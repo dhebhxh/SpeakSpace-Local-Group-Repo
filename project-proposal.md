@@ -2,10 +2,12 @@
 
 标题 1
 SpeakSpace‑Local：一个由本地 AI 推理驱动的语音优先办公生产力系统
+
 SpeakSpace-Local: A Voice-First Office Productivity System Enabled by Local AI Inference
 
 标题 2
 SpeakSpace‑Local：一个将语音转化为结构化可用知识的本地优先智能原型
+
 SpeakSpace-Local: A Local‑First Intelligence Prototype for Turning Voice into Structured, Actionable Knowledge
 
 # abstract

@@ -1,17 +1,19 @@
 # SpeakSpace-Local-Group-Repo
 
-1. 簡介與背景 (Introduction & Background)
+### 1. 簡介與背景 (Introduction & Background)
 1.1 產品願景 (Product Vision)：闡述開發 SpeakSpace Local 的核心目的──打造一個在本地端（Localhost）運作、兼具極致低延遲體驗與企業級安全防禦的語音助理系統。
-1.2 核心目標 (Key Objectives)：
-實作地端「STT ➔ LLM ➔ TTS」的非同步控制面流水線。
+
+
+1.2 核心目標 (Key Objectives)：<br>
+實作地端「STT ➔ LLM ➔ TTS」的非同步控制面流水線。<br>
 遵循資安合規原則，確保系統具備在「物理隔離（Air-Gapped）」環境下穩定運作的能力。
 
 
-2. 利益關係人與用戶故事 (Stakeholders & User Stories)
+### 2. 利益關係人與用戶故事 (Stakeholders & User Stories)
 2.1 利益關係人分析 (Stakeholder Analysis)：
 客戶/企業主管：看重資料絕對不外洩（1.2 斷網合規）與資安審計追溯能力。
 終端用戶：看重對話響應速度，無法忍受因地端推理導致的 UI 凍結或長時間卡頓。
-### 2.2 用戶故事 (User Stories - 敏捷開發核心)
+### 2.2 用戶故事 (User Stories)
 
 | Epics | User Stories | Acceptance Criteria |
 | :--- | :--- | :--- |
@@ -25,36 +27,50 @@
 | | **As a:** 企業主管<br>**I Want:** 應用程式資料不離開裝置<br>**So That:** 機密或敏感資料能得到保護 | **Given:** 使用者希望全部使用過程不經手網路<br>**When:** 使用者選擇離線模式後<br>**Then:** 輸入與輸出的資料將不自動同步至伺服器 |
 | **SSL Mobile** | *(小組待補充項目)* | |
 
-3. 功能性需求 (Functional Requirements)
+### 3. 功能性需求 (Functional Requirements)
 3.1 前端互動模組 (Desktop UI - Tauri)：
 提供語音錄製、發送與即時狀態渲染（如轉圈圈、串流文字輸出）。
 負責將用戶輸入數位化為 JSON 格式，並發起 RESTful API 請求。
+
+
 3.2 後端控制面核心 (Control Plane - Spring Boot)：
 API 路由與解析：接收並解析前端傳入的 JSON 包裹，轉換為強型別物件（DTO）。
 多執行緒串流調度：啟動線程池（Thread Pool），實作非同步管線化（Pipelining），動態調度 STT ➔ LLM ➔ TTS 資料流。
+
+
 3.3 地端 AI 原子組件 (Local AI Engines - Ollama & Whisper)：
 語音轉文字（STT / Whisper）與大語言模型在地端（Localhost）的推理與流式字串（Streaming）輸出。
+
+
 3.4 本地資料持久化 (Data Storage - SQLite)：
 利用 Spring Data JPA 實作歷史對話紀錄、資安日誌與本地 RAG 知識庫的資料儲存。
 
 
-5. 非功能性需求 (Non-Functional Requirements)
+### 4. 非功能性需求 (Non-Functional Requirements)
 4.1 效能與回應延遲 (Performance & Latency)：
 首字響應時間 (TTFT)：系統必須透過多執行緒串流優化，將地端綜合語音響應延遲壓低至 1.5 秒以內，避免單執行緒帶來的 UI 阻塞與凍結。
+
+
 4.2 資安與合規性 (Security & Compliance - 1.2 安全負責人防區)：
 物理隔離防禦：系統必須支援環境感知設定（Spring Profiles），在強制的 Air-Gapped 模式下，100% 阻斷外網連線，限制所有通訊走 Loopback（127.0.0.1）虛擬通道。
+
+
 4.3 可移植性與擴充性 (Portability & Extensibility)：
 前後端通訊必須嚴格基於約定的 JSON API 架構（Interface-Driven Design），確保各組件解耦，未來可彈性遷移或升級硬體模型。
 
 
-6. 驗收標準與完成定義 (Definition of Done - DoD)
+### 5. 驗收標準與完成定義 (Definition of Done - DoD)
 5.1 程式碼品質與代碼審查 
 程式碼必須成功通過編譯，無Compilation Error且無嚴重與法警告。 
 必須成功推送到 Git 專案的分支（Branch），並通過團隊的 Pull Request (PR) 審查，確保代碼具備可讀性與維護性。 
+
+
 5.2 功能性閉環驗證 
 前端（Tauri）與後端控制面（Spring Boot）必須能順利進行 RESTful API 聯調。 
 資料傳輸欄位必須 100% 嚴格符合雙方約定的 JSON 協議規格書。 
 系統能完整跑完「STT ➔ Spring Boot ➔ Ollama ➔ TTS」的端到端語音閉環，無資料遺失。 
+
+
 5.3 非功能性效能指標 
 系統在背景透過多執行緒 Pipeline 處理，使語音合成輸出（TTS）的「首字響應時間（TTFT）」在單機測試中不得超過 1.5 秒。 
 5.4資安合規性驗證 

@@ -11,7 +11,6 @@
 2.1 利益關係人分析 (Stakeholder Analysis)：
 客戶/企業主管：看重資料絕對不外洩（1.2 斷網合規）與資安審計追溯能力。
 終端用戶：看重對話響應速度，無法忍受因地端推理導致的 UI 凍結或長時間卡頓。
-2.2 用戶故事 (User Stories - 敏捷開發核心)：
 | Epics | User Stories | Acceptance Criteria |
 | :--- | :--- | :--- |
 | **SSL Desktop** | **As a:** 一般使用者<br>**I Want:** 使用語音轉文字功能<br>**So That:** 我可以更方便的記下重要事物 | **Given:** 使用者透過應用程式錄音<br>**When:** 應用程式處理輸入的資訊後<br>**Then:** 輸出文字格式的回應內容並儲存在裝置中 |
@@ -23,7 +22,6 @@
 | | **As a:** 一般使用者<br>**I Want:** 應用程式在離線狀態下使用<br>**So That:** 我能在任何地方取得協助 | **Given:** 系統在斷網的環境下啟動<br>**When:** 應用程式自動切換到離線模式<br>**Then:** 離線模式下轉由 LocalHost 上運作 |
 | | **As a:** 企業主管<br>**I Want:** 應用程式資料不離開裝置<br>**So That:** 機密或敏感資料能得到保護 | **Given:** 使用者希望全部使用過程不經手網路<br>**When:** 使用者選擇離線模式後<br>**Then:** 輸入與輸出的資料將不自動同步至伺服器 |
 | **SSL Mobile** | *(小組待補充項目)* | |
-
 
 3. 功能性需求 (Functional Requirements)
 3.1 前端互動模組 (Desktop UI - Tauri)：

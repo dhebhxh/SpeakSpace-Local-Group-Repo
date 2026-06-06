@@ -1,14 +1,12 @@
 # title
-
 标题 1
+
 SpeakSpace‑Local：一个由本地 AI 推理驱动的语音优先办公生产力系统
 
-SpeakSpace-Local: A Voice-First Office Productivity System Enabled by Local AI Inference
-
 标题 2
+
 SpeakSpace‑Local：一个将语音转化为结构化可用知识的本地优先智能原型
 
-SpeakSpace-Local: A Local‑First Intelligence Prototype for Turning Voice into Structured, Actionable Knowledge
 
 # abstract
 
@@ -20,18 +18,10 @@ SpeakSpace-Local: A Local‑First Intelligence Prototype for Turning Voice into 
 
 本项目借鉴 SpeakSpace 的语音智能工作流理念，独立实现了一个本地优先的语音处理系统，为本地语音生产力工具的可行性提供了支持。
 
-## 英文版
-As privacy requirements continue to rise and on‑device inference capabilities improve across desktop and mobile hardware, we set out to explore whether a speech‑driven, locally running AI assistant—capable of understanding voice input and organizing content automatically—can be built without relying on the cloud.
 
-With this goal in mind, we developed SpeakSpace Local. The system adopts a modular architecture that separates model inference, data storage, and interface rendering, allowing flexible replacement of speech recognition, speech synthesis, and text‑understanding components. Building on this design, we implemented a complete workflow covering audio recording, transcription, summarization, translation, and structured output.
+# 1 introduction
 
-For evaluation, we focused on the practical performance of on‑device AI, examining latency, memory usage, model size, output quality, and cross‑device variability to determine which components can run reliably and which require further optimization.
-
-Drawing on the workflow concepts of SpeakSpace, this project independently implements a locally prioritized speech‑processing system, providing empirical support for the feasibility of future on‑device voice productivity tools.
-
-# introduction
-
-1. 项目目标
+## 1.1 项目目标
 
 本项目将构建一个桌面端的本地 AI 工作流原型，并在移动端测试小模型的运行表现。桌面端将实现一个完整的本地语音智能流程，包括：
 - 语音捕获与转录
@@ -44,7 +34,7 @@ Drawing on the workflow concepts of SpeakSpace, this project independently imple
 - 以及通过 TTS 播放生成内容
 同时，我们还将提供一个性能可视化面板，用于对比不同模型的延迟和运行表现，以支持研究分析。
 
-2. 主要挑战
+# 1.2 主要挑战
 - 设备性能有限
 许多用户的桌面设备和移动设备计算能力有限，难以直接运行当代 AI 模型。因此需要通过模型量化、模型缩减和合理取舍来降低资源需求，使模型能够在普通硬件上正常运行。
 
@@ -57,28 +47,40 @@ Drawing on the workflow concepts of SpeakSpace, this project independently imple
 - 本地数据管理复杂
 所有数据（转录、摘要、任务、笔记等）都需要在本地进行存储、组织与检索。这要求设计合适的数据结构、本地数据库方案和检索机制。
 
-3. 项目范围
+## 1.3 项目范围
 本项目不涉及云端 API、生产级功能实现、真实用户数据，所有工作均限定在本地原型、可行性验证与基础研究范围内。
 
-4. 项目动机与影响
+## 1.4 项目动机与影响
 随着数据隐私需求的不断提升、边缘 AI 技术的快速成熟以及离线工作场景的日益增多，本地运行的语音智能系统正变得越来越重要。
 这类工具的潜在用户范围非常广泛：从日常记录和学习的普通用户，到需要处理敏感信息的专业群体，例如医疗、法律、金融、政府机构等。无论是个人用户还是专业从业者，都可以从安全、离线、可本地运行的语音智能能力中受益。
 
-## 英文版:
-1. Project Objectives
-This project aims to develop a desktop‑based local AI workflow prototype and evaluate the feasibility of running small models on mobile devices. The desktop system will implement a complete on‑device speech‑intelligence pipeline, including speech capture and transcription, summary and key‑point generation, cross‑lingual translation, note‑based question answering, task and action‑item extraction, local search, offline note‑library management, and TTS‑based audio playback. A performance visualization panel will also be provided to compare model latency and runtime characteristics, supporting research analysis and model evaluation.
 
-2. Key Challenges 
-First, limited device performance poses a fundamental constraint for running AI models locally. Many desktop and mobile devices cannot directly support modern model workloads, necessitating quantization, model reduction, and careful trade‑offs.
-Second, tasks such as speech transcription and summarization require low latency and real‑time responsiveness, which is difficult to guarantee under constrained resources.
-Third, significant differences between desktop and mobile environments—such as inference frameworks, hardware capabilities, system architectures, and packaging methods—further increase the complexity of cross‑platform adaptation.
-Finally, managing all data locally requires appropriate data structures, local database solutions, and retrieval mechanisms, adding additional engineering complexity.
+# 2 Related Works
 
-3. Project Scope
-This project excludes cloud‑based APIs, production‑level features, and real user data. All work is confined to local prototyping, feasibility validation, and foundational research.
+尽管现有研究在语音理解和边缘推理等方向已有显著进展，但在本地环境下整合转录、摘要、任务抽取等多种语义能力，并在桌面与移动端保持一致的交互与架构设计，仍是尚未解决的挑战。本节将从三个主要研究方向展开综述，并说明它们与本研究的区别。
 
-4. Motivation and Impact
-With rising privacy demands, improving on‑device AI capabilities, and the increasing prevalence of offline work scenarios, locally executed speech‑intelligence systems are becoming increasingly important. Performing speech processing and content generation directly on user devices avoids privacy risks associated with cloud transmission and ensures usability in low‑connectivity environments.
-The potential user base is broad, ranging from everyday users to professionals handling sensitive information in fields such as healthcare, law, finance, and government. Both individual users and professional practitioners can benefit from secure, offline, locally executed speech‑intelligence capabilities.
+## 2.1 边缘推理与本地模型
+近年来，随着轻量化模型和本地推理框架的发展，越来越多研究开始关注如何在普通设备（如笔记本电脑和手机）上运行 AI 模型，而不依赖云端服务器。这一方向通常被称为边缘推理或本地模型推理。其核心目标并非提升模型本身的准确度，而是确保现有模型能够在资源受限的设备上以可接受的速度和稳定性完成推理，从而支持实际应用场景中的本地运行需求。
 
-# Related Work
+为实现这一目标，研究者提出了多种技术路线，包括通过模型量化将参数从 16‑bit 压缩到 4‑bit 或 3‑bit，以减少模型大小和内存占用；使用轻量化推理框架（如 llama.cpp、whisper.cpp、ONNX Runtime Mobile）在 CPU 或移动端执行推理；以及通过优化内存管理和推理调度来降低延迟。这些技术共同推动了语言模型、语音识别模型和语音合成模型在本地设备上的部署能力，使得无需依赖云端 GPU 也能够完成一定程度的智能处理。
+
+尽管如此，现有研究仍面临若干挑战。首先，模型压缩不可避免地带来能力下降，使本地模型在复杂语义任务上的表现弱于云端大模型。其次，移动端硬件性能有限，导致推理延迟显著高于桌面设备或云端环境。最后，现有研究大多只关注单个模型在本地设备上的推理性能，而较少讨论当多个模型（如 STT、LLM 和 TTS）需要在同一设备上连续或并行工作时，系统是否仍能保持可接受的速度、内存占用和整体用户体验。
+
+基于上述背景，本研究关注在真实设备上实现 STT、LLM 和 TTS 的本地协同推理能力，并通过实验评估其在完整语音工作流中的延迟、内存占用与用户体验，从而为构建可在桌面与移动端运行的本地语音智能系统提供工程层面的可行性参考。
+
+## 2.2 AI 驱动的结构化生产力系统
+近年来，AI 在生产力工具中的角色逐渐从执行单一任务（如摘要、翻译或问答）扩展到支持更完整的多步骤工作流。这一研究方向主要关注如何将非结构化输入内容转化为可组织、可检索、可操作的结构化生产力成果，包括摘要生成、要点提取、任务抽取、行动项识别、语义片段划分与实体抽取等多种形式的结构化知识。
+
+当前 AI 驱动的结构化生产力系统仍存在明显局限。语音助手（如 Siri、Google Assistant）主要执行指令级任务，缺乏对长语音内容的深度理解与结构化能力；转录工具（如 Otter、Notion AI）通常停留在文本转录或浅层总结，难以进一步识别任务、行动项或语义片段；LLM 工具（如 ChatGPT、Claude）虽然能够生成结构化内容，但难以与用户的本地知识库或项目空间深度集成。更重要的是，现有系统普遍缺乏对原始输入的结构化组织能力，难以将语音内容转化为清晰、可理解的结构化片段，从而限制了其在真实工作场景中的实用性。
+
+在此背景下，SpeakSpace Local 所探索的方向将本地 STT、LLM、TTS与工作空间语义相结合，为结构化生产力研究提供了新的视角。该原型不仅关注语音内容的转录与理解，更强调从语音中生成摘要、要点和任务等结构化要素，并根据语义将其组织到相应的项目或工作空间中，从而形成更完整的语音驱动结构化生产力流程。
+
+## 2.3 本地优先应用与隐私保护研究
+本地优先应用是一类强调数据控制权与隐私保护的软件架构理念，其核心原则包括：数据默认存储在用户设备上、同步为可选项、功能在离线状态下仍可使用，并尽可能减少对云端服务的依赖。与传统依赖云端的应用不同，本地优先应用强调让敏感数据始终保留在用户设备上，而不是在处理过程中被上传到外部服务器。
+
+这一理念在语音数据场景中尤为重要，因为语音内容往往包含个人身份信息、工作细节或组织内部讨论等高度敏感的数据。一旦语音内容被上传至云端，即使仅用于转录或处理，也可能带来潜在的隐私泄露风险。现有研究在本地数据管理、离线可用性和隐私保护方面已有一定探索，但这些工作多聚焦于数据存储与同步机制，而较少讨论语音类应用在处理链路中如何减少云端参与，以降低敏感信息的潜在暴露风险。
+
+在此背景下，SpeakSpace Local 采用本地优先的系统架构，使语音内容在采集、存储与处理的整个过程中均保持在用户设备上，从而避免敏感语音数据在传输或处理阶段暴露给第三方服务。
+
+
+综上所述，现有研究分别从模型推理效率、语义结构化能力以及数据隐私与系统架构等角度推动了语音智能技术的发展，但这些方向大多是彼此独立展开的。边缘推理关注模型能否在本地高效运行，结构化生产力研究强调如何从语音中提取可操作的语义要素，而本地优先应用则强调数据在设备侧的安全与可控性。然而，能够在同一系统中同时满足本地推理、结构化语义处理与隐私保护要求的语音工作流仍然缺乏系统性的探索。本研究正是在这一交叉空白处展开，尝试构建一个可在桌面与移动端一致运行的本地语音智能原型。

@@ -78,6 +78,28 @@ TTS 初步 runtime 方向：
 
 我们不会在 V1 承诺固定的 1.5 秒 TTS 响应目标，因为 TTS 不属于第一版核心流程。
 
+### 根据硬件情况做启动推荐
+
+应用应该在首次启动或首次配置本地模型时，做一次轻量级硬件检测。目标不是让每个用户手动理解和选择模型，而是根据当前设备自动推荐一个合理的模型 / runtime 组合。
+
+建议检测的信息：
+
+- OS 和架构，例如 macOS Apple Silicon、Windows x64 或 Linux x64
+- CPU 或芯片型号
+- RAM 和当前可用内存
+- GPU 或加速能力，例如 Apple Metal 或 NVIDIA CUDA
+- 可用于下载模型的磁盘空间
+
+建议行为：
+
+- 如果设备是现代 16GB Apple Silicon 或同等级笔记本 / 台式机，推荐使用 `whisper.cpp ggml-large-v3-turbo-q5_0` 做 STT，使用 `Ollama qwen3:4b-instruct` 做 LLM/SLM。
+- 如果设备只有约 8GB RAM，或 CPU/GPU 资源有限，推荐降级 profile，例如 `whisper.cpp ggml-small-q5_1` 加 `gemma3:1b` 或其他轻量 LLM/SLM。
+- 如果设备资源更强，并且用户更重视质量，可以提供更高质量 profile，例如 `qwen3:8b`，但不作为默认选择。
+- 如果某个首选 runtime 在当前设备上不可用，应 fallback 到最稳定的本地 runtime，而不是阻塞用户完成配置。
+- 始终允许用户手动覆盖推荐结果，因为不同用户可能更重视速度、质量、更小下载体积或更低电量消耗。
+
+这个功能应该表现为“推荐”，而不是永久锁定。首次配置页面可以说明系统选择了哪个 profile 以及原因，之后用户仍然可以在设置里修改。
+
 ## 问题 2：我们将如何测量延迟、质量和设备可行性？
 
 ### 延迟

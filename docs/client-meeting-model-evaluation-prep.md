@@ -78,6 +78,28 @@ Initial TTS runtime direction:
 
 We will not commit to a fixed 1.5-second TTS response target in V1 because TTS is not part of the first core workflow.
 
+### Hardware-Aware Startup Recommendation
+
+The app should include a lightweight hardware check during first launch or first local-model setup. The goal is to recommend a sensible default model/runtime combination for the user's device instead of asking every user to choose manually.
+
+Hardware signals to detect:
+
+- OS and architecture, such as macOS Apple Silicon, Windows x64, or Linux x64
+- CPU/chip model
+- RAM and available memory
+- GPU or accelerator availability, such as Apple Metal or NVIDIA CUDA
+- Available disk space for model downloads
+
+Recommended behaviour:
+
+- If the device is a modern 16GB Apple Silicon or equivalent desktop/laptop, suggest `whisper.cpp ggml-large-v3-turbo-q5_0` for STT and `Ollama qwen3:4b-instruct` for LLM/SLM.
+- If the device has around 8GB RAM or limited CPU/GPU resources, suggest a degraded profile such as `whisper.cpp ggml-small-q5_1` plus `gemma3:1b` or another lightweight LLM/SLM.
+- If the device has stronger resources and the user prioritises quality, offer an optional higher-quality profile such as `qwen3:8b`, but do not make it the default.
+- If a preferred runtime is unavailable on the device, fall back to the most stable local runtime rather than blocking setup.
+- Always allow manual override, because some users may prefer speed, quality, smaller downloads, or lower battery usage.
+
+This should be presented as a recommendation, not a permanent lock-in. The first setup screen can say which profile was selected and why, then let the user change it later in settings.
+
 ## Question 2: How will we measure latency, quality, and device feasibility?
 
 ### Latency

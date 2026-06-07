@@ -76,8 +76,6 @@ Initial TTS runtime direction:
    - Fallback or baseline.
    - Useful for comparing speed, package size, and ease of local desktop use.
 
-We will not commit to a fixed 1.5-second TTS response target in V1 because TTS is not part of the first core workflow.
-
 ### Hardware-Aware Startup Recommendation
 
 The app should include a lightweight hardware check during first launch or first local-model setup. The goal is to recommend a sensible default model/runtime combination for the user's device instead of asking every user to choose manually.
@@ -187,14 +185,3 @@ We will not formally test mobile in V1.
 
 3. Is same-language output the expected default?
    - Recommended answer: yes. Input language should be preserved throughout transcript, summary, key points, and action items.
-
-
-## V1 Non-Goals
-
-- No mobile app in V1.
-- No TTS in the V1 core workflow.
-- No AskAI / RAG over a note library in V1.
-- No formal disconnected-network validation in V1.
-- No 1.5-second TTS hard commitment.
-- No production SpeakSpace API, production codebase, production database, or real customer data.
-- No attempt to evaluate every possible language in the first round.

@@ -1,80 +1,109 @@
-# SpeakSpace-Local-Group-Repo
+# SpeakSpace-Local Requirements Specification Blueprint
 
-### 1. 簡介與背景 (Introduction & Background)
-1.1 產品願景 (Product Vision)：闡述開發 SpeakSpace Local 的核心目的──打造一個在本地端（Localhost）運作、兼具極致低延遲體驗與企業級安全防禦的語音助理系統。
-
-
-1.2 核心目標 (Key Objectives)：<br>
-實作地端「STT ➔ LLM ➔ TTS」的非同步控制面流水線。<br>
-遵循資安合規原則，確保系統具備在「物理隔離（Air-Gapped）」環境下穩定運作的能力。
+### 1. Introduction & Background
+1.1 Product Vision 
+The core purpose of developing SpeakSpace Local is to build a voice assistant system that operates entirely on the local host (Localhost), combining a low latency experience with enterprise-grade security defenses.
 
 
-### 2. 利益關係人與用戶故事 (Stakeholders & User Stories)
-2.1 利益關係人分析 (Stakeholder Analysis)：
-客戶/企業主管：看重資料絕對不外洩（1.2 斷網合規）與資安審計追溯能力。
-終端用戶：看重對話響應速度，無法忍受因地端推理導致的 UI 凍結或長時間卡頓。
-### 2.2 用戶故事 (User Stories)
+1.2 Key Objectives
+Implement an asynchronous control plane pipeline for local "STT -> LLM -> TTS" data flows.
+Adhere to Security Compliance principles to ensure the system is capable of operating stably within a "(Air-Gapped)" environment.
+
+
+
+### 2. Stakeholders & User Stories
+2.1 Stakeholder Analysis
+Client / Enterprise Executive: Prioritizes absolute prevention of data leakage (1.2 disconnected compliance) and security audit traceability.
+End User: Prioritizes conversational responsiveness; cannot tolerate UI freezing or prolonged stuttering caused by local inference.
+
+
+2.2 User Stories
+
 
 | Epics | User Stories | Acceptance Criteria |
 | :--- | :--- | :--- |
-| **SSL Desktop** | **As a:** 一般使用者<br>**I Want:** 使用語音轉文字功能<br>**So That:** 我可以更方便的記下重要事物 | **Given:** 使用者透過應用程式錄音<br>**When:** 應用程式處理輸入的資訊後<br>**Then:** 輸出文字格式的回應內容並儲存在裝置中 |
-| | **As a:** 一般使用者<br>**I Want:** 使用文字轉語音功能<br>**So That:** 輸出可以符合不同場合與需求 | **Given:** 使用者對應用程式輸入文字<br>**When:** 應用程式處理輸入的文字後<br>**Then:** 輸出音訊格式的回編內容並儲存在裝置中 |
-| | **As a:** 一般使用者<br>**I Want:** 回應等待時間在可接受的範圍內<br>**So That:** 節省等待的時間增加工作效率 | **As a:** 一般使用者<br>**I Want:** 可以隨時查看過往的筆記&資料<br>**So That:** 避免需要靠自己記住所有事情 | **Given:** 使用者對應用程式給定有效輸入後<br>**When:** 應用程式在接受到訊息後到產生輸出前<br>**Then:** 系統在背景透過多執行緒 Pipeline 處理，使語音合成輸出 (TTS) 的首字響應時間不超過 1.5 秒。<br><br>**Given:** 使用者若想查詢過往紀錄與資訊<br>**When:** 使用者進入過往資料紀錄尋找特定紀錄<br>**Then:** 使用者能夠找到過往已儲存的回應內容 |
-| | **As a:** 一般使用者<br>**I Want:** 設定資料在特定時間後銷毀<br>**So That:** 裝置存儲空間管理 & 隱私保護 | **Given:** 使用者希望資料可以在到期後自動銷毀<br>**When:** 使用者完成到期自動銷毀相關設定<br>**Then:** 符合過期條件的歷史紀錄資料，將由後端排程自動執行安全抹除且無法被復原。 |
-| | **As a:** 一般使用者<br>**I Want:** 應用程式能識別內容提及的排程<br>**So That:** 可以一鍵將行程加入行事曆 | **Given:** 使用者希望應用程式能識別內容加入排程<br>**When:** 應用程式識別到內容可能有待辦事項內容<br>**Then:** 詢問使用者是否要新增可能的排程 |
-| **SSL (Local mode)** | **As a:** 企業主管<br>**I Want:** 能夠一鍵切換離線 & 線上模式<br>**So That:** 根據場合與需求更換模式 | **Given:** 主畫面設置了 Online/Offline Toggle<br>**When:** 特定的 Toggle 被打開了<br>**Then:** 應用程式切換到該選定的模式進行運作 |
-| | **As a:** 一般使用者<br>**I Want:** 應用程式在離線狀態下使用<br>**So That:** 我能在任何地方取得協助 | **Given:** 系統在斷網的環境下啟動<br>**When:** 應用程式自動切換到離線模式<br>**Then:** 離線模式下轉由 LocalHost 上運作 |
-| | **As a:** 企業主管<br>**I Want:** 應用程式資料不離開裝置<br>**So That:** 機密或敏感資料能得到保護 | **Given:** 使用者希望全部使用過程不經手網路<br>**When:** 使用者選擇離線模式後<br>**Then:** 輸入與輸出的資料將不自動同步至伺服器 |
-| **SSL Mobile** | *(小組待補充項目)* | |
+| **SSL Speech-to-Text** | **AS A:** End User<br>**I WANT:** To use the speech-to-text function (Multi-language)<br>**SO THAT:** I can take note of important matters more conveniently. | **Given:** The user records audio through the application.<br>**When:** The application processes the inputted information.<br>**Then:** It outputs the response in text format and stores it on the device. |
+| **SSL Text-to-Speech** | **AS A:** End User<br>**I WANT:** To use the text-to-speech function (Multi-language)<br>**SO THAT:** The output can adapt to different occasions and requirements. | **Given:** The user inputs text into the application.<br>**When:** The application processes the inputted text.<br>**Then:** It outputs the response in audio format and stores it on the device. |
+| **SSL Data Storage & Management** | **AS A:** End User<br>**I WANT:** The response waiting time to be within an acceptable range<br>**SO THAT:** Waiting time is reduced, increasing work efficiency. | **Given:** After the user provides a valid input to the application.<br>**When:** Between the time the application receives the message and generates the output.<br>**Then:** The system processes it in the background via a multi-threaded Pipeline, ensuring the Time to First Token (TTFT) for Text-to-Speech (TTS) synthesis does not exceed 1.5 seconds. (\*\*Actual response time depends primarily on the final product). |
+| **SSL Data Storage & Management** | **AS A:** End User<br>**I WANT:** To view past notes and data at any time<br>**SO THAT:** I can avoid relying solely on my own memory to remember everything. | **Given:** If the user wants to query past records and information.<br>**When:** The user enters past data records to find a specific entry.<br>**Then:** The user can find the previously stored response content. |
+| **SSL Intent Recognition** | **AS A:** End User<br>**I WANT:** The application to recognize schedules mentioned in the content<br>**SO THAT:** Schedules can be added to the calendar with a single click. | **Given:** The user wants the application to recognize and add schedules from content.<br>**When:** The application identifies that the content may contain to-do items.<br>**Then:** It prompts the user whether they want to add the potential schedule. |
+| **SSL Data & Privacy Protection** | **AS A:** End User<br>**I WANT:** To set data to self-destruct after a specific time<br>**SO THAT:** Manage device storage space & protect privacy. | **Given:** The user wants data to be automatically destroyed upon expiration.<br>**When:** The user completes the automatic expiration destruction settings.<br>**Then:** Expired historical record data will be securely erased automatically by a backend schedule and cannot be recovered. |
+| **SSL ASK ΑΙ** | **AS A:** End User<br>**I WANT:** To perform Ask AI actions on dialogue strings<br>**SO THAT:** Generate more ideas and insights after interacting with the AI. | **Given:** The user wants to discuss response-related content with the AI.<br>**When:** Clicking the "ASK AI" button within a note.<br>**Then:** A new window appears, allowing the user to discuss with the built-in AI. |
+| **SSL Data Management** | **AS A:** End User<br>**I WANT:** To manage generated content and usage status<br>**SO THAT:** Users have full control over the application's usage. | **Given:** The user wants to manage the overall app usage and notes.<br>**When:** The user enters the Control Panel page.<br>**Then:** The dashboard displays usage stats and permits note CRUD operations. |
+| **SSL Office Automation** | **AS A:** Enterprise User<br>**I WANT:** To customize automated pipeline workflows<br>**SO THAT:** I can work more efficiently and stay focused. | **Given:** The user has customized a pipeline processing workflow.<br>**When:** A valid input is given to this workflow.<br>**Then:** The user receives a customized output after pipeline processing. |
+| **SSL Office Automation** | **AS A:** Enterprise User<br>**I WANT:** The application to support WebHook functionality<br>**SO THAT:** Workflows within the organization can be automated. | **Given:** The user binds the organizational system with the SSL WebHook.<br>**When:** SSL receives recorded audio and extracts a summary.<br>**Then:** It automatically emails the relevant teams OR identifies and adds it to the calendar. |
+| **SSL (Local mode)** | **AS A:** End User<br>**I WANT:** To switch between online & offline modes with one click<br>**SO THAT:** I can swap modes based on different occasions and needs. | **Given:** An Online/Offline Toggle is provided on the main interface.<br>**When:** The specific toggle is switched on.<br>**Then:** The application switches to the selected mode for operation. |
+| **SSL (Local mode)** | **AS A:** End User<br>**I WANT:** To use the application in an offline state<br>**SO THAT:** I can get assistance anywhere. | **Given:** The system starts in a network-disconnected environment.<br>**When:** The application automatically switches to offline mode.<br>**Then:** Operations are handled via LocalHost under offline mode. |
+| **SSL (Local mode)** | **AS A:** Enterprise Executive<br>**I WANT:** Application data never to leave the device<br>**SO THAT:** Confidential or sensitive data remains protected. | **Given:** The user desires that the entire usage process does not involve the internet.<br>**When:** The user selects offline mode.<br>**Then:** Inputted and outputted data will not be automatically synchronized to the server. |
 
-### 3. 功能性需求 (Functional Requirements)
-3.1 前端互動模組 (Desktop UI - Tauri)：
-提供語音錄製、發送與即時狀態渲染（如轉圈圈、串流文字輸出）。
-負責將用戶輸入數位化為 JSON 格式，並發起 RESTful API 請求。
-
-
-3.2 後端控制面核心 (Control Plane - Spring Boot)：
-API 路由與解析：接收並解析前端傳入的 JSON 包裹，轉換為強型別物件（DTO）。
-多執行緒串流調度：啟動線程池（Thread Pool），實作非同步管線化（Pipelining），動態調度 STT ➔ LLM ➔ TTS 資料流。
-
-
-3.3 地端 AI 原子組件 (Local AI Engines - Ollama & Whisper)：
-語音轉文字（STT / Whisper）與大語言模型在地端（Localhost）的推理與流式字串（Streaming）輸出。
+### 3. Functional Requirements
+3.1 Frontend Interaction Module (Desktop UI - Tauri)
+Provides voice recording, transmission, and real-time status rendering (e.g., loading spinners, streaming text output).
+Responsible for digitalizing user inputs into JSON format and initiating RESTful API requests.
+Provides voice recording, transmission, and real-time status rendering (e.g., loading spinners, asynchronous streaming text output).
+Responsible for non-signaling transmission of user inputs and recording data through Tauri's built-in IPC mechanism (invoke calls) using strong types (TypeScript Interface) to the Tauri Core layer, ensuring 0-Network Overheads without involving local network communication.
 
 
-3.4 本地資料持久化 (Data Storage - SQLite)：
-利用 Spring Data JPA 實作歷史對話紀錄、資安日誌與本地 RAG 知識庫的資料儲存。
+3.2 Backend Control Plane Core (Control Plane - Spring Boot)
+API Routing & Parsing: Receives and parses JSON packages transmitted from the frontend, converting them into strongly-typed Data Transfer Objects (DTOs).
+Multi-threaded Stream Scheduling: Launches a Thread Pool to implement asynchronous pipelining, dynamically scheduling the STT $\rightarrow$ LLM $\rightarrow$ TTS data pipeline.
+IPC Routing & Parsing: Utilizes Rust's tauri::command to listen to frontend requests and uses the serde library to automatically deserialize frontend-passed data into Rust strongly-typed structures (Struct).
+Asynchronous Pipeline Scheduling (Pipelining & Stream): Relies on Rust's high-performance asynchronous runtime, Tokio Runtime, and a Thread Pool to achieve asynchronous pipeline control. It dynamically schedules and transfers binary data streams and strings of local STT $\rightarrow$ LLM $\rightarrow$ TTS across threads, utilizing Tauri window events (emit streams) for real-time feedback to the frontend UI, ensuring that the frontend main thread is neither blocked nor frozen during inference.
 
 
-### 4. 非功能性需求 (Non-Functional Requirements)
-4.1 效能與回應延遲 (Performance & Latency)：
-首字響應時間 (TTFT)：系統必須透過多執行緒串流優化，將地端綜合語音響應延遲壓低至 1.5 秒以內，避免單執行緒帶來的 UI 阻塞與凍結。
+3.3 Local AI Atomic Components (Local AI Engines - Ollama & Whisper)
+Handles Speech-to-Text (STT / Whisper) and Large Language Model inference along with streaming string output on the local machine (Localhost).
+Leverages Rust's FFI (Foreign Function Interface) or community native bindings (such as whisper-rs and llama-cpp-2) to directly load and invoke local AI models for inference within the Tauri backend process.
+Supports native memory passing of streaming strings and audio feature values, linking model inference results to the control plane pipeline with ultra-low latency.
 
 
-4.2 資安與合規性 (Security & Compliance - 1.2 安全負責人防區)：
-物理隔離防禦：系統必須支援環境感知設定（Spring Profiles），在強制的 Air-Gapped 模式下，100% 阻斷外網連線，限制所有通訊走 Loopback（127.0.0.1）虛擬通道。
+3.4 Local Data Persistence (Data Storage - SQLite)
+Utilizes Spring Data JPA to implement data storage for historical conversation records, security logs, and the local RAG knowledge base.
+Utilizes Rust's lightweight asynchronous database framework, SQLx (或 Diesel), to directly connect to the embedded SQLite database.
+Responsible for structured storage and asynchronous secure erasure (Secure Erasure) of historical conversation records, security audit logs, and local knowledge base data.
 
 
-4.3 可移植性與擴充性 (Portability & Extensibility)：
-前後端通訊必須嚴格基於約定的 JSON API 架構（Interface-Driven Design），確保各組件解耦，未來可彈性遷移或升級硬體模型。
+
+### 4. Non-Functional Requirements
+4.1 Performance & Latency
+Time to First Token (TTFT): The system must optimize via multi-threaded streaming to compress the local comprehensive voice response latency to under 1.5 seconds, avoiding UI blocking and freezing brought by single-threading.
+Time to First Token (TTFT): The system must implement high-concurrency thread pool management based on Rust's Tokio Async Runtime. By performing asynchronous pipelining and micro-buffering stream processing on voice feature values and text tokens locally, the comprehensive local voice response latency (from the end of recording to the TTS outputting the first token) is pressed down to under 1.5 seconds, fundamentally preventing main thread UI rendering freezes caused by heavy local AI inference loads.
 
 
-### 5. 驗收標準與完成定義 (Definition of Done - DoD)
-5.1 程式碼品質與代碼審查 
-程式碼必須成功通過編譯，無Compilation Error且無嚴重與法警告。 
-必須成功推送到 Git 專案的分支（Branch），並通過團隊的 Pull Request (PR) 審查，確保代碼具備可讀性與維護性。 
+4.2 Security & Compliance 
+Air-Gapped Defense: The system must support environment-aware configurations (Spring Profiles). Under mandatory Air-Gapped mode, it must 100% block outbound internet connections, restricting all communications to the Loopback (127.0.0.1) virtual channel.
+Air-Gapped Defense (Offline Compliance): The system must support environment-aware configurations based on compile-time or runtime environment variables (such as .env configurations or Rust cfg attributes). In mandatory Air-Gapped (physically isolated) mode, the backend process (Tauri Core) must 100% block all external network sockets (Outbound Web Sockets/HTTP connections), confining all internal data exchange and command routing strictly to the core layer's IPC (Inter-Process Communication) memory channel, achieving a physical level of 0bps Outbound Traffic to guard against confidential note and inference data leaks.
 
 
-5.2 功能性閉環驗證 
-前端（Tauri）與後端控制面（Spring Boot）必須能順利進行 RESTful API 聯調。 
-資料傳輸欄位必須 100% 嚴格符合雙方約定的 JSON 協議規格書。 
-系統能完整跑完「STT ➔ Spring Boot ➔ Ollama ➔ TTS」的端到端語音閉環，無資料遺失。 
+
+4.3 Portability & Extensibility
+Frontend-backend communication must strictly rely on the agreed JSON API architecture (Interface-Driven Design), ensuring components are decoupled so that hardware models can be flexibly migrated or upgraded in the future.
+Component-Driven Decoupling Design: Communication between the frontend, backend, and local AI atomic engines must strictly adhere to agreed strongly-typed structural contracts (Interface-Driven Design, aligning Rust Structs with TypeScript Interfaces). This guarantees high decoupling among the UI rendering layer, control logic layer, and underlying C++ model bindings (Whisper/Llama.cpp), enabling flexible migration, replacement, or upgrading of local hardware models and underlying embedded databases without modifying the frontend architecture in the future.
 
 
-5.3 非功能性效能指標 
-系統在背景透過多執行緒 Pipeline 處理，使語音合成輸出（TTS）的「首字響應時間（TTFT）」在單機測試中不得超過 1.5 秒。 
-5.4資安合規性驗證 
-系統在環境設定為 離線模式時，必須成功通過物理斷網（或本機防火牆阻斷）實驗。 
-經由 Wireshark 網路封包監聽實測，實體網卡之外部流量吞吐量必須為 0 bps，所有 AI 推理資料流必須被鎖定在 Loopback（127.0.0.1）虛擬通道內，且後端控制面需能明確追蹤並印出本地請求之生命週期。 
-5.5 產品交付與部署 
-相應功能必須可以在不修改 Java 原始碼的前提下，透過外部環境變數或動態組態設定（如 Spring Profiles）進行環境路由切換。 
+### 5. Definition of Done (DoD)
+5.1 Code Quality & Code Review
+The code must successfully compile with zero Compilation Errors and no severe syntax warnings.
+Code must be successfully pushed to the project's Git branch and pass the team's Pull Request (PR) review to ensure readability and maintainability.
+
+
+5.2 Functional Closed-Loop Verification
+The frontend (Tauri) and backend control plane (Spring Boot) must successfully conduct joint RESTful API debugging.
+Data transmission fields must strictly align 100% with the JSON protocol specification agreed upon by both parties.
+The system must fully complete the end-to-end voice loop of "STT -> Spring Boot-> Ollama -> TTS" with zero data loss.
+
+
+5.3 Non-Functional Performance Metrics
+Processed through the background multi-threaded pipeline, the "Time to First Token (TTFT)" for Text-to-Speech (TTS) synthesis must not exceed 1.5 seconds in local single-machine testing.
+
+
+5.4 Security Compliance Verification
+When the environment configuration is set to offline mode, the system must successfully pass physical network disconnection (or local firewall blocking) experiments.
+Verified by Wireshark network packet monitoring, the outbound traffic throughput of the physical network card must be 0bps; all AI inference data streams must be confined to the Loopback (127.0.0.1) virtual channel, and the backend control plane must be able to explicitly track and print out the lifecycle of local requests.
+
+
+5.5 Product Delivery & Deployment
+Corresponding functionalities must be capable of switching environment routes via external environment variables or dynamic configuration settings (such as Spring Profiles) without modifying any Java source code.
+
+
+

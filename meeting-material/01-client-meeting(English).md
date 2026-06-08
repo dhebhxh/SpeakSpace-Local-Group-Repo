@@ -1,213 +1,129 @@
 # What is the smallest useful user flow we can build first?
-Minimum useful flow 
-1. User records or imports audio, or enters text manually. 
-2. Local STT converts speech into transcript text where audio is used. 
-3. Local LLM/SLM generates a summary, key points, or transformed version of the note. 
-4. Optional translation is generated locally where feasible. 
-5. Optional TTS converts selected output into spoken audio. 
+
+## Minimum useful flow
+1. User records or imports audio, or enters text manually.  
+2. Local STT converts speech into transcript text where audio is used.  
+3. Local LLM/SLM generates a summary, key points, or a transformed version of the note.  
+4. Optional translation is generated locally where feasible.  
+5. Optional TTS converts selected output into spoken audio.  
 6. The app stores the original note, transcript, and generated outputs locally.
 
+---
 
-# What desktop and mobile frameworks are we considering, and why? 
-### Desktop
-#### Packaging
-Meaning:  
-How the code we write is ultimately turned into an installable desktop application.  
-Different frameworks require bundling different components, so the difficulty varies.
+# What desktop and mobile frameworks are we considering, and why?
 
-Tauri: Only needs to bundle a Rust program + frontend static files, very small.
+## Desktop
 
-Electron: Needs to bundle the entire Chrome browser.
+### Packaging
+Meaning: how our code is ultimately packaged into an installable desktop application.
 
-Flutter Desktop: Needs to bundle the Flutter rendering engine.
+- **Tauri**: only packages the Rust binary + frontend static files; smallest size  
+- **Electron**: packages the entire Chrome runtime  
+- **Flutter Desktop**: packages the Flutter rendering engine  
+- **Python UI**: packages the Python interpreter and dependencies  
+- **Native**: uses the OS’s native executable format; most natural
 
-Python UI: Needs to bundle the Python interpreter and dependencies.
+### Model runtime access
+Meaning: how easily the framework can call local AI model inference libraries (Rust/Python/C++).
 
-Native: The OS already supports native executables, the most natural.
+- **Tauri (Rust)**: strongest; Rust can directly call llama.cpp, GGUF loaders  
+- **Electron (Node.js)**: requires C++/Rust extensions  
+- **Flutter Desktop**: requires plugins to call C++/Rust  
+- **Python UI**: Python can run models easily, but UI is weak  
+- **Native (C++/Swift)**: best performance, highest development cost
 
-#### Model runtime access
-Meaning:  
-Whether the framework can easily call local AI model inference libraries (Rust/Python/C++).
+### Performance
+UI smoothness, memory usage, startup time, and whether model inference is slowed by the UI.
 
-Tauri (Rust): Rust can directly call llama.cpp, GGUF loaders — best local model access.
-
-Electron (Node.js): JS cannot run models directly; requires C++ or Rust extensions.
-
-Flutter Desktop: Dart cannot run models directly; needs plugins to call C++/Rust.
-
-Python UI: Python can run models (llama-cpp-python), but UI is weak.
-
-Native (C++/Swift): Directly calls C++ model libraries, best performance but high dev cost.
-
-#### Performance
-Meaning:  
-Whether the UI is smooth, memory usage is low, startup is fast, and model inference is not slowed by the UI.
-
-#### Cross‑platform effort
-Meaning:  
-Whether we need to write three separate versions for Windows, macOS, and Linux.
-
-Some frameworks run all three with one codebase; others require per‑platform adaptation.
+### Cross‑platform effort
+Whether we need separate implementations for Windows, macOS, and Linux.
 
 | Framework | Packaging | Model Runtime Access | Performance | Cross‑platform Effort |
-|-----------|-----------|----------------------|-------------|------------------------|
-| Tauri | Small bundle | Strong (Rust direct access) | High | Low |
-| Electron | Large bundle | Medium (needs extensions) | Medium | Low |
-| Flutter Desktop | Medium | Medium (needs plugin) | High | Low |
-| Native Desktop | Different per platform | Strongest | Highest | High |
-| Python UI | Difficult | Medium | Low–Medium | Medium |
+|----------|-----------|----------------------|-------------|------------------------|
+| Tauri | Small | Strong | High | Low |
+| Electron | Large | Medium | Medium | Low |
+| Flutter Desktop | Medium | Medium | High | Low |
+| Native Desktop | High | Strongest | Highest | High |
+| Python UI | High | Medium | Low–Medium | Medium |
 
+---
 
-## Mobile
-#### Flutter
-Can it run models locally?  
-Yes, but Flutter itself cannot run AI models directly.  
-It must call native C++/Rust inference libraries via plugins, such as:
+# Mobile
 
-- MLC (a framework for running models on mobile)
-- llama.cpp mobile version
-- Custom C++/Rust model loaders
+## Flutter
+- **On‑device model support**: Yes, via native plugins  
+- **Simplifications needed**: small models (3B–7B), 4‑bit quantization, shorter context
 
-Flutter handles UI; native code handles inference.
+## React Native
+- **On‑device model support**: Yes, but more complex than Flutter  
+- **Simplifications needed**: same as Flutter, plus native bindings
 
-What needs to be simplified:
-- Smaller models (3B–7B)
-- Quantization (4-bit)
-- Shorter context length (1k–2k)
+## Native Android (Kotlin/Java)
+- **On‑device model support**: Yes; easiest and best performance  
+- **Simplifications needed**: quantization, small models, memory optimization
 
-#### React Native
-Can it run models locally?  
-Yes, but more difficult than Flutter.  
-JS cannot run models; requires:
+## Native iOS (Swift)
+- **On‑device model support**: Yes; best via CoreML  
+- **Simplifications needed**: quantization, CoreML‑compatible structure, smaller model size
 
-- Android/iOS native modules  
-- Or MLC’s RN bindings
+## Lightweight inference wrappers (MLC / llama.cpp mobile / gguf-lite)
+- **On‑device model support**: Yes; most unified cross‑platform approach  
+- **Simplifications needed**: quantized models, simple architectures, short context
 
-Same principle: JS for UI, native for inference.
+| Framework | On‑device Model Support | Required Simplifications |
+|----------|--------------------------|---------------------------|
+| Flutter | Yes (via plugins) | Small models, 4‑bit, short context |
+| React Native | Yes (more complex) | Small models, quantization, native bindings |
+| Native Android | Easiest | Small models, quantization, memory optimization |
+| Native iOS | Strong (CoreML) | Quantization, compatible structure, small size |
+| MLC / llama.cpp mobile | Yes (cross‑platform) | Quantized, small, short context |
 
-What needs to be simplified:
-- Small models
-- Quantization
-- Native bindings
-
-#### Native Android (Kotlin/Java)
-Can it run models locally?  
-Yes, and one of the easiest + best performing.
-
-Android supports:
-- NNAPI (hardware acceleration)
-- MLC Android runtime
-- llama.cpp Android builds
-
-What needs to be simplified:
-- 4-bit quantization
-- Model size ~1GB
-- Memory optimization
-
-#### Native iOS (Swift)
-Can it run models locally?  
-Yes, and Apple devices are strong at local inference.
-
-Best approach:
-- Convert models to CoreML (Apple’s optimized format)
-
-Or use:
-- MLC iOS runtime (runs GGUF)
-
-What needs to be simplified:
-- Quantization
-- CoreML-compatible model structure
-- Smaller model size
-
-#### Lightweight inference wrappers
-(MLC / llama.cpp mobile / gguf-lite)
-
-Can they run models locally?  
-Yes, and they provide the most unified cross‑platform approach.
-
-Same GGUF model can run on:
-- Android
-- iOS
-- Desktop
-- Web (WebGPU)
-
-What needs to be simplified:
-- 4-bit quantization
-- Simple model structure (no MoE)
-- Short context length
-
-| Framework | Can run on-device? | What needs simplification? |
-|-----------|---------------------|-----------------------------|
-| Flutter | Yes (via native plugins) | Small models, 4-bit, short context |
-| React Native | Yes (harder) | Same as Flutter |
-| Native Android | Yes (best support) | Quantization, small model, memory |
-| Native iOS | Yes (CoreML best) | Quantization, CoreML compatibility |
-| Lightweight wrappers | Yes (most unified) | 4-bit, simple structure, short context |
-
+---
 
 # What hardware do team members have available for testing?
 
-### desktop
-1. windows, AMD Ryzen 7 7435H, 3050, 16GB
-2. win11，R7-5800H，3060，32GB
-3. 3 * mac， M4， 16GB
-4. mac， M2pro， 16GB
-5. Windows, Intel Core i7-12700H, 3050, 16GB
+## Desktop
+1. Windows, AMD Ryzen 7 7435H, RTX 3050, 16GB  
+2. Windows 11, R7‑5800H, RTX 3060, 32GB  
+3. 3 × Mac, Apple M4, 16GB  
+4. Mac, M2 Pro, 16GB  
+5. Windows, Intel i7‑12700H, RTX 3050, 16GB  
 
-### mobile
-1. Processor: Snapdragon 8 Gen 3
-RAM: 12.0 + 6.0 GB
-Storage: 528GB
-Operating System: Xiaomi HyperOS 3.0.303.0
+## Mobile
+1. Snapdragon 8 Gen 3, 12+6GB, 528GB, HyperOS 3.0.303.0  
+2. Apple A18 Pro, 8GB, 512GB, iOS 26.6  
+3. Snapdragon 8 Gen 3 for Galaxy, 12GB, 512GB, One UI 8.5  
+4. Apple A17 Pro, 8GB, 256GB, iOS 26.3  
 
-2. Processor: A18 Pro
-RAM: 8.0 GB
-Storage: 512GB
-Operating System: iOS 26.6
+---
 
-3. Processor: Snapdragon 8 Gen 3 for Galaxy
-RAM: 12.0 GB
-Storage: 512GB
-Operating System: Android / One UI 8.5
+# What can be completed confidently by the mid‑project point?
 
-4. Processor: Apple A17 Pro
-RAM: 8GB
-Storage: 256GB
-OS: IOS 26.3
-
-# What can be completed confidently by the mid-project point? 
-1. All foundational architecture and technical decisions finalized  
-From Week 1–2 outcomes:
-
-- Overall app architecture sketch  
+## 1. Architecture and technical direction fully established
+Including:
+- Overall application architecture sketch  
 - UI wireframes  
 - Repository structure  
 - Initial risk list  
-- Tech stack decisions (Tauri/Electron/Flutter etc.)  
+- Tech stack decisions (Tauri/Electron/Flutter, etc.)  
 - Desktop/mobile strategy  
-- Model + inference runtime shortlist (llama.cpp / MLC / GGUF etc.)
+- Model and inference runtime shortlist (llama.cpp / MLC / GGUF, etc.)
 
-Meaning:  
-All directional decisions are locked; no major pivots later.
+## 2. First runnable application flow
+Including:
+- Desktop or mobile UI shell  
+- Text or audio input  
+- Passing input to a local model  
+- UI displaying the first version of generated summaries  
 
-2. First runnable end-to-end flow  
-From Week 3–4 goals:
-
-- Desktop or mobile app shell  
-- Ability to input text or audio  
-- Ability to pass input to a local model  
-- UI displays first version of summary output  
-
-Meaning:  
-The app runs, the model runs, and they connect.
-
+---
 
 # What will we document from week one so the final handover is not rushed?
 
 - Tech stack and architecture decisions  
-- App architecture diagrams and module descriptions  
+- Architecture diagrams and module descriptions  
 - UI wireframes and interaction flows  
-- Model + inference runtime shortlist and evaluations  
+- Model and inference runtime shortlist  
 - Risk list and mitigation strategies  
 - Weekly experiment results and technical validations  
-- Code structure and development conventions  
+- Repository structure and coding conventions  

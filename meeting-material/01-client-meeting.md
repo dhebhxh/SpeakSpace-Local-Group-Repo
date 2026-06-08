@@ -185,6 +185,38 @@ llama.cpp 的移动端版本
 
 # What hardware do team members have available for testing?
 
+### 桌面端
+1. Windows 系统，AMD Ryzen 7 7435H 处理器，RTX 3050 显卡，16GB 内存
+
+2. Windows 11，AMD R7‑5800H 处理器，RTX 3060 显卡，32GB 内存
+
+3. 3 台 Mac，Apple M4 芯片，16GB 内存
+
+4. Mac，Apple M2 Pro 芯片，16GB 内存
+
+5. Windows 系统，Intel Core i7‑12700H 处理器，RTX 3050 显卡，16GB 内存
+
+### 移动端
+1. 处理器：Snapdragon 8 Gen 3
+内存：12 + 6 GB（含扩展内存）
+存储：528GB
+系统：Xiaomi HyperOS 3.0.303.0
+
+2. 处理器：Apple A18 Pro
+内存：8GB
+存储：512GB
+系统：iOS 26.6
+
+3. 处理器：Snapdragon 8 Gen 3 for Galaxy
+内存：12GB
+存储：512GB
+系统：Android / One UI 8.5
+
+4. 处理器：Apple A17 Pro
+内存：8GB
+存储：256GB
+系统：iOS 26.3
+
 # What can be completed confidently by the mid-project point? 
 1. 基础架构与技术路线全部确定
 来自 Week 1–2 的成果包括：

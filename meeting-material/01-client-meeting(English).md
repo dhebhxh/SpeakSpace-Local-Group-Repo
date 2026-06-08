@@ -146,8 +146,34 @@ What needs to be simplified:
 
 
 # What hardware do team members have available for testing?
-1. windows AMD Ryzen 7 7435H 3050
-2. Mac mini, Apple M4, 16GB RAM
+
+### desktop
+1. windows, AMD Ryzen 7 7435H, 3050, 16GB
+2. win11，R7-5800H，3060，32GB
+3. 3 * mac， M4， 16GB
+4. mac， M2pro， 16GB
+5. Windows, Intel Core i7-12700H, 3050, 16GB
+
+### mobile
+1. Processor: Snapdragon 8 Gen 3
+RAM: 12.0 + 6.0 GB
+Storage: 528GB
+Operating System: Xiaomi HyperOS 3.0.303.0
+
+2. Processor: A18 Pro
+RAM: 8.0 GB
+Storage: 512GB
+Operating System: iOS 26.6
+
+3. Processor: Snapdragon 8 Gen 3 for Galaxy
+RAM: 12.0 GB
+Storage: 512GB
+Operating System: Android / One UI 8.5
+
+4. Processor: Apple A17 Pro
+RAM: 8GB
+Storage: 256GB
+OS: IOS 26.3
 
 # What can be completed confidently by the mid-project point? 
 1. All foundational architecture and technical decisions finalized  

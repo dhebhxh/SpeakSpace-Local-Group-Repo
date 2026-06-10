@@ -1,14 +1,12 @@
 # title
-
 标题 1
+
 SpeakSpace‑Local：一个由本地 AI 推理驱动的语音优先办公生产力系统
 
-SpeakSpace-Local: A Voice-First Office Productivity System Enabled by Local AI Inference
-
 标题 2
+
 SpeakSpace‑Local：一个将语音转化为结构化可用知识的本地优先智能原型
 
-SpeakSpace-Local: A Local‑First Intelligence Prototype for Turning Voice into Structured, Actionable Knowledge
 
 # abstract
 
@@ -20,12 +18,320 @@ SpeakSpace-Local: A Local‑First Intelligence Prototype for Turning Voice into 
 
 本项目借鉴 SpeakSpace 的语音智能工作流理念，独立实现了一个本地优先的语音处理系统，为本地语音生产力工具的可行性提供了支持。
 
-As privacy requirements continue to rise and on‑device inference capabilities improve across desktop and mobile hardware, we set out to explore whether a speech‑driven, locally running AI assistant—capable of understanding voice input and organizing content automatically—can be built without relying on the cloud.
 
-With this goal in mind, we developed SpeakSpace Local. The system adopts a modular architecture that separates model inference, data storage, and interface rendering, allowing flexible replacement of speech recognition, speech synthesis, and text‑understanding components. Building on this design, we implemented a complete workflow covering audio recording, transcription, summarization, translation, and structured output.
+# 1 introduction
 
-For evaluation, we focused on the practical performance of on‑device AI, examining latency, memory usage, model size, output quality, and cross‑device variability to determine which components can run reliably and which require further optimization.
+### 1.1 项目目标
 
-Drawing on the workflow concepts of SpeakSpace, this project independently implements a locally prioritized speech‑processing system, providing empirical support for the feasibility of future on‑device voice productivity tools.
+本项目将构建一个桌面端的本地 AI 工作流原型，并在移动端测试小模型的运行表现。桌面端将实现一个完整的本地语音智能流程，包括：
+- 语音捕获与转录
+- 摘要与关键要点生成
+- 跨语言翻译
+- 基于笔记的问答
+- 任务与行动项提取
+- 本地搜索
+- 离线笔记库管理
+- 以及通过 TTS 播放生成内容
+同时，我们还将提供一个性能可视化面板，用于对比不同模型的延迟和运行表现，以支持研究分析。
 
-# introduction
+### 1.2 主要挑战
+- 设备性能有限
+许多用户的桌面设备和移动设备计算能力有限，难以直接运行当代 AI 模型。因此需要通过模型量化、模型缩减和合理取舍来降低资源需求，使模型能够在普通硬件上正常运行。
+
+- 实时性要求高
+语音转录、摘要生成等功能对响应速度有较高要求，需要在有限的计算资源下仍保持较好的实时性和交互体验，这对模型选择和系统优化提出了挑战。
+
+- 跨平台差异显著
+桌面端与移动端在推理框架、硬件性能、系统架构和打包方式上存在明显差异。同一模型在不同平台上需要分别适配和优化，增加了开发与调试的复杂度。
+
+- 本地数据管理复杂
+所有数据（转录、摘要、任务、笔记等）都需要在本地进行存储、组织与检索。这要求设计合适的数据结构、本地数据库方案和检索机制。
+
+### 1.3 项目范围
+本项目不涉及云端 API、生产级功能实现、真实用户数据，所有工作均限定在本地原型、可行性验证与基础研究范围内。
+
+### 1.4 项目动机与影响
+随着数据隐私需求的不断提升、边缘 AI 技术的快速成熟以及离线工作场景的日益增多，本地运行的语音智能系统正变得越来越重要。
+这类工具的潜在用户范围非常广泛：从日常记录和学习的普通用户，到需要处理敏感信息的专业群体，例如医疗、法律、金融、政府机构等。无论是个人用户还是专业从业者，都可以从安全、离线、可本地运行的语音智能能力中受益。
+
+
+# 2 Related Works
+
+尽管现有研究在语音理解和边缘推理等方向已有显著进展，但在本地环境下整合转录、摘要、任务抽取等多种语义能力，并在桌面与移动端保持一致的交互与架构设计，仍是尚未解决的挑战。本节将从三个主要研究方向展开综述，并说明它们与本研究的区别。
+
+### 2.1 边缘推理与本地模型
+近年来，随着轻量化模型和本地推理框架的发展，越来越多研究开始关注如何在普通设备（如笔记本电脑和手机）上运行 AI 模型，而不依赖云端服务器。这一方向通常被称为边缘推理或本地模型推理。其核心目标并非提升模型本身的准确度，而是确保现有模型能够在资源受限的设备上以可接受的速度和稳定性完成推理，从而支持实际应用场景中的本地运行需求。
+
+为实现这一目标，研究者提出了多种技术路线，包括通过模型量化将参数从 16‑bit 压缩到 4‑bit 或 3‑bit，以减少模型大小和内存占用；使用轻量化推理框架（如 llama.cpp、whisper.cpp、ONNX Runtime Mobile）在 CPU 或移动端执行推理；以及通过优化内存管理和推理调度来降低延迟。这些技术共同推动了语言模型、语音识别模型和语音合成模型在本地设备上的部署能力，使得无需依赖云端 GPU 也能够完成一定程度的智能处理。
+
+尽管如此，现有研究仍面临若干挑战。首先，模型压缩不可避免地带来能力下降，使本地模型在复杂语义任务上的表现弱于云端大模型。其次，移动端硬件性能有限，导致推理延迟显著高于桌面设备或云端环境。最后，现有研究大多只关注单个模型在本地设备上的推理性能，而较少讨论当多个模型（如 STT、LLM 和 TTS）需要在同一设备上连续或并行工作时，系统是否仍能保持可接受的速度、内存占用和整体用户体验。
+
+基于上述背景，本研究关注在真实设备上实现 STT、LLM 和 TTS 的本地协同推理能力，并通过实验评估其在完整语音工作流中的延迟、内存占用与用户体验，从而为构建可在桌面与移动端运行的本地语音智能系统提供工程层面的可行性参考。
+
+### 2.2 AI 驱动的结构化生产力系统
+近年来，AI 在生产力工具中的角色逐渐从执行单一任务（如摘要、翻译或问答）扩展到支持更完整的多步骤工作流。这一研究方向主要关注如何将非结构化输入内容转化为可组织、可检索、可操作的结构化生产力成果，包括摘要生成、要点提取、任务抽取、行动项识别、语义片段划分与实体抽取等多种形式的结构化知识。
+
+当前 AI 驱动的结构化生产力系统仍存在明显局限。语音助手（如 Siri、Google Assistant）主要执行指令级任务，缺乏对长语音内容的深度理解与结构化能力；转录工具（如 Otter、Notion AI）通常停留在文本转录或浅层总结，难以进一步识别任务、行动项或语义片段；LLM 工具（如 ChatGPT、Claude）虽然能够生成结构化内容，但难以与用户的本地知识库或项目空间深度集成。更重要的是，现有系统普遍缺乏对原始输入的结构化组织能力，难以将语音内容转化为清晰、可理解的结构化片段，从而限制了其在真实工作场景中的实用性。
+
+在此背景下，SpeakSpace Local 所探索的方向将本地 STT、LLM、TTS与工作空间语义相结合，为结构化生产力研究提供了新的视角。该原型不仅关注语音内容的转录与理解，更强调从语音中生成摘要、要点和任务等结构化要素，并根据语义将其组织到相应的项目或工作空间中，从而形成更完整的语音驱动结构化生产力流程。
+
+### 2.3 本地优先应用与隐私保护研究
+本地优先应用是一类强调数据控制权与隐私保护的软件架构理念，其核心原则包括：数据默认存储在用户设备上、同步为可选项、功能在离线状态下仍可使用，并尽可能减少对云端服务的依赖。与传统依赖云端的应用不同，本地优先应用强调让敏感数据始终保留在用户设备上，而不是在处理过程中被上传到外部服务器。
+
+这一理念在语音数据场景中尤为重要，因为语音内容往往包含个人身份信息、工作细节或组织内部讨论等高度敏感的数据。一旦语音内容被上传至云端，即使仅用于转录或处理，也可能带来潜在的隐私泄露风险。现有研究在本地数据管理、离线可用性和隐私保护方面已有一定探索，但这些工作多聚焦于数据存储与同步机制，而较少讨论语音类应用在处理链路中如何减少云端参与，以降低敏感信息的潜在暴露风险。
+
+在此背景下，SpeakSpace Local 采用本地优先的系统架构，使语音内容在采集、存储与处理的整个过程中均保持在用户设备上，从而避免敏感语音数据在传输或处理阶段暴露给第三方服务。
+
+
+综上所述，现有研究分别从模型推理效率、语义结构化能力以及数据隐私与系统架构等角度推动了语音智能技术的发展，但这些方向大多是彼此独立展开的。边缘推理关注模型能否在本地高效运行，结构化生产力研究强调如何从语音中提取可操作的语义要素，而本地优先应用则强调数据在设备侧的安全与可控性。然而，能够在同一系统中同时满足本地推理、结构化语义处理与隐私保护要求的语音工作流仍然缺乏系统性的探索。本研究正是在这一交叉空白处展开，尝试构建一个可在桌面与移动端一致运行的本地语音智能原型。
+
+
+# 3 Implementation
+
+### 3.1 构建什么
+
+本项目旨在实现一个**本地优先（local‑first）的语音智能原型系统**，在不依赖云端 API 的前提下复现 SpeakSpace 的核心工作流程。系统目标是构建一个全新的桌面与移动端研发原型，使用本地模型完成语音转文本、语言理解、翻译与文本转语音等能力。
+
+基于这一方向，系统将重点构建：
+
+- 一个提供主要用户工作流的**桌面应用**；
+- 一个展示设备受限环境可行性的**非发布移动端原型**；
+- 一个由以下部分组成的**本地 AI 管线**：
+  - 语音转文本（STT）
+  - 本地 LLM/SLM（用于摘要、翻译、结构化输出）
+  - 可选的文本转语音（TTS）
+- 一个用于存储笔记、转录、摘要与生成内容的**本地存储层**；
+- 一个**模块化架构**，允许替换模型而无需重写应用。
+
+该流程构成整个实现的主干。
+
+
+### 3.2 如何构建
+
+#### 3.2.1 系统架构
+
+系统采用**模块化、管线式架构**，以便在未来扩展模型能力时保持灵活性。
+
+架构包括：
+
+- **前端层**
+  - 桌面 UI（Tauri/Electron）
+  - 移动端 UI（Flutter/React Native）
+  - 笔记捕获、转录查看、摘要面板、工作区导航
+
+- **本地 AI 运行时层**
+  - STT 引擎（Whisper.cpp 或 ONNX‑STT）
+  - LLM/SLM 运行时（Ollama、llama.cpp、ONNX Runtime）
+  - TTS 引擎（轻量本地 TTS）
+
+- **数据层**
+  - SQLite 结构化存储
+  - 本地文件系统存储音频与生成内容
+  - 可选嵌入式向量检索（用于 Ask‑style 查询）
+
+- **集成层**
+  - 模型加载与生命周期管理
+  - Prompt 构建与响应解析
+  - 延迟测量与回退逻辑
+
+
+#### 3.2.2 桌面端实现
+
+桌面应用将作为主要开发与测试环境。候选框架包括：
+
+- **Tauri**
+  - 优点：轻量、Rust 后端、性能强、易于集成本地模型运行时  
+  - 缺点：生态相对不如 Electron 成熟
+
+- **Electron**
+  - 优点：成熟、生态大、UI 开发简单  
+  - 缺点：内存占用高、启动慢
+
+考虑到性能与本地模型执行需求，**Tauri**更可能成为首选。
+
+
+#### 3.2.3 移动端实现
+
+移动端将构建一个非发布原型，用于验证本地推理在移动设备上的可行性。
+
+候选框架：
+
+- **Flutter**
+  - 优点：跨平台一致性强、性能好、UI 可复用性高  
+  - 缺点：集成本地模型运行时需要自定义插件
+
+- **React Native**
+  - 优点：灵活、生态大、易于集成原生推理库  
+  - 缺点：碎片化较多、优化工作量更大
+
+由于需要测试本地推理能力，**React Native**更适合与 ONNX Runtime Mobile 等原生库结合。
+
+#### 3.2.4 本地 AI 管线实现
+
+##### （1）语音转文本（STT）
+
+可选方案：Whisper.cpp、ONNX‑STT  
+关键评估指标包括准确率、延迟、内存占用与语言支持。
+
+实现步骤：
+
+- 在桌面端集成 Whisper.cpp（CPU/GPU）
+- 在移动端测试 ONNX Runtime Mobile 的可行性
+- 尽可能提供流式转录
+
+
+
+##### （2）LLM/SLM 文本智能
+
+可选方案：
+
+- Ollama（桌面）
+- llama.cpp（桌面/移动）
+- ONNX Runtime（移动优化）
+
+关键评估指标包括输出质量、速度、本地 token 成本与模型大小。
+
+实现任务：
+
+- 构建摘要、翻译、任务提取等 Prompt 模板
+- 在移动端使用更小模型作为回退
+- 记录延迟与内存使用情况
+
+
+
+##### （3）文本转语音（TTS）
+
+将评估轻量 TTS 引擎的可行性，重点关注音质、延迟、包体大小与设备支持。
+
+
+#### 3.2.5 本地存储
+
+SQLite 将用于存储：
+
+- 笔记  
+- 转录文本  
+- 摘要  
+- 生成内容  
+- 工作区/项目元数据  
+
+该方案能够满足离线优先、结构清晰、易于扩展的需求。
+
+
+### 3.3 技术选型：优缺点分析
+
+| 组件 | 选项 | 优点 | 缺点 |
+|------|------|------|------|
+| 桌面框架 | Tauri | 快速、轻量、Rust 后端 | 生态较小 |
+| | Electron | 成熟、UI 开发简单 | 重、慢 |
+| 移动框架 | Flutter | UI 一致性强、性能好 | 原生集成困难 |
+| | React Native | 原生访问能力强 | 碎片化多 |
+| STT | Whisper.cpp | 高准确率、本地运行 | 移动端负担重 |
+| | ONNX STT | 移动友好 | 准确率较低 |
+| LLM/SLM | Ollama | 桌面集成简单 | 仅限桌面 |
+| | llama.cpp | 跨平台 | 需调优 |
+| | ONNX Runtime | 移动优化 | 模型选择少 |
+| TTS | 轻量 TTS 引擎 | 包体小 | 音质较弱 |
+
+
+### 3.4 相关工作与可借鉴经验
+
+#### 3.4.1 Whisper.cpp 与本地 STT 项目
+
+现有的离线转录项目展示了：
+
+- CPU‑only 转录的可行性  
+- 量化对移动端的重要性  
+- 音频预处理对降低延迟的必要性  
+
+
+#### 3.4.2 本地 LLM 应用（Ollama、llama.cpp）
+
+本地 LLM 应用的实践表明：
+
+- 小型指令微调模型（3B–7B）可可靠执行摘要任务  
+- 量化 GGUF 模型显著降低内存占用  
+- 桌面性能可接受，但移动端需更激进的优化  
+
+
+#### 3.4.3 笔记与语音生产力工具
+
+现有工具（如 Obsidian 插件、Whisper 笔记应用、本地摘要工具）表明：
+
+- 用户重视结构化输出（要点、任务）  
+- 延迟是关键 UX 因素  
+- 本地存储必须透明且可靠  
+
+
+# 4 Evaluation
+
+本项目的评估目标是验证本地语音智能工作流在真实设备上的可行性，并检验用户是否能够顺畅地完成从语音输入到结构化输出的核心任务。评估方法将围绕可用性、性能、理解度与整体体验展开，以支持项目目标中提出的“构建一个可运行、可理解、可扩展的本地语音智能原型”。
+
+为了实现这一目标，本项目将采用 **以用户为中心的可用性测试（HCI Usability Testing）** 作为主要方法，并辅以 **性能测量（Latency & Memory Profiling）** 与 **任务完成度分析（Task-based Evaluation）**。这种组合式评估方式能够同时覆盖用户体验与技术可行性两个维度，与项目文档中强调的“可用性、延迟、内存、设备差异、模型表现”等要求保持一致（文档中提到：“Latency, quality, memory, package-size, and user-experience trade-offs.”）。
+
+在可用性测试中，参与者将来自两个主要群体：  
+1. **普通用户**（用于测试基本流程是否易懂、是否能顺利完成任务）  
+2. **技术背景用户**（用于测试模型延迟、错误处理、结构化输出的理解度）  
+
+测试将围绕最小可用流程展开，包括语音录制、转录查看、摘要生成、任务抽取与本地存储等步骤（文档中指出：“Minimum useful flow: record/import → STT → summary → translation → TTS → local storage.”）。参与者将被要求完成一系列任务，例如录制一段语音并查看系统生成的摘要，或在笔记库中检索先前生成的内容。我们希望通过这些测试发现用户在理解界面、等待模型响应、查看结构化输出时的困难点，并验证本地模型的延迟是否在可接受范围内。
+
+性能评估将贯穿整个开发周期，重点测量 STT、LLM/SLM 与 TTS 的延迟、内存占用与设备差异（文档中提到：“What to measure: accuracy, latency, memory use, model size.”）。这些数据将帮助我们判断哪些模型适合桌面端，哪些模型需要在移动端替换为更轻量的版本，并为最终报告提供量化依据。
+
+本项目的假设是：  
+**在普通桌面设备上，本地 STT 与小型 LLM 能够在可接受的延迟范围内完成完整语音工作流；在移动端，经过量化的小模型能够支持基本的摘要与翻译任务，但性能将显著受限。**  
+评估结果将帮助我们验证这一假设，并进一步指导未来的模型选择与架构优化。
+
+数据分析将结合定性与定量方法：  
+- 用户访谈与观察记录用于分析可用性问题  
+- 任务完成率与错误率用于衡量流程顺畅度  
+- 延迟、内存与模型质量指标用于技术可行性判断  
+
+评估的局限性包括：参与者数量有限、移动端模型选择受限、测试设备差异较大，以及原型功能不具备生产级稳定性。未来可进一步扩展到更大规模的用户研究、跨设备对比实验与更丰富的结构化任务评估。
+
+
+# 5 Time Plan
+
+本项目将从 6 月初持续至 9 月初，整体节奏遵循文档中建议的阶段性结构（文档指出：“Week 1–2 discovery… Week 3–4 first working flow… Week 5–7 core intelligence… Week 8–10 TTS & performance… Week 11–13 integration & demo.”）。在此基础上，我们结合自身工作节奏、评估需求与交付要求，制定如下时间计划。
+
+项目初期（6 月前两周）将专注于背景研究、架构设计与模型选型，包括阅读文献、测试候选模型、绘制系统结构图与 UI 草图。此阶段的目标是明确技术路线、确定桌面与移动端框架，并建立基础仓库结构。由于文档强调“Discovery, architecture, model/runtime shortlist, UI direction”，这一阶段将确保所有关键决策在早期完成。
+
+进入 6 月下旬至 7 月初，将进入第一个原型阶段，构建桌面端应用的基本工作流，包括音频输入、文本输入、初步的本地推理调用与 UI 展示。此阶段的目标是实现一个可运行的端到端流程，以便在后续阶段进行扩展与优化。
+
+7 月中旬至 8 月初将专注于核心本地智能能力，包括 Whisper.cpp 集成、摘要与翻译模型的本地运行、SQLite 本地存储与工作区语义结构的实现。此阶段也将开始收集延迟与内存数据，为后续性能分析做准备。
+
+8 月将进入性能优化与移动端可行性验证阶段。我们将测试移动端 ONNX Runtime Mobile 的表现，评估小模型在手机上的延迟与可用性，并实现基础的 TTS 流程。此阶段还将进行可用性测试的准备，包括招募参与者、设计任务脚本与准备测试环境。
+
+8 月下旬至 9 月初将专注于整合、稳定性提升、文档撰写与最终展示准备。可用性测试将在此阶段进行，测试结果将用于完善最终报告与演示内容。我们也将在此阶段完成所有必要的技术文档、设置说明与未来工作建议。
+
+整个项目将采用两周为单位的短周期迭代，每个周期包含目标设定、开发、测试与回顾。由于暑期期间可能存在导师或团队成员不在岗的情况，我们将提前规划关键会议时间，确保评估与交付不受影响。潜在风险包括模型性能不足、移动端推理不可行或时间不足以完成所有功能。为此，我们准备了替代方案，例如使用更小模型、减少移动端功能范围或优先保证桌面端完整性。
+
+总体而言，该时间计划确保项目能够在 9 月初前完成一个可运行、可评估、可展示的本地语音智能原型，并满足文档中提出的所有核心目标。
+
+
+# 6 References
+
+本项目的研究方向横跨语音识别、本地推理与结构化生产力系统，因此在构建 SpeakSpace Local 原型之前，我们参考了多个与本研究最接近的学术与工业项目。这些项目不仅为本地语音智能系统提供了技术基础，也为本研究的架构设计、模型选择与可行性分析提供了重要启发。
+
+首先，与本研究最直接相关的是 OpenAI Whisper 及其衍生的本地推理实现 Whisper.cpp。Whisper 的原始论文展示了大规模弱监督语音识别模型在多语言场景中的鲁棒性，而 Whisper.cpp 则通过量化与 CPU 优化，使该模型能够在普通桌面设备上运行。这一方向与本项目的核心目标高度一致，即探索在不依赖云端的情况下实现本地语音转文本能力。Whisper.cpp 的工程实践也为本研究在延迟、内存占用与模型压缩方面提供了重要参考。
+
+其次，我们参考了 EdgeSpeechNets（ACM SIGKDD），该项目提出了一系列适用于移动端的高效语音识别网络。其研究表明，通过结构化剪枝、蒸馏与轻量化设计，可以在移动设备上实现实时语音识别。这与本项目在移动端可行性验证中的目标高度契合，尤其是在文档中强调的“mobile feasibility notes”与“device constraints”部分。EdgeSpeechNets 的方法为本研究在移动端 STT 模型选择与性能预期方面提供了理论依据。
+
+此外，我们参考了 Local-first Software（ACM CSCW），该论文系统性地提出了本地优先应用的设计原则，包括离线可用性、数据主权与最小化云依赖。这些原则与 SpeakSpace Local 的核心理念完全一致，尤其是文档中强调的“Local-first: The core prototype should not depend on active SpeakSpace APIs or cloud-only intelligence.”。该论文为本研究在数据结构、存储策略与隐私保护方面提供了理论基础。
+
+这些项目共同构成了本研究的文献基础：Whisper 系列提供了本地语音识别的可行性，EdgeSpeechNets 展示了移动端推理的可能性，而 Local-first Software 则为系统架构提供了理念框架。基于这些研究，我们能够更系统地分析本地语音智能系统的能力边界，并据此构建 SpeakSpace Local 的技术路线。
+
+
+## 参考文献列表（初始版本）
+
+1. Radford, A., et al. “Robust Speech Recognition via Large-Scale Weak Supervision.” OpenAI, 2022.
+
+2. Gerganov, G. “whisper.cpp: High-performance CPU inference of Whisper models.” GitHub, 2023.
+
+3. Lin, J., Rao, Y., Lu, J., Zhou, J., & Zheng, N. “EdgeSpeechNets: Highly Efficient Deep Neural Networks for Speech Recognition on the Edge.” *Proceedings of the ACM SIGKDD*, 2020.
+
+4. Kleppmann, M., & Beresford, A. R. “Local-first Software: You Own Your Data, in spite of the Cloud.” *Proceedings of the ACM on Human-Computer Interaction (CSCW)*, 2020.
+
+5. ONNX Runtime Mobile Documentation. Microsoft, 2024.
+
+6. llama.cpp Documentation. GGML Project, 2024.
+
+

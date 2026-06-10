@@ -1,0 +1,199 @@
+{
+  "run_id": "20260610-190012",
+  "timestamp": "2026-06-10T19:00:12",
+  "ollama_version": {
+    "args": [
+      "ollama",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "ollama version is 0.30.7\n",
+    "stderr": "",
+    "elapsed_ms": 35.92
+  },
+  "ollama_list": {
+    "args": [
+      "ollama",
+      "list"
+    ],
+    "returncode": 0,
+    "stdout": "NAME                                   ID              SIZE      MODIFIED      \nministral-3:3b-instruct-2512-q4_K_M    f04aa1c738f6    3.0 GB    3 minutes ago    \ngranite4:micro-h                       076afb3855dc    1.9 GB    4 minutes ago    \nphi4-mini:latest                       78fad5d182a7    2.5 GB    7 minutes ago    \nqwen2.5:1.5b-instruct                  65ec06548149    986 MB    8 minutes ago    \nqwen2.5:3b-instruct                    357c53fb659c    1.9 GB    9 minutes ago    \n",
+    "stderr": "",
+    "elapsed_ms": 44.35
+  },
+  "ollama_api_version": {
+    "args": [
+      "curl",
+      "-s",
+      "http://127.0.0.1:11434/api/version"
+    ],
+    "returncode": 0,
+    "stdout": "{\"version\":\"0.30.7\"}",
+    "stderr": "",
+    "elapsed_ms": 17.92
+  },
+  "hardware_model": {
+    "args": [
+      "sysctl",
+      "-n",
+      "hw.model"
+    ],
+    "returncode": 0,
+    "stdout": "Mac16,10\n",
+    "stderr": "",
+    "elapsed_ms": 4.56
+  },
+  "hardware_memory_bytes": {
+    "args": [
+      "sysctl",
+      "-n",
+      "hw.memsize"
+    ],
+    "returncode": 0,
+    "stdout": "17179869184\n",
+    "stderr": "",
+    "elapsed_ms": 4.36
+  },
+  "cpu_brand": {
+    "args": [
+      "sysctl",
+      "-n",
+      "machdep.cpu.brand_string"
+    ],
+    "returncode": 0,
+    "stdout": "Apple M4\n",
+    "stderr": "",
+    "elapsed_ms": 3.36
+  },
+  "macos": {
+    "args": [
+      "sw_vers"
+    ],
+    "returncode": 0,
+    "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t26.5.1\nBuildVersion:\t\t25F80\n",
+    "stderr": "",
+    "elapsed_ms": 10.88
+  },
+  "disk": {
+    "args": [
+      "df",
+      "-h",
+      "."
+    ],
+    "returncode": 0,
+    "stdout": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk3s5   228Gi   159Gi    43Gi    79%    1.6M  452M    0%   /System/Volumes/Data\n",
+    "stderr": "",
+    "elapsed_ms": 4.38
+  },
+  "model_options": {
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "num_ctx": 4096,
+    "num_predict": 650
+  },
+  "tasks": [
+    {
+      "id": "en_summary_actions",
+      "language": "English",
+      "expected_script": "latin",
+      "section_terms": [
+        "summary",
+        "decisions",
+        "action",
+        "risk"
+      ],
+      "anchors": [
+        "16\\s*GB",
+        "STT",
+        "LLM",
+        "Hindi",
+        "Friday",
+        "Ravi",
+        "JSON"
+      ],
+      "prompt": "You are analyzing a local meeting transcript for SpeakSpace Local.\nKeep the output in English. Produce exactly these sections:\n1. Summary: two concise sentences.\n2. Decisions: bullet list.\n3. Action Items: bullet list with owner and due date if mentioned.\n4. Risks: bullet list.\n\nTranscript:\nAlex: The desktop prototype records meeting audio locally and sends the transcript to a small local model. We need it to work on 16GB laptops.\nMei: For the first milestone, keep STT and LLM separate so we can swap models.\nRavi: Hindi support is required for customer demos, but quality can be marked as experimental if the model is slow.\nAlex: Let's test Qwen, Phi, Ministral, and Granite with English, Chinese, and Hindi notes.\nMei: The report should include memory, load time, tokens per second, and whether JSON output is stable.\nRavi: I will prepare UI copy after the model shortlist is done.\nAlex: Please finish the shortlist by Friday, then we can freeze the V1 default."
+    },
+    {
+      "id": "zh_summary_actions",
+      "language": "Chinese",
+      "expected_script": "cjk",
+      "section_terms": [
+        "摘要",
+        "决定",
+        "行动",
+        "风险"
+      ],
+      "anchors": [
+        "16\\s*GB",
+        "本地",
+        "STT",
+        "LLM",
+        "印地语",
+        "周五",
+        "内存"
+      ],
+      "prompt": "你正在分析 SpeakSpace Local 的本地会议转写文本。\n请用中文输出，并严格包含这些小节：\n1. 摘要：两句话。\n2. 已定事项：项目符号列表。\n3. 行动项：项目符号列表，包含负责人和截止时间（如果文本中提到）。\n4. 风险：项目符号列表。\n\n转写文本：\n林：桌面端原型必须保证音频、转写文本和模型分析都留在本地，不能依赖云端。\n陈：第一版重点是英语、中文和印地语，不要同时扩展太多语言。\n王：如果用户电脑是 16GB 内存，我们可以默认推荐一个 3B 左右的模型；如果更低配置，就需要降级模型。\n林：STT 和 LLM 要保持解耦，后面才能替换 whisper.cpp 或 Ollama 里的模型。\n陈：报告里要写清楚模型大小、加载时间、tokens per second、内存占用和结构化输出是否稳定。\n王：我负责整理测试表格，周五前给出候选模型排序。"
+    },
+    {
+      "id": "hi_summary_actions",
+      "language": "Hindi",
+      "expected_script": "devanagari",
+      "section_terms": [
+        "सारांश",
+        "निर्णय",
+        "कार्य",
+        "जोखिम"
+      ],
+      "anchors": [
+        "16\\s*GB",
+        "स्थानीय|लोकल",
+        "STT",
+        "LLM",
+        "हिंदी",
+        "शुक्रवार",
+        "मेमोरी"
+      ],
+      "prompt": "आप SpeakSpace Local के लिए एक स्थानीय मीटिंग ट्रांसक्रिप्ट का विश्लेषण कर रहे हैं।\nकृपया पूरा उत्तर हिंदी में दें और ये अनुभाग रखें:\n1. सारांश: दो छोटे वाक्य।\n2. निर्णय: बुलेट सूची।\n3. कार्य आइटम: बुलेट सूची, मालिक और समय सीमा के साथ यदि दिया गया हो।\n4. जोखिम: बुलेट सूची।\n\nट्रांसक्रिप्ट:\nआशा: SpeakSpace Local में ऑडियो, ट्रांसक्रिप्ट और विश्लेषण डिवाइस पर ही रहना चाहिए।\nनेहा: पहले चरण में अंग्रेजी, चीनी और हिंदी को ही टेस्ट करें, ताकि स्कोप नियंत्रित रहे।\nराहुल: 16GB मेमोरी वाले डेस्कटॉप पर 3B के आसपास का LLM ठीक हो सकता है, लेकिन धीमे डिवाइस के लिए छोटा मॉडल चाहिए।\nआशा: STT और LLM को अलग रखना जरूरी है, क्योंकि बाद में whisper.cpp या Ollama मॉडल बदले जा सकते हैं।\nनेहा: रिपोर्ट में मॉडल साइज, लोड समय, tokens per second, मेमोरी उपयोग और JSON स्थिरता लिखनी होगी।\nराहुल: मैं शुक्रवार तक टेस्ट टेबल और शुरुआती रैंकिंग तैयार करूंगा।"
+    },
+    {
+      "id": "mixed_json_extraction",
+      "language": "Mixed",
+      "expected_script": "json",
+      "section_terms": [],
+      "anchors": [
+        "qwen",
+        "phi",
+        "ministral",
+        "granite",
+        "Friday|周五|शुक्रवार",
+        "16\\s*GB"
+      ],
+      "required_json_keys": [
+        "project",
+        "languages",
+        "models_to_test",
+        "hardware_limit",
+        "metrics",
+        "deadline",
+        "open_risks"
+      ],
+      "prompt": "Extract structured information from the transcript.\nReturn valid JSON only. Do not wrap it in Markdown. Use these keys:\nproject, languages, models_to_test, hardware_limit, metrics, deadline, open_risks.\n\nTranscript:\nThe team is evaluating SpeakSpace Local after speech-to-text. V1 languages are English, 中文, and हिंदी. The desktop test limit is 16GB RAM. Models to test are Qwen2.5 3B, Qwen2.5 1.5B, Phi-4-mini, Ministral-3 3B, and Granite 4 Micro. Metrics must include model load time, total latency, output tokens per second, memory use, whether the task completed, and whether JSON is valid. The shortlist should be ready by Friday / 周五 / शुक्रवार. Main risks are weak Hindi output, unstable JSON formatting, and models that are too slow on mid-range machines."
+    },
+    {
+      "id": "faithfulness_missing_info",
+      "language": "English",
+      "expected_script": "latin",
+      "section_terms": [
+        "answer",
+        "not mentioned"
+      ],
+      "anchors": [
+        "not mentioned",
+        "Ollama",
+        "Friday",
+        "16\\s*GB"
+      ],
+      "prompt": "Answer the questions using only the transcript. If the transcript does not contain the answer, write \"not mentioned\".\n\nTranscript:\nMaya: For the LLM experiment, use Ollama on the desktop machine and test with a 16GB memory ceiling.\nChen: The three required languages are English, Chinese, and Hindi.\nRavi: We need the report by Friday. Please include whether each model starts successfully and whether the model can produce structured output.\n\nQuestions:\n1. Which runtime should be used?\n2. What is the memory ceiling?\n3. Which three languages are required?\n4. What is the deadline?\n5. Which cloud provider should host the model?"
+    }
+  ]
+}

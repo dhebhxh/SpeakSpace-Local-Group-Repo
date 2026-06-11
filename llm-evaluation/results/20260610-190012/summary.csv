@@ -1,6 +1,0 @@
-label,ollama,disk_size,runtime_size,processor,warmup_total_ms,warmup_load_ms,ollama_rss_after_warmup_mb,tasks,failures,avg_total_ms,median_total_ms,avg_client_elapsed_ms,avg_eval_tokens_per_sec,avg_prompt_tokens_per_sec,avg_output_tokens,avg_quality_score,language_ok_tasks,structure_ok_tasks,json_valid
-Qwen2.5-3B-Instruct,qwen2.5:3b-instruct,1.9 GB,2.2 GB,100% GPU,2762.19,2440.23,2108.2,5,0,7145.05,6898.13,7146.25,34.34,493.8,215.8,4.8,5,5,True
-Qwen2.5-1.5B-Instruct,qwen2.5:1.5b-instruct,986 MB,1.2 GB,100% GPU,1529.76,1433.03,1190.5,5,0,4246.31,2578.12,4247.17,62.06,1039.89,234.2,4.4,5,5,True
-Phi-4-mini-instruct,phi4-mini:latest,2.5 GB,3.1 GB,100% GPU,3575.89,3264.86,2901.2,5,0,11417.39,8115.68,11418.36,27.26,429.85,285.6,5,5,5,True
-Ministral-3-3B-Instruct,ministral-3:3b-instruct-2512-q4_K_M,3.0 GB,2.7 GB,100% GPU,3681.21,3485.66,3373.4,5,0,8900.44,9484.64,8901.78,30.61,467.77,245,4.8,5,5,True
-Granite-4.0-Micro-H,granite4:micro-h,1.9 GB,2.1 GB,100% GPU,2598.84,2142.51,2124.2,5,0,15547.83,12851.84,15548.88,22.67,265.88,317.8,4.8,5,5,True

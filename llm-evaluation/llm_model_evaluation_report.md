@@ -7,7 +7,7 @@
 综合速度、加载占用和人工复核质量，`Qwen2.5-3B-Instruct` 最适合作为 V1 默认候选。`Ministral-3-3B-Instruct` 的多语言任务质量接近或局部更好，但模型文件更大，加载后的常驻内存（RSS）也更高。`Qwen2.5-1.5B-Instruct` 速度最快、占用最低，但中文和印地语任务出现复述提示、占位文本、截断和事实错误，不建议作为默认模型。
 
 > 证据：
-> - 来源：`llm-evaluation/results/20260610-190012/summary.csv`、`detailed_results.csv`、`raw_outputs.md`
+> - 来源：本轮本地测试记录；关键数值和人工复核结论已保留在本文表格和说明中
 > - 方法：5 个模型各跑 5 个固定任务；通过 Ollama 本地接口非流式调用；人工复核原始输出
 > - 置信度：中等。该测试是单设备、单轮小样本测试，适合做桌面端首轮筛选，不等同于最终生产基准。
 
@@ -86,14 +86,7 @@
 
 ## 测试方法
 
-本轮基准测试脚本是 `llm-evaluation/run_llm_benchmark.py`。
-
-生成的实验材料：
-
-- 汇总结果：`llm-evaluation/results/20260610-190012/summary.csv`
-- 单任务指标：`llm-evaluation/results/20260610-190012/detailed_results.csv`
-- 模型原始输出：`llm-evaluation/results/20260610-190012/raw_outputs.md`
-- 环境快照：`llm-evaluation/results/20260610-190012/environment.json`
+本轮测试通过临时基准测试脚本调用本地 Ollama 接口完成。按照清理要求，测试脚本、原始输出、CSV/JSON 结果文件已经删除；本文保留关键配置、性能指标、质量复核结论和推荐顺序。
 
 自动评分检查了响应是否存在、语言/文字系统是否匹配、结构是否大致符合要求、关键事实锚点是否覆盖，以及 JSON 是否可解析。最终推荐同时参考人工复核，因为自动评分没有捕捉到提示词复制、印地语输出截断、术语错误展开，以及 `Qwen2.5-1.5B-Instruct` 的忠实问答错误。
 

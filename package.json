@@ -1,0 +1,29 @@
+{
+  "name": "speakspace-local-desktop",
+  "version": "1.0.0",
+  "description": "Local Electron desktop speech-to-text MVP powered by whisper.cpp",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "download:runtime": "node ./scripts/download-runtime.js",
+    "download:tts": "node ./scripts/download-tts-runtime.js",
+    "download:llm": "node ./scripts/download-llm-runtime.js",
+    "download:llm:candidates": "node ./scripts/download-llm-runtime.js --preset candidates",
+    "download:runtime:check": "node ./scripts/download-runtime.js --check",
+    "download:tts:check": "node ./scripts/download-tts-runtime.js --check",
+    "download:llm:check": "node ./scripts/download-llm-runtime.js --check",
+    "cleanup:assets": "node ./scripts/cleanup-local-assets.js",
+    "test": "echo \"No automated tests configured\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^42.4.0"
+  },
+  "dependencies": {
+    "sherpa-onnx": "^1.13.2",
+    "sherpa-onnx-node": "^1.13.2"
+  }
+}

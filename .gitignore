@@ -25,3 +25,10 @@ replay_pid*
 
 # macOS metadata
 .DS_Store
+
+# Local source materials excluded from GitHub
+/SpeakSpace Local - Onboarding and Structure.pdf
+/Transcript.txt
+
+# Local dependencies
+node_modules/

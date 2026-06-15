@@ -61,6 +61,7 @@ async function createNote(noteData) {
     folder: noteData.folder || "default",
     performance: noteData.performance || null,
     conversations: noteData.conversations || [],
+    deletedAt: noteData.deletedAt || null,
   };
 
   db.notes.unshift(note);
@@ -85,7 +86,42 @@ async function updateNote(noteId, updates) {
   return db.notes[index];
 }
 
-async function deleteNote(noteId) {
+async function moveNoteToTrash(noteId) {
+  const db = await readDb();
+  const index = db.notes.findIndex((n) => n.id === noteId);
+  if (index === -1) {
+    throw new Error(`Note not found: ${noteId}`);
+  }
+
+  const now = new Date().toISOString();
+  db.notes[index] = {
+    ...db.notes[index],
+    deletedAt: db.notes[index].deletedAt || now,
+    updatedAt: now,
+  };
+
+  await writeDb(db);
+  return db.notes[index];
+}
+
+async function restoreNote(noteId) {
+  const db = await readDb();
+  const index = db.notes.findIndex((n) => n.id === noteId);
+  if (index === -1) {
+    throw new Error(`Note not found: ${noteId}`);
+  }
+
+  db.notes[index] = {
+    ...db.notes[index],
+    deletedAt: null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await writeDb(db);
+  return db.notes[index];
+}
+
+async function permanentlyDeleteNote(noteId) {
   const db = await readDb();
   const index = db.notes.findIndex((n) => n.id === noteId);
   if (index === -1) {
@@ -95,6 +131,10 @@ async function deleteNote(noteId) {
   db.notes.splice(index, 1);
   await writeDb(db);
   return { success: true };
+}
+
+async function deleteNote(noteId) {
+  return moveNoteToTrash(noteId);
 }
 
 async function getNote(noteId) {
@@ -108,7 +148,7 @@ async function getNote(noteId) {
 
 async function listNotes({ folder, tag, search } = {}) {
   const db = await readDb();
-  let notes = db.notes;
+  let notes = db.notes.filter((n) => !n.deletedAt);
 
   if (folder && folder !== "all") {
     notes = notes.filter((n) => n.folder === folder);
@@ -131,9 +171,30 @@ async function listNotes({ folder, tag, search } = {}) {
   return notes;
 }
 
+async function listDeletedNotes({ search } = {}) {
+  const db = await readDb();
+  let notes = db.notes.filter((n) => n.deletedAt);
+
+  if (search) {
+    const lower = search.toLowerCase();
+    notes = notes.filter(
+      (n) =>
+        n.title.toLowerCase().includes(lower) ||
+        n.transcript.toLowerCase().includes(lower) ||
+        (n.structured?.summary || "").toLowerCase().includes(lower)
+    );
+  }
+
+  return notes.sort((a, b) => {
+    const aTime = new Date(a.deletedAt || 0).getTime();
+    const bTime = new Date(b.deletedAt || 0).getTime();
+    return bTime - aTime;
+  });
+}
+
 async function listFolders() {
   const db = await readDb();
-  const folders = new Set(db.notes.map((n) => n.folder));
+  const folders = new Set(db.notes.filter((n) => !n.deletedAt).map((n) => n.folder));
   folders.add("default");
   return Array.from(folders).sort();
 }
@@ -141,7 +202,7 @@ async function listFolders() {
 async function listTags() {
   const db = await readDb();
   const tags = new Set();
-  for (const note of db.notes) {
+  for (const note of db.notes.filter((n) => !n.deletedAt)) {
     for (const tag of note.tags) {
       tags.add(tag);
     }
@@ -172,10 +233,13 @@ async function appendConversation(noteId, message) {
 
 async function getStoreInfo() {
   const db = await readDb();
+  const activeNotes = db.notes.filter((n) => !n.deletedAt);
+  const deletedNotes = db.notes.filter((n) => n.deletedAt);
   return {
     storePath: getStoreDir(),
     dbPath: getDbPath(),
-    noteCount: db.notes.length,
+    noteCount: activeNotes.length,
+    trashCount: deletedNotes.length,
     folders: await listFolders(),
     tags: await listTags(),
   };
@@ -185,8 +249,12 @@ module.exports = {
   createNote,
   updateNote,
   deleteNote,
+  moveNoteToTrash,
+  restoreNote,
+  permanentlyDeleteNote,
   getNote,
   listNotes,
+  listDeletedNotes,
   listFolders,
   listTags,
   appendConversation,

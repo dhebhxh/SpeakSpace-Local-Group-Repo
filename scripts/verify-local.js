@@ -12,6 +12,7 @@ const syntaxTargets = [
   "src/main/main.js",
   "src/main/note-store.js",
   "src/preload/preload.js",
+  "src/renderer/ime-events.js",
   "src/renderer/renderer.js",
 ];
 
@@ -61,6 +62,39 @@ function verifyRendererDomIds() {
   }
 
   console.log(`renderer DOM id check passed: ${refs.size} references`);
+}
+
+function verifyImeEnterHandling() {
+  const ime = require("../src/renderer/ime-events");
+  const target = {};
+
+  if (ime.getTextInputEnterIntent({ key: "Enter", shiftKey: false, currentTarget: {} }) !== "submit") {
+    throw new Error("Plain Enter should submit text input.");
+  }
+
+  if (ime.getTextInputEnterIntent({ key: "Enter", shiftKey: true, currentTarget: {} }) !== "none") {
+    throw new Error("Shift+Enter should be left to the textarea.");
+  }
+
+  if (ime.getTextInputEnterIntent({ key: "Enter", shiftKey: false, isComposing: true, currentTarget: {} }) !== "compose") {
+    throw new Error("Composing Enter should be left to the IME.");
+  }
+
+  if (ime.getTextInputEnterIntent({ key: "Enter", shiftKey: false, keyCode: 229, currentTarget: {} }) !== "compose") {
+    throw new Error("Legacy IME keyCode 229 Enter should be left to the IME.");
+  }
+
+  ime.markTextCompositionStart({ currentTarget: target });
+  if (ime.getTextInputEnterIntent({ key: "Enter", shiftKey: false, currentTarget: target }) !== "compose") {
+    throw new Error("Tracked composition should suppress Enter submission.");
+  }
+
+  ime.markTextCompositionEnd({ currentTarget: target });
+  if (ime.getTextInputEnterIntent({ key: "Enter", shiftKey: false, currentTarget: target }) !== "ignore") {
+    throw new Error("Enter immediately after compositionend should be ignored.");
+  }
+
+  console.log("IME Enter handling passed");
 }
 
 async function withTemporaryUserData(fn) {
@@ -175,6 +209,7 @@ async function verifyNoteStoreAppDataFallback() {
 async function main() {
   verifySyntax();
   verifyRendererDomIds();
+  verifyImeEnterHandling();
   await verifyNoteStoreTrashFlow();
   await verifyNoteStoreAppDataFallback();
   console.log("local verification passed");

@@ -32,3 +32,14 @@ replay_pid*
 
 # Local dependencies
 node_modules/
+
+# SpeakSpace local runtime data and generated assets
+.speakspace-data/
+resources/models/
+resources/whisper/
+resources/output/
+resources/tts/
+resources/ollama/
+resources/runtime-manifest.json
+temp/
+scripts/.cache/

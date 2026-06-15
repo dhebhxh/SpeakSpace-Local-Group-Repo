@@ -20,6 +20,18 @@ function getSTTWhisperBinDir() {
   return path.join(getSTTWhisperRoot(), "bin");
 }
 
+function getSTTParakeetRoot() {
+  return path.join(getSTTRoot(), "parakeet");
+}
+
+function getSTTParakeetModelsDir() {
+  return path.join(getSTTParakeetRoot(), "models");
+}
+
+function getSTTParakeetCacheDir() {
+  return path.join(getSTTParakeetRoot(), ".cache");
+}
+
 function getSTTModelsDir() {
   return path.join(getSTTRoot(), "models");
 }
@@ -98,6 +110,9 @@ module.exports = {
   getSTTCacheDir,
   getSTTModelsDir,
   getSTTOutputDir,
+  getSTTParakeetCacheDir,
+  getSTTParakeetModelsDir,
+  getSTTParakeetRoot,
   getSTTRuntimeManifestPath,
   getTTSRoot,
   getTTSModelsRoot,

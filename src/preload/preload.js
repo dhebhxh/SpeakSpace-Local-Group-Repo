@@ -13,7 +13,8 @@ contextBridge.exposeInMainWorld("desktopSTT", {
   transcribeAudio: (filePath) => ipcRenderer.invoke("audio:transcribe", filePath),
   getTTSRuntimeInfo: () => ipcRenderer.invoke("tts:get-runtime-info"),
   synthesizeTTS: (text, options) => ipcRenderer.invoke("tts:synthesize", text, options),
-  setSTTModel: (modelName) => ipcRenderer.invoke("stt:set-model", modelName),
+  setSTTModel: (engineName, modelName) => ipcRenderer.invoke("stt:set-model", engineName, modelName),
+  setSTTEngine: (engineName) => ipcRenderer.invoke("stt:set-engine", engineName),
   setLLMModel: (modelName) => ipcRenderer.invoke("llm:set-model", modelName),
 
   processStructured: (transcript) => ipcRenderer.invoke("process:structured", transcript),

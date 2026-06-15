@@ -20,8 +20,10 @@ const {
 const {
   deleteSTTModel,
   deleteSTTRuntime,
+  downloadParakeetModel,
   getRuntimeInfo,
   setActiveModel,
+  setActiveSTTEngine,
   saveMicrophoneRecording,
   transcribeAudio,
 } = require("./transcription-service");
@@ -204,6 +206,10 @@ async function downloadSpecificModel(kind, modelName) {
 
   if (kind === "stt") {
     return downloadSttModel(modelName);
+  }
+
+  if (kind === "parakeet") {
+    return downloadParakeetModel(modelName);
   }
 
   if (kind === "llm") {
@@ -669,7 +675,11 @@ ipcMain.handle("runtime:delete", async (_event, kind) => {
 
 ipcMain.handle("runtime:delete-model", async (_event, kind, modelName) => {
   if (kind === "stt") {
-    return deleteSTTModel(modelName);
+    return deleteSTTModel("whisper", modelName);
+  }
+
+  if (kind === "parakeet") {
+    return deleteSTTModel("parakeet", modelName);
   }
 
   if (kind === "llm") {
@@ -713,8 +723,16 @@ ipcMain.handle("llm:chat", async (_event, messages) => {
   return result;
 });
 
-ipcMain.handle("stt:set-model", async (_event, modelName) => {
-  return setActiveModel(modelName);
+ipcMain.handle("stt:set-model", async (_event, engineOrModelName, maybeModelName) => {
+  if (maybeModelName !== undefined) {
+    return setActiveModel(engineOrModelName, maybeModelName);
+  }
+
+  return setActiveModel("whisper", engineOrModelName);
+});
+
+ipcMain.handle("stt:set-engine", async (_event, engineName) => {
+  return setActiveSTTEngine(engineName);
 });
 
 ipcMain.handle("llm:set-model", async (_event, modelName) => {

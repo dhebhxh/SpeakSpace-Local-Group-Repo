@@ -28,6 +28,7 @@ Expected documentation/evaluation areas:
 - `llm-evaluation/` or equivalent LLM/SLM benchmark reports.
 - `project-proposal.md` and report-planning documents.
 - `docs/speakspace-handoff-2026-06-15.md` records the latest handoff for the STT settings, Parakeet, trash workflow, and IME work captured in PR #6.
+- `docs/speakspace-ui-pr6-handoff-2026-06-15.md` records the latest UI/settings follow-up for PR #6, including homepage STT tooltips, Local LLM/Text-to-Speech settings alignment, model-card storage badges, and cross-platform verification notes.
 
 ## Local-First Constraint
 
@@ -76,12 +77,16 @@ When changing IPC contracts, prefer stable request/response shapes, consistent e
 
 ## Current Desktop Implementation Notes
 
-Recent app work is tracked in PR #6 from branch `LF-c-patch-1`. Depending on which branch or PR a future agent checks out, these features may be present locally or only visible in that PR.
+Recent app work is tracked in PR #6 from branch `LF-c-patch-1`. Depending on which branch or PR a future agent checks out, these features may be present locally or only visible in that PR. The latest pushed UI update in that PR is commit `9c5f48d` (`Align settings model selection UI`), which passed the repository's macOS and Windows GitHub Actions verification.
 
 - The desktop app now has a soft-delete trash workflow for notes and generated transcript content. Restores should keep the trash window open so multiple items can be recovered in one session.
 - The chat input has IME composition handling for Enter. Do not regress Chinese/Japanese/Korean input behavior by submitting while composition is still active.
 - The Speech-to-Text settings UI has moved from a single dropdown to engine panels and model cards. Whisper remains the default cross-platform engine; Parakeet is exposed as an optional local engine candidate.
-- Per-model download/delete/select actions live on the model cards. Avoid reintroducing duplicate empty runtime action panels below the Whisper card list.
+- Local LLM and Text-to-Speech settings now follow the same engine-panel and model-card visual pattern as Speech-to-Text. Keep these three settings sections visually and behaviorally consistent unless the task explicitly changes that direction.
+- Per-model download/delete/select actions live on model cards. Avoid reintroducing duplicate empty runtime action panels below the model card lists.
+- TTS voice selection intentionally remains a dropdown even though the TTS model bundle itself is shown as a model card.
+- The homepage composer upload and microphone controls show a tooltip when STT is unavailable because no transcription model is downloaded. Keep this scoped to the main homepage composer unless a task explicitly asks to expand it.
+- LLM model card size badges show approximate Ollama model storage/download size from official Ollama model pages. They are not exact local disk usage after installation, and they should not be replaced with unsupported runtime RAM estimates.
 - The Parakeet path currently targets audio-only transcription. Do not add video-file handling unless the project scope changes.
 
 ## Development Workflow
@@ -110,6 +115,7 @@ If `package.json` and the Electron app are present:
 - `npm run download:llm:check` checks LLM runtime/model readiness.
 - Do not download large models by default during routine verification.
 - If `npm test` is still a placeholder, say so rather than claiming automated tests pass.
+- PR #6 currently runs `Verify Local Desktop` on both `macos-latest` and `windows-latest`. Treat those CI jobs as the strongest available cross-platform smoke signal, but do not claim full runtime/model-download coverage unless the relevant downloads were actually run.
 
 When working on document/evaluation files:
 

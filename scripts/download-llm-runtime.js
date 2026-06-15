@@ -4,6 +4,7 @@ const {
   downloadLLMModel,
   downloadLLMRuntime,
   getLLMRuntimeInfo,
+  stopLLMServer,
 } = require("../src/main/llm-service");
 
 const catalogPath = path.join(__dirname, "ollama-model-catalog.json");
@@ -83,6 +84,7 @@ async function main() {
   console.log(`Installed models: ${runtimeInfo.installedModels.join(", ") || "none"}`);
 
   if (options.checkOnly) {
+    await stopLLMServer();
     return;
   }
 
@@ -100,9 +102,11 @@ async function main() {
   console.log("LLM runtime is ready.");
   console.log(`runtime: ${refreshedRuntime.runtimeLocation}`);
   console.log(`model:   ${refreshedRuntime.modelName}`);
+  await stopLLMServer();
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
+  await stopLLMServer();
   console.error("");
   console.error(error.message || error);
   process.exitCode = 1;

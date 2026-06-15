@@ -36,8 +36,12 @@ const {
   createNote,
   updateNote,
   deleteNote,
+  moveNoteToTrash,
+  restoreNote,
+  permanentlyDeleteNote,
   getNote,
   listNotes,
+  listDeletedNotes,
   listFolders,
   listTags,
   appendConversation,
@@ -729,12 +733,28 @@ ipcMain.handle("note:delete", async (_event, noteId) => {
   return deleteNote(noteId);
 });
 
+ipcMain.handle("note:move-to-trash", async (_event, noteId) => {
+  return moveNoteToTrash(noteId);
+});
+
+ipcMain.handle("note:restore", async (_event, noteId) => {
+  return restoreNote(noteId);
+});
+
+ipcMain.handle("note:permanent-delete", async (_event, noteId) => {
+  return permanentlyDeleteNote(noteId);
+});
+
 ipcMain.handle("note:get", async (_event, noteId) => {
   return getNote(noteId);
 });
 
 ipcMain.handle("note:list", async (_event, filters) => {
   return listNotes(filters);
+});
+
+ipcMain.handle("note:list-deleted", async (_event, filters) => {
+  return listDeletedNotes(filters);
 });
 
 ipcMain.handle("note:folders", async () => {

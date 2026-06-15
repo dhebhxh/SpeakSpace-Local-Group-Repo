@@ -1,6 +1,8 @@
 const APP_LANGUAGE_STORAGE_KEY = "speakspace.uiLanguage";
 const DEFAULT_APP_LANGUAGE = "en";
 const LANGUAGE_OPTIONS = ["en", "zh-CN"];
+const SETTINGS_CATEGORY_STORAGE_KEY = "speakspace.settingsCategory";
+const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storage"];
 const I18N = {
   en: {
     systemPrompt:
@@ -41,8 +43,19 @@ const I18N = {
     quality: "Quality",
     localEngineLabel: "Local Engine",
     settingsTitle: "Runtime & Models",
+    settingsGeneral: "General",
+    settingsStorage: "Storage",
+    languageHelp: "Choose the display language for the app.",
+    ttsModelHelp: "Local TTS model used for reply playback.",
+    managedDataDirectory: "Managed Data Directory",
+    managedDataChecking: "Checking managed data directory...",
+    cleanAssetsTitle: "Clean Local Assets",
+    cleanAssetsHelp: "Removes project-managed runtimes, models, and caches. Notes are kept.",
     newSession: "New Session",
     notesLibrary: "Notes Library",
+    trash: "Trash",
+    trashKicker: "Notes",
+    deletedNotes: "Deleted Notes",
     searchNotes: "Search notes...",
     copyReply: "Copy Reply",
     saveAsNote: "Save as Note",
@@ -52,6 +65,20 @@ const I18N = {
     send: "Send",
     backToAssistant: "← Back to Assistant",
     delete: "Delete",
+    moveToTrash: "Move to Trash",
+    noteMovedToTrash: "Note moved to Trash",
+    restoreNote: "Restore",
+    deleteForever: "Delete Forever",
+    noteRestored: "Note restored",
+    noteDeletedForever: "Note permanently deleted",
+    deleteForeverConfirm:
+      "Permanently delete this note? This cannot be undone.",
+    trashLoadFailed: "Failed to load Trash: {message}",
+    trashEmpty: "Trash is empty",
+    trashEmptyDesc: "Deleted notes will appear here.",
+    trashPreviewEmpty: "Select a deleted note to preview it.",
+    deletedAt: "Deleted",
+    createdAt: "Created",
     askAboutNote: "Ask About This Note",
     noteQaPlaceholder: "For example: What should I do after this meeting?",
     ask: "Ask",
@@ -234,8 +261,19 @@ const I18N = {
     quality: "质量",
     localEngineLabel: "本地引擎",
     settingsTitle: "运行时与模型",
+    settingsGeneral: "通用设置",
+    settingsStorage: "存储管理",
+    languageHelp: "选择应用界面显示语言。",
+    ttsModelHelp: "用于播放助手回答的本地 TTS 模型。",
+    managedDataDirectory: "托管数据目录",
+    managedDataChecking: "正在检查托管数据目录...",
+    cleanAssetsTitle: "清理本地资源",
+    cleanAssetsHelp: "删除项目托管的运行时、模型和缓存；不会删除笔记。",
     newSession: "新建会话",
     notesLibrary: "笔记库",
+    trash: "回收站",
+    trashKicker: "笔记",
+    deletedNotes: "已删除笔记",
     searchNotes: "搜索笔记...",
     copyReply: "复制回复",
     saveAsNote: "保存为笔记",
@@ -245,6 +283,19 @@ const I18N = {
     send: "发送",
     backToAssistant: "← 返回助理",
     delete: "删除",
+    moveToTrash: "移到回收站",
+    noteMovedToTrash: "笔记已移入回收站",
+    restoreNote: "恢复",
+    deleteForever: "永久删除",
+    noteRestored: "笔记已恢复",
+    noteDeletedForever: "笔记已永久删除",
+    deleteForeverConfirm: "要永久删除这条笔记吗？此操作无法撤销。",
+    trashLoadFailed: "加载回收站失败: {message}",
+    trashEmpty: "回收站为空",
+    trashEmptyDesc: "被删除的笔记会显示在这里。",
+    trashPreviewEmpty: "选择一条已删除笔记进行预览。",
+    deletedAt: "删除时间",
+    createdAt: "创建时间",
     askAboutNote: "针对此笔记提问",
     noteQaPlaceholder: "例如：这段会议里我需要做什么？",
     ask: "提问",
@@ -454,8 +505,11 @@ const state = {
   modelDownloadKind: "",
   modelDeleteTarget: "",
   modelDeleteKind: "",
+  settingsCategory: "general",
   notes: [],
+  deletedNotes: [],
   currentNoteId: null,
+  currentTrashNoteId: null,
   noteQaMessages: [],
 };
 
@@ -511,6 +565,8 @@ const sidebarToggleBtnDetail = document.querySelector("#sidebarToggleBtnDetail")
 const sidebarCollapseBtn = document.querySelector("#sidebarCollapseBtn");
 
 const newSessionBtn = document.querySelector("#newSessionBtn");
+const trashOpenBtn = document.querySelector("#trashOpenBtn");
+const trashCountEl = document.querySelector("#trashCount");
 const noteSearchInput = document.querySelector("#noteSearchInput");
 const notesListEl = document.querySelector("#notesList");
 const notesCountEl = document.querySelector("#notesCount");
@@ -524,6 +580,14 @@ const noteQaSendBtn = document.querySelector("#noteQaSendBtn");
 const statusChip = document.querySelector("#statusChip");
 const settingsOverlay = document.querySelector("#settingsOverlay");
 const settingsCloseBtn = document.querySelector("#settingsCloseBtn");
+const settingsNavEl = document.querySelector("#settingsNav");
+const managedDataPathEl = document.querySelector("#managedDataPath");
+const trashOverlay = document.querySelector("#trashOverlay");
+const trashCloseBtn = document.querySelector("#trashCloseBtn");
+const trashStatusEl = document.querySelector("#trashStatus");
+const trashListEl = document.querySelector("#trashList");
+const trashListCountEl = document.querySelector("#trashListCount");
+const trashPreviewEl = document.querySelector("#trashPreview");
 
 const hwCpuModelEl = document.querySelector("#hwCpuModel");
 const hwCpuCoresEl = document.querySelector("#hwCpuCores");
@@ -574,6 +638,23 @@ function persistAppLanguage(language) {
   }
 }
 
+function getStoredSettingsCategory() {
+  try {
+    const value = window.localStorage.getItem(SETTINGS_CATEGORY_STORAGE_KEY);
+    return SETTINGS_CATEGORIES.includes(value) ? value : "general";
+  } catch (_error) {
+    return "general";
+  }
+}
+
+function persistSettingsCategory(category) {
+  try {
+    window.localStorage.setItem(SETTINGS_CATEGORY_STORAGE_KEY, category);
+  } catch (_error) {
+    // Ignore persistence issues.
+  }
+}
+
 function ensureClientMessageId(message, prefix) {
   if (!message) return "";
   if (!message._uiId) {
@@ -595,6 +676,9 @@ function applyLanguageUI() {
   document.documentElement.lang = state.uiLanguage === "zh-CN" ? "zh-CN" : "en";
 
   document.querySelector("#newSessionLabel").textContent = t("newSession");
+  document.querySelector("#trashLabel").textContent = t("trash");
+  trashOpenBtn.title = t("trash");
+  trashOpenBtn.setAttribute("aria-label", t("trash"));
   document.querySelector("#notesLibraryTitle").textContent = t("notesLibrary");
   noteSearchInput.placeholder = t("searchNotes");
   statusChip.title = t("localEngineSettings");
@@ -612,15 +696,26 @@ function applyLanguageUI() {
   promptInputEl.placeholder = t("promptPlaceholder");
   sendBtn.setAttribute("aria-label", t("send"));
   backToNotesBtn.textContent = t("backToAssistant");
-  deleteNoteBtn.textContent = t("delete");
+  deleteNoteBtn.textContent = t("moveToTrash");
   noteQaInput.placeholder = t("noteQaPlaceholder");
   noteQaSendBtn.setAttribute("aria-label", t("ask"));
   document.querySelector("#noteQaTitle").textContent = t("askAboutNote");
   document.querySelector("#settingsSidebarLabel").textContent = t("localEngineLabel");
   document.querySelector("#settingsTitle").textContent = t("settingsTitle");
   settingsCloseBtn.setAttribute("aria-label", t("close"));
+  document.querySelector("#settingsNavGeneral").textContent = t("settingsGeneral");
+  document.querySelector("#settingsNavStt").textContent = t("sttTitle");
+  document.querySelector("#settingsNavLlm").textContent = t("llmTitle");
+  document.querySelector("#settingsNavTts").textContent = t("ttsTitle");
+  document.querySelector("#settingsNavHardware").textContent = t("hardwareTitle");
+  document.querySelector("#settingsNavStorage").textContent = t("settingsStorage");
+  document.querySelector("#trashKicker").textContent = t("trashKicker");
+  document.querySelector("#trashTitle").textContent = t("trash");
+  document.querySelector("#trashListTitle").textContent = t("deletedNotes");
+  trashCloseBtn.setAttribute("aria-label", t("close"));
   document.querySelector("#languageGroupTitle").textContent = t("language");
   document.querySelector("#languageLabel").textContent = t("interfaceLanguage");
+  document.querySelector("#languageHelpText").textContent = t("languageHelp");
   document.querySelector("#sttGroupTitle").textContent = t("sttTitle");
   document.querySelector("#sttModelLabel").textContent = t("sttModelLabel");
   document.querySelector("#llmGroupTitle").textContent = t("llmTitle");
@@ -630,8 +725,16 @@ function applyLanguageUI() {
   document.querySelector("#ttsAutoplayTitle").textContent = t("ttsAutoplayTitle");
   document.querySelector("#ttsAutoplayHelp").textContent = t("ttsAutoplayHelp");
   document.querySelector("#ttsModelLabel").textContent = t("ttsModelLabel");
+  document.querySelector("#ttsModelHelpText").textContent = t("ttsModelHelp");
   document.querySelector("#ttsVoiceLabel").textContent = t("ttsVoiceLabel");
   document.querySelector("#hardwarePanelTitle").textContent = t("hardwareTitle");
+  document.querySelector("#storageGroupTitle").textContent = t("settingsStorage");
+  document.querySelector("#managedDataTitle").textContent = t("managedDataDirectory");
+  document.querySelector("#cleanAssetsTitle").textContent = t("cleanAssetsTitle");
+  document.querySelector("#cleanAssetsHelpText").textContent = t("cleanAssetsHelp");
+  if (managedDataPathEl && !managedDataPathEl.textContent.trim()) {
+    managedDataPathEl.textContent = t("managedDataChecking");
+  }
   document.querySelector("#hwCpuLabel").textContent = t("cpu");
   document.querySelector("#hwMemLabel").textContent = t("memory");
   document.querySelector("#hwGpuLabel").textContent = t("gpu");
@@ -665,6 +768,8 @@ function applyLanguageUI() {
   updateRecordingMeta();
   renderMessages();
   renderNotesList();
+  renderTrashList();
+  renderTrashPreview();
 }
 
 /* ========== View Navigation ========== */
@@ -736,7 +841,33 @@ function startNewSession() {
   switchView("assistant");
 }
 
+function renderSettingsCategory() {
+  const activeCategory = SETTINGS_CATEGORIES.includes(state.settingsCategory)
+    ? state.settingsCategory
+    : "general";
+
+  settingsNavEl?.querySelectorAll(".settings-nav-btn").forEach((button) => {
+    const isActive = button.dataset.settingsCategory === activeCategory;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+
+  document.querySelectorAll("[data-settings-section]").forEach((section) => {
+    section.classList.toggle("active", section.dataset.settingsSection === activeCategory);
+  });
+}
+
+function setSettingsCategory(category) {
+  if (!SETTINGS_CATEGORIES.includes(category)) {
+    return;
+  }
+  state.settingsCategory = category;
+  persistSettingsCategory(category);
+  renderSettingsCategory();
+}
+
 function openSettings() {
+  renderSettingsCategory();
   settingsOverlay.classList.remove("hidden");
 }
 
@@ -745,8 +876,18 @@ function closeSettings() {
 }
 
 newSessionBtn.addEventListener("click", startNewSession);
+trashOpenBtn.addEventListener("click", () => {
+  openTrashOverlay();
+});
 statusChip.addEventListener("click", openSettings);
 settingsCloseBtn.addEventListener("click", closeSettings);
+trashCloseBtn.addEventListener("click", closeTrashOverlay);
+settingsNavEl?.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const button = target?.closest("[data-settings-category]");
+  if (!button) return;
+  setSettingsCategory(button.dataset.settingsCategory);
+});
 [sidebarToggleBtn, sidebarToggleBtnDetail, sidebarCollapseBtn].forEach((button) => {
   button?.addEventListener("click", () => toggleSidebar());
 });
@@ -755,11 +896,20 @@ settingsOverlay.addEventListener("click", (event) => {
     closeSettings();
   }
 });
+trashOverlay.addEventListener("click", (event) => {
+  if (event.target === trashOverlay) {
+    closeTrashOverlay();
+  }
+});
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     const openDropdown = document.querySelector(".custom-dropdown.open");
     if (openDropdown) {
       closeAllDropdowns();
+      return;
+    }
+    if (!trashOverlay.classList.contains("hidden")) {
+      closeTrashOverlay();
       return;
     }
     if (!settingsOverlay.classList.contains("hidden")) {
@@ -2689,6 +2839,9 @@ async function refreshRuntime() {
     state.runtime.sttModels = runtime.transcription.availableModels || [];
     state.runtime.llmModels = runtime.llm.installedModels || [];
     applyLocalTTSRuntime(runtime.tts || {});
+    if (managedDataPathEl) {
+      managedDataPathEl.textContent = state.runtime.managedDataRoot || t("managedDataChecking");
+    }
 
     setEngineStatus(
       "stt",
@@ -3260,10 +3413,248 @@ async function loadNotesList(searchQuery) {
     const filters = searchQuery ? { search: searchQuery } : {};
     state.notes = await window.desktopSTT.listNotes(filters);
     renderNotesList();
+    await refreshTrashCount();
   } catch (error) {
     notesListEl.innerHTML = `<div class="notes-empty"><p>${escapeHtml(
       t("notesLoadFailed", { message: error.message })
     )}</p></div>`;
+  }
+}
+
+function getLocale() {
+  return state.uiLanguage === "zh-CN" ? "zh-CN" : "en-US";
+}
+
+function formatDateTime(value, options = {}) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString(getLocale(), options);
+}
+
+function getNotePreviewText(note) {
+  return note.structured?.summary || note.transcript?.slice(0, 160) || "";
+}
+
+function updateTrashCount(count) {
+  const safeCount = Number.isFinite(count) ? count : 0;
+  if (trashCountEl) {
+    trashCountEl.textContent = String(safeCount);
+  }
+  if (trashListCountEl) {
+    trashListCountEl.textContent = String(safeCount);
+  }
+}
+
+async function refreshTrashCount() {
+  try {
+    const info = await window.desktopSTT.getStoreInfo();
+    updateTrashCount(info.trashCount || 0);
+  } catch (_error) {
+    updateTrashCount(state.deletedNotes.length);
+  }
+}
+
+function setTrashStatus(text, isError = false, durationMs = 0) {
+  if (!trashStatusEl) return;
+  trashStatusEl.textContent = text || "";
+  trashStatusEl.classList.toggle("error", Boolean(isError));
+  trashStatusEl.classList.toggle("visible", Boolean(text));
+
+  if (durationMs > 0 && text) {
+    window.setTimeout(() => {
+      if (trashStatusEl.textContent === text) {
+        trashStatusEl.textContent = "";
+        trashStatusEl.classList.remove("visible", "error");
+      }
+    }, durationMs);
+  }
+}
+
+async function loadTrashNotes() {
+  try {
+    state.deletedNotes = await window.desktopSTT.listDeletedNotes();
+    updateTrashCount(state.deletedNotes.length);
+
+    if (
+      state.deletedNotes.length > 0 &&
+      !state.deletedNotes.some((note) => note.id === state.currentTrashNoteId)
+    ) {
+      state.currentTrashNoteId = state.deletedNotes[0].id;
+    }
+
+    if (state.deletedNotes.length === 0) {
+      state.currentTrashNoteId = null;
+    }
+
+    renderTrashList();
+    renderTrashPreview();
+  } catch (error) {
+    setTrashStatus(t("trashLoadFailed", { message: error.message }), true);
+  }
+}
+
+async function openTrashOverlay() {
+  stopTTS();
+  trashOverlay.classList.remove("hidden");
+  setTrashStatus("");
+  await loadTrashNotes();
+}
+
+function closeTrashOverlay() {
+  trashOverlay.classList.add("hidden");
+}
+
+function renderTrashList() {
+  if (!trashListEl) return;
+  trashListEl.innerHTML = "";
+  updateTrashCount(state.deletedNotes.length);
+
+  if (state.deletedNotes.length === 0) {
+    trashListEl.innerHTML = `
+      <div class="notes-empty">
+        <h3>${t("trashEmpty")}</h3>
+        <p>${t("trashEmptyDesc")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  for (const note of state.deletedNotes) {
+    const card = document.createElement("button");
+    card.className = "trash-note-card";
+    card.type = "button";
+    if (note.id === state.currentTrashNoteId) {
+      card.classList.add("active");
+    }
+    card.dataset.noteId = note.id;
+
+    const title = document.createElement("h3");
+    title.className = "note-card-title";
+    title.textContent = note.title || "Untitled";
+
+    const summary = document.createElement("p");
+    summary.className = "note-card-summary";
+    summary.textContent = getNotePreviewText(note);
+
+    const deletedAt = document.createElement("span");
+    deletedAt.className = "note-card-date";
+    deletedAt.textContent = `${t("deletedAt")}: ${formatDateTime(note.deletedAt, {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+
+    card.append(title, summary, deletedAt);
+    card.addEventListener("click", () => {
+      state.currentTrashNoteId = note.id;
+      renderTrashList();
+      renderTrashPreview();
+    });
+    trashListEl.append(card);
+  }
+}
+
+function renderTrashPreview() {
+  if (!trashPreviewEl) return;
+  const note = state.deletedNotes.find((item) => item.id === state.currentTrashNoteId);
+
+  if (!note) {
+    trashPreviewEl.innerHTML = `
+      <div class="trash-preview-empty">
+        <h3>${state.deletedNotes.length === 0 ? t("trashEmpty") : t("trashPreviewEmpty")}</h3>
+        <p>${state.deletedNotes.length === 0 ? t("trashEmptyDesc") : ""}</p>
+      </div>
+    `;
+    return;
+  }
+
+  const tags = Array.isArray(note.tags) ? note.tags : [];
+  const perf = note.performance || {};
+  const perfItems = [];
+  if (perf.sttDurationMs) perfItems.push(`STT: ${formatMs(perf.sttDurationMs)}`);
+  if (perf.llmDurationMs) perfItems.push(`LLM: ${formatMs(perf.llmDurationMs)}`);
+  if (perf.structuringDurationMs) perfItems.push(`${t("structuring")}: ${formatMs(perf.structuringDurationMs)}`);
+
+  trashPreviewEl.innerHTML = `
+    <div class="trash-preview-header">
+      <div>
+        <h3>${escapeHtml(note.title || "Untitled")}</h3>
+        <div class="note-meta-row">
+          <span class="note-date">${t("deletedAt")}: ${escapeHtml(formatDateTime(note.deletedAt))}</span>
+          <span class="note-date">${t("createdAt")}: ${escapeHtml(formatDateTime(note.createdAt))}</span>
+          ${tags.map((tag) => `<span class="note-tag">#${escapeHtml(tag)}</span>`).join("")}
+        </div>
+        ${perfItems.length > 0 ? `<div class="note-perf">${perfItems.join(" · ")}</div>` : ""}
+      </div>
+      <div class="trash-preview-actions">
+        <button id="trashRestoreBtn" class="ghost-btn accent-btn" type="button">${t("restoreNote")}</button>
+        <button id="trashPermanentDeleteBtn" class="ghost-btn danger-btn" type="button">${t("deleteForever")}</button>
+      </div>
+    </div>
+
+    ${note.structured?.summary ? `
+      <div class="note-section">
+        <h4>${t("summary")}</h4>
+        <p>${escapeHtml(note.structured.summary)}</p>
+      </div>
+    ` : ""}
+
+    ${note.structured?.keyPoints?.length > 0 ? `
+      <div class="note-section">
+        <h4>${t("keyPoints")}</h4>
+        <ul>${note.structured.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ul>
+      </div>
+    ` : ""}
+
+    ${note.structured?.actionItems?.length > 0 ? `
+      <div class="note-section">
+        <h4>${t("actionItems")}</h4>
+        <ul class="action-items">${note.structured.actionItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      </div>
+    ` : ""}
+
+    ${note.transcript ? `
+      <div class="note-section transcript-section">
+        <h4>${t("originalTranscript")}</h4>
+        <p class="transcript-text">${escapeHtml(note.transcript)}</p>
+      </div>
+    ` : ""}
+  `;
+
+  document.querySelector("#trashRestoreBtn")?.addEventListener("click", handleRestoreTrashNote);
+  document
+    .querySelector("#trashPermanentDeleteBtn")
+    ?.addEventListener("click", handlePermanentDeleteTrashNote);
+}
+
+async function handleRestoreTrashNote() {
+  if (!state.currentTrashNoteId) return;
+
+  try {
+    await window.desktopSTT.restoreNote(state.currentTrashNoteId);
+    state.currentTrashNoteId = "";
+    await loadTrashNotes();
+    await loadNotesList(noteSearchInput.value.trim());
+    setTrashStatus(t("noteRestored"), false, 2000);
+  } catch (error) {
+    setTrashStatus(t("operationFailed", { message: error.message }), true);
+  }
+}
+
+async function handlePermanentDeleteTrashNote() {
+  if (!state.currentTrashNoteId) return;
+  if (!window.confirm(t("deleteForeverConfirm"))) return;
+
+  try {
+    await window.desktopSTT.permanentlyDeleteNote(state.currentTrashNoteId);
+    state.currentTrashNoteId = "";
+    await loadTrashNotes();
+    await loadNotesList(noteSearchInput.value.trim());
+    setTrashStatus(t("noteDeletedForever"), false, 2000);
+  } catch (error) {
+    setTrashStatus(t("operationFailed", { message: error.message }), true);
   }
 }
 
@@ -3548,10 +3939,13 @@ async function handleDeleteNote() {
   if (!state.currentNoteId) return;
 
   try {
-    await window.desktopSTT.deleteNote(state.currentNoteId);
+    await window.desktopSTT.moveNoteToTrash(state.currentNoteId);
     state.currentNoteId = null;
+    state.noteQaMessages = [];
     switchView("assistant");
     await loadNotesList(noteSearchInput.value.trim());
+    await refreshTrashCount();
+    setTemporaryJobStatus(t("noteMovedToTrash"), false, 2000);
   } catch (error) {
     setJobStatus(t("deleteFailed", { message: error.message }), true);
   }
@@ -3751,6 +4145,8 @@ noteQaInput.addEventListener("keydown", async (event) => {
 /* ========== Init ========== */
 
 initSidebarState();
+state.settingsCategory = getStoredSettingsCategory();
+renderSettingsCategory();
 initLanguage();
 initTTS();
 initParticles();

@@ -27,6 +27,7 @@ Expected documentation/evaluation areas:
 - `stt-evaluation/` or equivalent STT benchmark reports.
 - `llm-evaluation/` or equivalent LLM/SLM benchmark reports.
 - `project-proposal.md` and report-planning documents.
+- `docs/speakspace-handoff-2026-06-15.md` records the latest handoff for the STT settings, Parakeet, trash workflow, and IME work captured in PR #6.
 
 ## Local-First Constraint
 
@@ -35,7 +36,7 @@ Local-first/offline-first behavior is a hard project constraint.
 - Do not add cloud STT, cloud LLM, cloud TTS, analytics, or telemetry services unless the current task owner or team explicitly approves and the data flow/privacy impact has been discussed.
 - Do not upload transcripts, notes, audio, prompts, local model outputs, or evaluation data to third-party services.
 - Runtime/model downloads are allowed only when they are an intended project workflow and the source, destination, and privacy implications are clear.
-- AI processing should default to the local stack: `whisper.cpp` for STT, Ollama/local models for LLM work, and `sherpa-onnx` for TTS.
+- AI processing should default to the local stack: `whisper.cpp` or an explicitly selected local Parakeet engine for STT, Ollama/local models for LLM work, and `sherpa-onnx` for TTS.
 - Production SpeakSpace APIs are out of scope unless the team explicitly changes the research direction.
 
 ## Reference Model Profile
@@ -43,6 +44,7 @@ Local-first/offline-first behavior is a hard project constraint.
 The following are project baseline/reference choices, not mandatory setup for every team member's computer:
 
 - STT reference: `whisper.cpp` with `ggml-large-v3-turbo-q5_0.bin`.
+- STT candidate: local Parakeet through `sherpa-onnx-node` is being explored as an optional Windows-friendly path. Do not replace Whisper as the default without fresh evaluation across the project language set.
 - LLM reference: local Ollama model chosen from the project evaluation results. Check the current evaluation docs before changing defaults.
 - TTS reference: `sherpa-onnx-node` or `sherpa-onnx` with `kokoro-multi-lang-v1_0`.
 
@@ -71,6 +73,16 @@ The app should keep these boundaries:
 - IPC payloads should be treated as untrusted input and validated at the main-process boundary.
 
 When changing IPC contracts, prefer stable request/response shapes, consistent errors, additive fields, and explicit validation.
+
+## Current Desktop Implementation Notes
+
+Recent app work is tracked in PR #6 from branch `LF-c-patch-1`. Depending on which branch or PR a future agent checks out, these features may be present locally or only visible in that PR.
+
+- The desktop app now has a soft-delete trash workflow for notes and generated transcript content. Restores should keep the trash window open so multiple items can be recovered in one session.
+- The chat input has IME composition handling for Enter. Do not regress Chinese/Japanese/Korean input behavior by submitting while composition is still active.
+- The Speech-to-Text settings UI has moved from a single dropdown to engine panels and model cards. Whisper remains the default cross-platform engine; Parakeet is exposed as an optional local engine candidate.
+- Per-model download/delete/select actions live on the model cards. Avoid reintroducing duplicate empty runtime action panels below the Whisper card list.
+- The Parakeet path currently targets audio-only transcription. Do not add video-file handling unless the project scope changes.
 
 ## Development Workflow
 

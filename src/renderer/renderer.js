@@ -63,6 +63,8 @@ const I18N = {
     saveAsNote: "Save as Note",
     importAudio: "Import audio file",
     record: "Record",
+    sttModelMissingTooltip:
+      "Speech-to-text model is not downloaded. Open Settings to download a model.",
     promptPlaceholder: "Type a question, or import audio / record...",
     send: "Send",
     backToAssistant: "← Back to Assistant",
@@ -120,7 +122,28 @@ const I18N = {
       "Multilingual TDT model for 25 European languages; does not cover Mandarin or Hindi.",
     switchSttEngineFailed: "Failed to switch STT engine: {message}",
     llmTitle: "Local LLM",
+    llmEngineOllamaDesc: "Local model runtime.",
+    llmEngineDetailDesc:
+      "Ollama runs local language models for chat, structuring, and note Q&A. Model cards below use the same download, delete, and select pattern as STT.",
+    llmRuntimeSourceTitle: "Runtime source",
+    llmModelStorageTitle: "Model storage",
+    llmModelsTitle: "LLM models",
+    llmRuntimeProject: "Project-managed Ollama",
+    llmRuntimeExternal: "External Ollama",
+    llmRuntimeMissing: "Ollama runtime is not installed.",
+    llmModelStorageReady: "Current model: {model}. Storage: {path}",
+    llmModelStorageMissing: "Choose a model card below and download it to enable local LLM inference.",
     ttsTitle: "Text-to-Speech",
+    ttsEngineKokoroDesc: "Local sherpa-onnx voices.",
+    ttsEngineDetailDesc:
+      "Kokoro runs through the local sherpa-onnx stack for reply playback. The model card manages the local model bundle; voice selection stays in the dropdown below.",
+    ttsRuntimeBackendTitle: "Runtime backend",
+    ttsVoiceSetTitle: "Voice set",
+    ttsModelsTitle: "TTS model",
+    ttsRuntimeBackendReady: "{backend} · {sampleRate}Hz",
+    ttsRuntimeBackendMissing: "Local TTS runtime is not installed.",
+    ttsVoiceSetReady: "{count} voices · Current: {voice}",
+    ttsVoiceSetMissing: "Download the TTS model bundle to enable voices.",
     ttsAutoplayTitle: "Autoplay Replies",
     ttsAutoplayHelp:
       "If disabled, you can still hover over assistant replies and use the action buttons to play them manually. Playback uses local TTS only.",
@@ -220,9 +243,9 @@ const I18N = {
     llmHelpMissingRuntime:
       "Ollama was not found. Download the project-managed runtime using the button below.",
     llmHelpMissingModelExternal:
-      "Using Ollama already installed on this device, but no LLM model is installed yet. Select a model from the dropdown and tap the download icon, or download a project-managed runtime below.",
+      "Using Ollama already installed on this device, but no LLM model is installed yet. Choose a model card below and tap the download icon, or download a project-managed runtime below.",
     llmHelpMissingModel:
-      "No LLM model found. Select a model from the dropdown and tap the download icon.",
+      "No LLM model found. Choose a model card below and tap the download icon.",
     downloadStt: "Download STT Runtime",
     downloadLlm: "Download Local LLM",
     downloadTts: "Download TTS Runtime",
@@ -250,6 +273,7 @@ const I18N = {
     runtimeReady: "Runtime is ready",
     setupStepRuntime: "Step 1: Download Runtime",
     setupStepModel: "Step 2: Select & Download Model",
+    selectDownloadModel: "Select & Download Model",
     sttSetupHint: "Download the STT runtime to enable speech-to-text",
     llmSetupHint: "Download the project-managed Ollama runtime to enable local LLM inference",
     ttsSetupHint: "Download the TTS runtime to enable text-to-speech",
@@ -310,6 +334,7 @@ const I18N = {
     saveAsNote: "保存为笔记",
     importAudio: "导入音频文件",
     record: "录音",
+    sttModelMissingTooltip: "语音转写模型未下载，请进入设置中下载模型。",
     promptPlaceholder: "输入问题，或导入音频 / 录音...",
     send: "发送",
     backToAssistant: "← 返回助理",
@@ -366,7 +391,28 @@ const I18N = {
       "支持 25 种欧洲语言的多语言 TDT 模型；不覆盖中文普通话或印地语。",
     switchSttEngineFailed: "切换 STT 引擎失败: {message}",
     llmTitle: "本地大语言模型",
+    llmEngineOllamaDesc: "本地模型运行时。",
+    llmEngineDetailDesc:
+      "Ollama 用于本地对话、结构化整理和笔记问答；下方模型卡片沿用和 STT 一致的下载、删除和选择方式。",
+    llmRuntimeSourceTitle: "运行时来源",
+    llmModelStorageTitle: "模型存储",
+    llmModelsTitle: "LLM 模型",
+    llmRuntimeProject: "项目内托管 Ollama",
+    llmRuntimeExternal: "设备外部 Ollama",
+    llmRuntimeMissing: "未安装 Ollama 运行时。",
+    llmModelStorageReady: "当前模型：{model}。存储位置：{path}",
+    llmModelStorageMissing: "请在下方模型卡片中选择并下载模型，以启用本地大模型推理。",
     ttsTitle: "语音播报",
+    ttsEngineKokoroDesc: "本地 sherpa-onnx 音色。",
+    ttsEngineDetailDesc:
+      "Kokoro 通过本地 sherpa-onnx 语音栈播放助手回答；模型卡片负责管理本地模型包，音色继续在下方下拉框中选择。",
+    ttsRuntimeBackendTitle: "运行后端",
+    ttsVoiceSetTitle: "音色集",
+    ttsModelsTitle: "TTS 模型",
+    ttsRuntimeBackendReady: "{backend} · {sampleRate}Hz",
+    ttsRuntimeBackendMissing: "未安装本地 TTS 运行时。",
+    ttsVoiceSetReady: "{count} 个音色 · 当前：{voice}",
+    ttsVoiceSetMissing: "下载 TTS 模型包后即可启用音色。",
     ttsAutoplayTitle: "回答后自动播放",
     ttsAutoplayHelp:
       "关闭后，仍可把鼠标移到助手回答上，通过悬浮操作按钮手动播放；当前仅允许本地 TTS 模型发声。",
@@ -466,9 +512,9 @@ const I18N = {
     llmHelpMissingRuntime:
       "未检测到 Ollama，请点击下方按钮下载项目内托管版本。",
     llmHelpMissingModelExternal:
-      "当前正在使用设备里已安装的 Ollama，但还没有安装 LLM 模型。请在下拉框中选择模型并点击下载图标，或点击下方按钮下载项目内托管运行时。",
+      "当前正在使用设备里已安装的 Ollama，但还没有安装 LLM 模型。请在下方模型卡片中选择并点击下载图标，或点击下方按钮下载项目内托管运行时。",
     llmHelpMissingModel:
-      "未检测到本地 LLM 模型，请在下拉框中选择模型并点击下载图标。",
+      "未检测到本地 LLM 模型，请在下方模型卡片中选择并点击下载图标。",
     downloadStt: "下载 STT 运行时",
     downloadLlm: "下载本地 LLM",
     downloadTts: "下载 TTS 运行时",
@@ -496,6 +542,7 @@ const I18N = {
     runtimeReady: "运行时已就绪",
     setupStepRuntime: "第一步：下载运行时",
     setupStepModel: "第二步：选择并下载模型",
+    selectDownloadModel: "选择并下载模型",
     sttSetupHint: "下载 STT 运行时以启用语音转写",
     llmSetupHint: "下载项目内托管的 Ollama 以启用本地大模型推理",
     ttsSetupHint: "下载 TTS 运行时以启用语音合成",
@@ -617,6 +664,8 @@ const chatListEl = document.querySelector("#chatList");
 const promptInputEl = document.querySelector("#promptInput");
 const pickFileBtn = document.querySelector("#pickFileBtn");
 const recordToggleBtn = document.querySelector("#recordToggleBtn");
+const pickFileTooltipEl = pickFileBtn?.closest("[data-composer-tooltip]");
+const recordTooltipEl = recordToggleBtn?.closest("[data-composer-tooltip]");
 const noteQaPickFileBtn = document.querySelector("#noteQaPickFileBtn");
 const noteQaRecordToggleBtn = document.querySelector("#noteQaRecordToggleBtn");
 const refreshRuntimeBtn = document.querySelector("#refreshRuntimeBtn");
@@ -673,6 +722,32 @@ const sttParakeetRuntimeTextEl = document.querySelector("#sttParakeetRuntimeText
 const sttParakeetModelsTitleEl = document.querySelector("#sttParakeetModelsTitle");
 const sttParakeetModelsBadgeEl = document.querySelector("#sttParakeetModelsBadge");
 const sttParakeetModelCardsEl = document.querySelector("#sttParakeetModelCards");
+const llmEngineListTitleEl = document.querySelector("#llmEngineListTitle");
+const llmOllamaEngineStatusEl = document.querySelector("#llmOllamaEngineStatus");
+const llmOllamaEngineDescEl = document.querySelector("#llmOllamaEngineDesc");
+const llmEngineDetailTitleEl = document.querySelector("#llmEngineDetailTitle");
+const llmEngineDetailDescEl = document.querySelector("#llmEngineDetailDesc");
+const llmEngineDetailBadgeEl = document.querySelector("#llmEngineDetailBadge");
+const llmRuntimeSourceTitleEl = document.querySelector("#llmRuntimeSourceTitle");
+const llmRuntimeSourceTextEl = document.querySelector("#llmRuntimeSourceText");
+const llmModelStorageTitleEl = document.querySelector("#llmModelStorageTitle");
+const llmModelStorageTextEl = document.querySelector("#llmModelStorageText");
+const llmModelsBadgeEl = document.querySelector("#llmModelsBadge");
+const llmModelCardsEl = document.querySelector("#llmModelCards");
+const llmEngineSettingsEl = document.querySelector(".llm-engine-settings");
+const ttsEngineListTitleEl = document.querySelector("#ttsEngineListTitle");
+const ttsKokoroEngineStatusEl = document.querySelector("#ttsKokoroEngineStatus");
+const ttsKokoroEngineDescEl = document.querySelector("#ttsKokoroEngineDesc");
+const ttsEngineDetailTitleEl = document.querySelector("#ttsEngineDetailTitle");
+const ttsEngineDetailDescEl = document.querySelector("#ttsEngineDetailDesc");
+const ttsEngineDetailBadgeEl = document.querySelector("#ttsEngineDetailBadge");
+const ttsRuntimeBackendTitleEl = document.querySelector("#ttsRuntimeBackendTitle");
+const ttsRuntimeBackendTextEl = document.querySelector("#ttsRuntimeBackendText");
+const ttsVoiceSetTitleEl = document.querySelector("#ttsVoiceSetTitle");
+const ttsVoiceSetTextEl = document.querySelector("#ttsVoiceSetText");
+const ttsModelsBadgeEl = document.querySelector("#ttsModelsBadge");
+const ttsModelCardsEl = document.querySelector("#ttsModelCards");
+const ttsEngineSettingsEl = document.querySelector(".tts-engine-settings");
 const managedDataPathEl = document.querySelector("#managedDataPath");
 const trashOverlay = document.querySelector("#trashOverlay");
 const trashCloseBtn = document.querySelector("#trashCloseBtn");
@@ -781,6 +856,7 @@ function applyLanguageUI() {
   pickFileBtn.setAttribute("aria-label", t("importAudio"));
   recordToggleBtn.title = t("record");
   recordToggleBtn.setAttribute("aria-label", t("record"));
+  updateMainComposerSttTooltips();
   noteQaPickFileBtn.title = t("importAudio");
   noteQaPickFileBtn.setAttribute("aria-label", t("importAudio"));
   noteQaRecordToggleBtn.title = t("record");
@@ -810,12 +886,12 @@ function applyLanguageUI() {
   document.querySelector("#languageHelpText").textContent = t("languageHelp");
   document.querySelector("#sttGroupTitle").textContent = t("sttTitle");
   document.querySelector("#llmGroupTitle").textContent = t("llmTitle");
-  document.querySelector("#llmModelLabel").textContent = t("llmModelLabel");
+  document.querySelector("#llmModelLabel").textContent = t("llmModelsTitle");
   updateRuntimeDownloadButtons();
   document.querySelector("#ttsGroupTitle").textContent = t("ttsTitle");
   document.querySelector("#ttsAutoplayTitle").textContent = t("ttsAutoplayTitle");
   document.querySelector("#ttsAutoplayHelp").textContent = t("ttsAutoplayHelp");
-  document.querySelector("#ttsModelLabel").textContent = t("ttsModelLabel");
+  document.querySelector("#ttsModelLabel").textContent = t("ttsModelsTitle");
   document.querySelector("#ttsModelHelpText").textContent = t("ttsModelHelp");
   document.querySelector("#ttsVoiceLabel").textContent = t("ttsVoiceLabel");
   document.querySelector("#hardwarePanelTitle").textContent = t("hardwareTitle");
@@ -856,6 +932,8 @@ function applyLanguageUI() {
   populateDropdown(languageDropdownEl, LANGUAGE_OPTIONS, state.uiLanguage, "language");
   updateTTSUI();
   updateRuntimeHelpTexts();
+  renderLLMEnginePanel();
+  renderTTSEnginePanel();
   updateRecordingMeta();
   renderMessages();
   renderNotesList();
@@ -989,6 +1067,10 @@ sttWhisperModelCardsEl?.addEventListener("click", handleWhisperModelCardClick);
 sttWhisperModelCardsEl?.addEventListener("keydown", handleWhisperModelCardKeydown);
 sttParakeetModelCardsEl?.addEventListener("click", handleParakeetModelCardClick);
 sttParakeetModelCardsEl?.addEventListener("keydown", handleParakeetModelCardKeydown);
+llmModelCardsEl?.addEventListener("click", handleLLMModelCardClick);
+llmModelCardsEl?.addEventListener("keydown", handleLLMModelCardKeydown);
+ttsModelCardsEl?.addEventListener("click", handleTTSModelCardClick);
+ttsModelCardsEl?.addEventListener("keydown", handleTTSModelCardKeydown);
 [sidebarToggleBtn, sidebarToggleBtnDetail, sidebarCollapseBtn].forEach((button) => {
   button?.addEventListener("click", () => toggleSidebar());
 });
@@ -1261,6 +1343,8 @@ function updateTTSUI() {
         t("ttsRuntimeMissing");
     }
   }
+
+  renderTTSEnginePanel();
 }
 
 function createModelBadge(text, variant = "") {
@@ -1268,6 +1352,12 @@ function createModelBadge(text, variant = "") {
   badge.className = `stt-model-badge${variant ? ` ${variant}` : ""}`;
   badge.textContent = text;
   return badge;
+}
+
+function formatModelStorage(sizeMB) {
+  if (!Number.isFinite(sizeMB) || sizeMB <= 0) return "";
+  if (sizeMB >= 1000) return `${(sizeMB / 1000).toFixed(1)} GB`;
+  return `${sizeMB} MB`;
 }
 
 function createSTTModelCardShell(titleText, badges = []) {
@@ -1434,6 +1524,185 @@ function renderParakeetModelCards() {
     card.append(createModelMetricsElement(meta));
     sttParakeetModelCardsEl.append(card);
   }
+}
+
+function renderModelCards(containerEl, kind, activeValue, options = {}) {
+  if (!containerEl) return;
+
+  containerEl.innerHTML = "";
+  const modelOptions = getAllOptionsForKind(kind);
+  const installedOptions = new Set(getInstalledModelsByKind(kind));
+
+  if (modelOptions.length === 0) {
+    containerEl.innerHTML = `<div class="dropdown-empty">${t("dropdownEmptyModel")}</div>`;
+    return;
+  }
+
+  for (const name of modelOptions) {
+    const meta = getModelMeta(name, kind);
+    const isActive = name === activeValue;
+    const isInstalled = installedOptions.has(name);
+    const badges = [
+      { text: isInstalled ? t("installed") : t("missingModel"), variant: isInstalled ? "" : "warning" },
+    ];
+
+    if (isActive) {
+      badges.unshift({ text: t("currentModel"), variant: "active" });
+    }
+    if (meta.recommended) {
+      badges.push({ text: t("recommended"), variant: "recommended" });
+    }
+    if (meta.sizeMB) {
+      badges.push({
+        text: kind === "llm" ? formatModelStorage(meta.sizeMB) : `${meta.sizeMB} MB`,
+        variant: "muted",
+      });
+    }
+
+    const { card, head } = createSTTModelCardShell(meta.label, badges);
+    card.dataset.value = name;
+    card.dataset.kind = kind;
+    card.dataset.installed = isInstalled ? "true" : "false";
+    card.classList.toggle("active", isActive);
+    card.classList.toggle("missing", !isInstalled);
+    if (isInstalled) {
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+      card.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
+
+    const actionButtons = getModelActionButtonsHTML(kind, name, isInstalled, isActive);
+    if (actionButtons) {
+      const actions = document.createElement("div");
+      actions.className = "stt-model-card-actions";
+      actions.innerHTML = actionButtons;
+      head.append(actions);
+    }
+
+    if (meta.desc) {
+      const desc = document.createElement("p");
+      desc.className = "settings-help-text";
+      desc.textContent = meta.desc;
+      card.append(desc);
+    }
+
+    if (options.showMetrics !== false) {
+      card.append(createModelMetricsElement(meta));
+    }
+
+    containerEl.append(card);
+  }
+}
+
+function renderLLMModelCards() {
+  renderModelCards(llmModelCardsEl, "llm", state.runtime.llmModelName);
+}
+
+function renderTTSModelCards() {
+  renderModelCards(ttsModelCardsEl, "tts-model", state.tts.localModelName || "kokoro-multi-lang-v1_0", {
+    showMetrics: false,
+  });
+}
+
+function renderLLMEnginePanel() {
+  if (llmEngineListTitleEl) llmEngineListTitleEl.textContent = t("sttEngineListTitle");
+  if (llmOllamaEngineDescEl) llmOllamaEngineDescEl.textContent = t("llmEngineOllamaDesc");
+  if (llmEngineDetailTitleEl) llmEngineDetailTitleEl.textContent = "Ollama";
+  if (llmEngineDetailDescEl) llmEngineDetailDescEl.textContent = t("llmEngineDetailDesc");
+  if (llmRuntimeSourceTitleEl) llmRuntimeSourceTitleEl.textContent = t("llmRuntimeSourceTitle");
+  if (llmModelStorageTitleEl) llmModelStorageTitleEl.textContent = t("llmModelStorageTitle");
+
+  const runtimeReady = Boolean(state.runtime.llmReady);
+  const runtimeExists = Boolean(state.runtime.llmOllamaExists);
+  const statusText = runtimeReady
+    ? t("sttEngineActive")
+    : runtimeExists
+    ? t("sttEngineAvailable")
+    : t("sttEngineNotInstalled");
+
+  if (llmOllamaEngineStatusEl) {
+    llmOllamaEngineStatusEl.textContent = statusText;
+    llmOllamaEngineStatusEl.classList.toggle("warning", !runtimeReady);
+  }
+  if (llmEngineDetailBadgeEl) {
+    llmEngineDetailBadgeEl.textContent = statusText;
+    llmEngineDetailBadgeEl.classList.toggle("warning", !runtimeReady);
+  }
+  if (llmRuntimeSourceTextEl) {
+    if (!runtimeExists) {
+      llmRuntimeSourceTextEl.textContent = t("llmRuntimeMissing");
+    } else if (state.runtime.llmRuntimeLocation === "portable") {
+      llmRuntimeSourceTextEl.textContent = t("llmRuntimeProject");
+    } else {
+      llmRuntimeSourceTextEl.textContent = t("llmRuntimeExternal");
+    }
+  }
+  if (llmModelStorageTextEl) {
+    if (runtimeReady) {
+      llmModelStorageTextEl.textContent = t("llmModelStorageReady", {
+        model: getModelMeta(state.runtime.llmModelName, "llm").label,
+        path: state.runtime.llmModelDir || "~/.ollama/models",
+      });
+    } else {
+      llmModelStorageTextEl.textContent = t("llmModelStorageMissing");
+    }
+  }
+  if (llmModelsBadgeEl) {
+    llmModelsBadgeEl.textContent = runtimeReady
+      ? t("sttEngineActive")
+      : runtimeExists
+      ? t("selectDownloadModel")
+      : t("sttEngineNotInstalled");
+    llmModelsBadgeEl.classList.remove("hidden");
+    llmModelsBadgeEl.classList.toggle("warning", !runtimeReady);
+  }
+
+  renderLLMModelCards();
+}
+
+function renderTTSEnginePanel() {
+  if (ttsEngineListTitleEl) ttsEngineListTitleEl.textContent = t("sttEngineListTitle");
+  if (ttsKokoroEngineDescEl) ttsKokoroEngineDescEl.textContent = t("ttsEngineKokoroDesc");
+  if (ttsEngineDetailTitleEl) ttsEngineDetailTitleEl.textContent = "Kokoro";
+  if (ttsEngineDetailDescEl) ttsEngineDetailDescEl.textContent = t("ttsEngineDetailDesc");
+  if (ttsRuntimeBackendTitleEl) ttsRuntimeBackendTitleEl.textContent = t("ttsRuntimeBackendTitle");
+  if (ttsVoiceSetTitleEl) ttsVoiceSetTitleEl.textContent = t("ttsVoiceSetTitle");
+
+  const runtimeReady = Boolean(state.tts.localAvailable);
+  const statusText = runtimeReady ? t("sttEngineActive") : t("sttEngineNotInstalled");
+
+  if (ttsKokoroEngineStatusEl) {
+    ttsKokoroEngineStatusEl.textContent = statusText;
+    ttsKokoroEngineStatusEl.classList.toggle("warning", !runtimeReady);
+  }
+  if (ttsEngineDetailBadgeEl) {
+    ttsEngineDetailBadgeEl.textContent = statusText;
+    ttsEngineDetailBadgeEl.classList.toggle("warning", !runtimeReady);
+  }
+  if (ttsRuntimeBackendTextEl) {
+    ttsRuntimeBackendTextEl.textContent = runtimeReady
+      ? t("ttsRuntimeBackendReady", {
+          backend: getTTSBackendLabel(state.tts.backend),
+          sampleRate: state.tts.sampleRate || 0,
+        })
+      : state.tts.errorMessage || t("ttsRuntimeBackendMissing");
+  }
+  if (ttsVoiceSetTextEl) {
+    const selectedSpeaker = getSelectedTTSSpeaker();
+    ttsVoiceSetTextEl.textContent =
+      runtimeReady && selectedSpeaker
+        ? t("ttsVoiceSetReady", {
+            count: state.tts.speakers.length,
+            voice: getModelMeta(selectedSpeaker.name, "tts").label.replace("（默认）", "").replace(" (Default)", ""),
+          })
+        : t("ttsVoiceSetMissing");
+  }
+  if (ttsModelsBadgeEl) {
+    ttsModelsBadgeEl.textContent = runtimeReady ? t("sttEngineActive") : t("sttEngineNotInstalled");
+    ttsModelsBadgeEl.classList.toggle("warning", !runtimeReady);
+  }
+
+  renderTTSModelCards();
 }
 
 function renderSTTEnginePanel() {
@@ -1608,6 +1877,82 @@ function handleParakeetModelCardKeydown(event) {
   void handleParakeetModelChange(card.dataset.value);
 }
 
+function handleLLMModelCardClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const downloadBtn = target.closest(".dropdown-item-download");
+  if (downloadBtn) {
+    event.stopPropagation();
+    if (downloadBtn.dataset.action === "cancel") {
+      handleCancelModelDownload();
+    } else {
+      void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
+    }
+    return;
+  }
+
+  const deleteBtn = target.closest(".dropdown-item-delete");
+  if (deleteBtn && !deleteBtn.disabled) {
+    event.stopPropagation();
+    void handleModelDelete(deleteBtn.dataset.kind, deleteBtn.dataset.value);
+    return;
+  }
+
+  const card = target.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+  void handleLLMModelChange(card.dataset.value);
+}
+
+function handleLLMModelCardKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest("button")) return;
+  const card = target?.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+
+  event.preventDefault();
+  void handleLLMModelChange(card.dataset.value);
+}
+
+function handleTTSModelCardClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const downloadBtn = target.closest(".dropdown-item-download");
+  if (downloadBtn) {
+    event.stopPropagation();
+    if (downloadBtn.dataset.action === "cancel") {
+      handleCancelModelDownload();
+    } else {
+      void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
+    }
+    return;
+  }
+
+  const deleteBtn = target.closest(".dropdown-item-delete");
+  if (deleteBtn && !deleteBtn.disabled) {
+    event.stopPropagation();
+    void handleModelDelete(deleteBtn.dataset.kind, deleteBtn.dataset.value);
+    return;
+  }
+
+  const card = target.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+  void handleTTSModelChange(card.dataset.value);
+}
+
+function handleTTSModelCardKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest("button")) return;
+  const card = target?.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+
+  event.preventDefault();
+  void handleTTSModelChange(card.dataset.value);
+}
+
 function updateRuntimeHelpTexts() {
   if (sttHelpTextEl) {
     const whisperReady = Boolean(state.runtime.sttWhisperCliExists && state.runtime.sttModelExists);
@@ -1657,6 +2002,8 @@ function updateRuntimeHelpTexts() {
   }
 
   renderSTTEnginePanel();
+  renderLLMEnginePanel();
+  renderTTSEnginePanel();
 }
 
 function updateRuntimeDownloadButtons() {
@@ -1723,6 +2070,13 @@ function updateRuntimeDownloadButtons() {
     llmDeleteBtn.classList.toggle("hidden", !llmCanDeleteRuntime && !isLlmDeleting);
   }
 
+  if (llmEngineSettingsEl) {
+    const hasVisibleRuntimeAction =
+      (llmDownloadBtn && !llmDownloadBtn.classList.contains("hidden")) ||
+      (llmDeleteBtn && !llmDeleteBtn.classList.contains("hidden"));
+    llmEngineSettingsEl.classList.toggle("hidden", !hasVisibleRuntimeAction);
+  }
+
   if (ttsDownloadBtn) {
     ttsDownloadBtn.disabled = isBusy;
     const isTtsDownloading = state.runtimeDownloadTarget === "tts";
@@ -1742,6 +2096,13 @@ function updateRuntimeDownloadButtons() {
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteTtsRuntime")}`;
     ttsDeleteBtn.classList.toggle("runtime-downloading", isTtsDeleting);
     ttsDeleteBtn.classList.toggle("hidden", !ttsCanDeleteRuntime && !isTtsDeleting);
+  }
+
+  if (ttsEngineSettingsEl) {
+    const hasVisibleRuntimeAction =
+      (ttsDownloadBtn && !ttsDownloadBtn.classList.contains("hidden")) ||
+      (ttsDeleteBtn && !ttsDeleteBtn.classList.contains("hidden"));
+    ttsEngineSettingsEl.classList.toggle("hidden", !hasVisibleRuntimeAction);
   }
 
   if (cleanAllAssetsBtn) {
@@ -2227,7 +2588,7 @@ const LLM_MODEL_META = {
     label: "Qwen3 4B Instruct",
     speed: 4,
     quality: 4,
-    ramMB: 3200,
+    sizeMB: 2500,
     desc: "Current default with the best overall balance",
     recommended: true,
   },
@@ -2235,35 +2596,35 @@ const LLM_MODEL_META = {
     label: "Qwen2.5 3B Instruct",
     speed: 5,
     quality: 3,
-    ramMB: 2200,
+    sizeMB: 1900,
     desc: "Fast and suitable for lighter tasks",
   },
   "qwen2.5:1.5b-instruct": {
     label: "Qwen2.5 1.5B Instruct",
     speed: 5,
     quality: 2,
-    ramMB: 1200,
+    sizeMB: 986,
     desc: "Ultra-lightweight for low-memory devices",
   },
   "phi4-mini": {
     label: "Phi-4 Mini",
     speed: 4,
     quality: 3,
-    ramMB: 2800,
+    sizeMB: 2500,
     desc: "Microsoft Phi-4 mini variant",
   },
   "ministral-3:3b": {
     label: "Ministral 3B",
     speed: 5,
     quality: 3,
-    ramMB: 2300,
+    sizeMB: 3000,
     desc: "Lightweight Mistral model",
   },
   "ibm/granite4:micro-h": {
     label: "Granite4 Micro-H",
     speed: 5,
     quality: 3,
-    ramMB: 2000,
+    sizeMB: 1900,
     desc: "IBM Granite micro model",
   },
 };
@@ -2632,8 +2993,10 @@ function refreshDropdownForKind(kind) {
     renderParakeetModelCards();
   } else if (kind === "llm") {
     renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
+    renderLLMModelCards();
   } else if (kind === "tts-model") {
     renderDropdownMenu(ttsModelDropdownEl, getAllOptionsForKind("tts-model"), state.tts.localModelName, "tts-model");
+    renderTTSModelCards();
   }
 }
 
@@ -2751,6 +3114,38 @@ function updateRecordingMeta() {
   });
 }
 
+function updateMainComposerSttTooltips() {
+  const showMissingSttTooltip =
+    !state.runtime.sttReady &&
+    !state.isWorking &&
+    !state.isRecording &&
+    !state.assetCleanupInProgress;
+  const tooltipText = t("sttModelMissingTooltip");
+  const entries = [
+    { wrapper: pickFileTooltipEl, button: pickFileBtn, title: t("importAudio") },
+    { wrapper: recordTooltipEl, button: recordToggleBtn, title: t("record") },
+  ];
+
+  for (const { wrapper, button, title } of entries) {
+    if (!wrapper || !button) continue;
+
+    wrapper.dataset.tooltipActive = showMissingSttTooltip ? "true" : "false";
+    wrapper.dataset.tooltip = showMissingSttTooltip ? tooltipText : "";
+
+    if (showMissingSttTooltip) {
+      wrapper.tabIndex = 0;
+      wrapper.setAttribute("aria-label", tooltipText);
+      button.removeAttribute("title");
+      continue;
+    }
+
+    wrapper.removeAttribute("tabindex");
+    wrapper.removeAttribute("aria-label");
+    button.title = title;
+    button.setAttribute("aria-label", title);
+  }
+}
+
 function updateButtons() {
   pickFileBtn.disabled =
     state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady;
@@ -2777,6 +3172,7 @@ function updateButtons() {
     !noteQaInput.value.trim();
   copyBtn.disabled = !state.lastAssistantText;
   saveAsNoteBtn.disabled = !state.lastTranscript && !state.lastAssistantText;
+  updateMainComposerSttTooltips();
   updateRuntimeDownloadButtons();
 }
 
@@ -3398,6 +3794,8 @@ async function refreshRuntime() {
     renderWhisperModelCards();
     renderParakeetModelCards();
     populateDropdown(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
+    renderLLMEnginePanel();
+    renderTTSEnginePanel();
   } catch (error) {
     state.runtime.sttReady = false;
     state.runtime.sttEngineName = "whisper";
@@ -3562,6 +3960,7 @@ async function handleLLMModelChange(modelName) {
     setEngineStatus("llm", "ready", getModelMeta(modelName, "llm").label);
     setDropdownValue(llmModelDropdownEl, modelName, "llm");
     renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), modelName, "llm");
+    renderLLMEnginePanel();
   } catch (error) {
     setJobStatus(t("switchLlmFailed", { message: error.message }), true);
   }
@@ -3580,6 +3979,7 @@ async function handleTTSModelChange(modelName) {
 
   setDropdownValue(ttsModelDropdownEl, targetModel, "tts-model");
   renderDropdownMenu(ttsModelDropdownEl, getAllOptionsForKind("tts-model"), targetModel, "tts-model");
+  renderTTSModelCards();
   updateTTSUI();
 }
 

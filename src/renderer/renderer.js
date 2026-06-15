@@ -3,6 +3,7 @@ const DEFAULT_APP_LANGUAGE = "en";
 const LANGUAGE_OPTIONS = ["en", "zh-CN"];
 const SETTINGS_CATEGORY_STORAGE_KEY = "speakspace.settingsCategory";
 const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storage"];
+const textInputEvents = window.SpeakSpaceIme;
 const I18N = {
   en: {
     systemPrompt:
@@ -4088,8 +4089,19 @@ promptInputEl.addEventListener("input", () => {
   updateButtons();
 });
 
+textInputEvents.bindTextCompositionTracking(promptInputEl);
 promptInputEl.addEventListener("keydown", async (event) => {
-  if (event.key === "Enter" && !event.shiftKey) {
+  const enterIntent = textInputEvents.getTextInputEnterIntent(event);
+  if (enterIntent === "compose") {
+    return;
+  }
+
+  if (enterIntent === "ignore") {
+    event.preventDefault();
+    return;
+  }
+
+  if (enterIntent === "submit") {
     event.preventDefault();
     await handleSend();
   }
@@ -4135,8 +4147,19 @@ noteQaInput.addEventListener("input", () => {
   updateButtons();
 });
 
+textInputEvents.bindTextCompositionTracking(noteQaInput);
 noteQaInput.addEventListener("keydown", async (event) => {
-  if (event.key === "Enter" && !event.shiftKey) {
+  const enterIntent = textInputEvents.getTextInputEnterIntent(event);
+  if (enterIntent === "compose") {
+    return;
+  }
+
+  if (enterIntent === "ignore") {
+    event.preventDefault();
+    return;
+  }
+
+  if (enterIntent === "submit") {
     event.preventDefault();
     await handleNoteQaSend();
   }

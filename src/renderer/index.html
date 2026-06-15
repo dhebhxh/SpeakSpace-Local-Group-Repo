@@ -114,61 +114,65 @@
 
           <div class="composer">
             <div class="composer-toolbar">
-              <button
-                id="pickFileBtn"
-                class="icon-btn"
-                type="button"
-                title="Import audio file"
-                aria-label="Import audio file"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.8"
-                  />
-                  <path
-                    d="M13 6l-5 5 5 5"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.8"
-                  />
-                </svg>
-              </button>
+              <span class="composer-tooltip" data-composer-tooltip>
+                <button
+                  id="pickFileBtn"
+                  class="icon-btn"
+                  type="button"
+                  title="Import audio file"
+                  aria-label="Import audio file"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                    <path
+                      d="M13 6l-5 5 5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </button>
+              </span>
 
-              <button
-                id="recordToggleBtn"
-                class="icon-btn"
-                type="button"
-                title="Record"
-                aria-label="Record"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <rect
-                    x="9"
-                    y="3"
-                    width="6"
-                    height="11"
-                    rx="3"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                  />
-                  <path
-                    d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.8"
-                  />
-                </svg>
-              </button>
+              <span class="composer-tooltip" data-composer-tooltip>
+                <button
+                  id="recordToggleBtn"
+                  class="icon-btn"
+                  type="button"
+                  title="Record"
+                  aria-label="Record"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect
+                      x="9"
+                      y="3"
+                      width="6"
+                      height="11"
+                      rx="3"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
+                    <path
+                      d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </button>
+              </span>
             </div>
 
             <textarea
@@ -476,31 +480,69 @@
                 <span id="llmGroupTitle" class="settings-group-title">Local LLM</span>
                 <span id="llmStatusText" class="settings-group-status">Checking...</span>
               </div>
-              <div class="settings-setting-list">
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <label id="llmModelLabel" class="model-label">Model</label>
-                    <p id="llmHelpText" class="settings-help-text"></p>
-                  </div>
-                  <div class="settings-setting-control">
-                    <div id="llmModelDropdown" class="custom-dropdown" data-disabled="true">
-                      <button type="button" class="custom-dropdown-trigger" disabled>
-                        <span class="custom-dropdown-value">Checking...</span>
-                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                      </button>
-                      <div class="custom-dropdown-menu"></div>
+              <div class="stt-engine-layout">
+                <aside id="llmEngineNav" class="stt-engine-nav" aria-label="Local LLM engines">
+                  <p id="llmEngineListTitle" class="stt-engine-nav-title">Local Engines</p>
+                  <button class="stt-engine-btn active" type="button" data-llm-engine="ollama" aria-pressed="true">
+                    <span class="stt-engine-btn-main">
+                      <span id="llmOllamaEngineName" class="stt-engine-btn-name">Ollama</span>
+                      <span id="llmOllamaEngineStatus" class="stt-engine-status">Active</span>
+                    </span>
+                    <span id="llmOllamaEngineDesc" class="stt-engine-btn-desc">Local model runtime.</span>
+                  </button>
+                </aside>
+
+                <div class="stt-engine-detail">
+                  <header class="stt-engine-detail-head">
+                    <div>
+                      <h3 id="llmEngineDetailTitle">Ollama</h3>
+                      <p id="llmEngineDetailDesc" class="settings-help-text"></p>
+                    </div>
+                    <span id="llmEngineDetailBadge" class="dropdown-item-badge">Active</span>
+                  </header>
+
+                  <div class="stt-capability-grid">
+                    <div class="stt-capability-card">
+                      <span id="llmRuntimeSourceTitle" class="stt-capability-title">Runtime source</span>
+                      <p id="llmRuntimeSourceText" class="settings-help-text"></p>
+                    </div>
+                    <div class="stt-capability-card">
+                      <span id="llmModelStorageTitle" class="stt-capability-title">Model storage</span>
+                      <p id="llmModelStorageText" class="settings-help-text"></p>
                     </div>
                   </div>
-                </div>
-                <div class="settings-actions-row">
-                  <button id="llmDownloadBtn" class="ghost-btn settings-action-btn hidden" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-                    Download Local LLM
-                  </button>
-                  <button id="llmDeleteBtn" class="ghost-btn settings-action-btn danger-btn hidden" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
-                    Delete Ollama Runtime
-                  </button>
+
+                  <div class="stt-models-panel">
+                    <div class="stt-models-head">
+                      <div>
+                        <span id="llmModelLabel" class="stt-capability-title">LLM models</span>
+                        <p id="llmHelpText" class="settings-help-text"></p>
+                      </div>
+                      <span id="llmModelsBadge" class="dropdown-item-badge">Active</span>
+                    </div>
+                    <div id="llmModelCards" class="stt-model-card-list"></div>
+                  </div>
+
+                  <div id="llmModelDropdown" class="custom-dropdown hidden" data-disabled="true">
+                    <button type="button" class="custom-dropdown-trigger" disabled>
+                      <span class="custom-dropdown-value">Checking...</span>
+                      <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="custom-dropdown-menu"></div>
+                  </div>
+
+                  <div class="settings-setting-list llm-engine-settings">
+                    <div class="settings-actions-row">
+                      <button id="llmDownloadBtn" class="ghost-btn settings-action-btn hidden" type="button">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                        Download Local LLM
+                      </button>
+                      <button id="llmDeleteBtn" class="ghost-btn settings-action-btn danger-btn hidden" type="button">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
+                        Delete Ollama Runtime
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -511,67 +553,111 @@
                 <span id="ttsGroupTitle" class="settings-group-title">Text-to-Speech</span>
                 <span id="ttsStatusText" class="settings-group-status">Checking...</span>
               </div>
-              <div class="settings-setting-list">
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <span id="ttsAutoplayTitle" class="model-label">Autoplay Replies</span>
-                    <p id="ttsAutoplayHelp" class="settings-help-text">If disabled, you can still hover over assistant replies and use the action buttons to play them manually. Playback uses local TTS only.</p>
+              <div class="stt-engine-layout">
+                <aside id="ttsEngineNav" class="stt-engine-nav" aria-label="Text-to-speech engines">
+                  <p id="ttsEngineListTitle" class="stt-engine-nav-title">Local Engines</p>
+                  <button class="stt-engine-btn active" type="button" data-tts-engine="kokoro" aria-pressed="true">
+                    <span class="stt-engine-btn-main">
+                      <span id="ttsKokoroEngineName" class="stt-engine-btn-name">Kokoro</span>
+                      <span id="ttsKokoroEngineStatus" class="stt-engine-status">Active</span>
+                    </span>
+                    <span id="ttsKokoroEngineDesc" class="stt-engine-btn-desc">Local sherpa-onnx voices.</span>
+                  </button>
+                </aside>
+
+                <div class="stt-engine-detail">
+                  <header class="stt-engine-detail-head">
+                    <div>
+                      <h3 id="ttsEngineDetailTitle">Kokoro</h3>
+                      <p id="ttsEngineDetailDesc" class="settings-help-text"></p>
+                    </div>
+                    <span id="ttsEngineDetailBadge" class="dropdown-item-badge">Active</span>
+                  </header>
+
+                  <div class="stt-capability-grid">
+                    <div class="stt-capability-card">
+                      <span id="ttsRuntimeBackendTitle" class="stt-capability-title">Runtime backend</span>
+                      <p id="ttsRuntimeBackendText" class="settings-help-text"></p>
+                    </div>
+                    <div class="stt-capability-card">
+                      <span id="ttsVoiceSetTitle" class="stt-capability-title">Voice set</span>
+                      <p id="ttsVoiceSetText" class="settings-help-text"></p>
+                    </div>
                   </div>
-                  <div class="settings-setting-control compact">
-                    <button
-                      id="ttsAutoplayToggle"
-                      class="settings-switch"
-                      type="button"
-                      role="switch"
-                      aria-checked="false"
-                      disabled
-                    >
-                      <span class="settings-switch-track">
-                        <span class="settings-switch-thumb"></span>
-                      </span>
-                      <span id="ttsAutoplayLabel" class="settings-switch-label">Off</span>
+
+                  <div class="settings-setting-list tts-feature-settings">
+                    <div class="settings-setting-row">
+                      <div class="settings-setting-copy">
+                        <span id="ttsAutoplayTitle" class="model-label">Autoplay Replies</span>
+                        <p id="ttsAutoplayHelp" class="settings-help-text">If disabled, you can still hover over assistant replies and use the action buttons to play them manually. Playback uses local TTS only.</p>
+                      </div>
+                      <div class="settings-setting-control compact">
+                        <button
+                          id="ttsAutoplayToggle"
+                          class="settings-switch"
+                          type="button"
+                          role="switch"
+                          aria-checked="false"
+                          disabled
+                        >
+                          <span class="settings-switch-track">
+                            <span class="settings-switch-thumb"></span>
+                          </span>
+                          <span id="ttsAutoplayLabel" class="settings-switch-label">Off</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stt-models-panel">
+                    <div class="stt-models-head">
+                      <div>
+                        <span id="ttsModelLabel" class="stt-capability-title">TTS model</span>
+                        <p id="ttsModelHelpText" class="settings-help-text">Local TTS model used for reply playback.</p>
+                      </div>
+                      <span id="ttsModelsBadge" class="dropdown-item-badge">Active</span>
+                    </div>
+                    <div id="ttsModelCards" class="stt-model-card-list"></div>
+                  </div>
+
+                  <div id="ttsModelDropdown" class="custom-dropdown hidden" data-disabled="true">
+                    <button type="button" class="custom-dropdown-trigger" disabled>
+                      <span class="custom-dropdown-value">Checking...</span>
+                      <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
+                    <div class="custom-dropdown-menu"></div>
                   </div>
-                </div>
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <label id="ttsModelLabel" class="model-label">Model</label>
-                    <p id="ttsModelHelpText" class="settings-help-text">Local TTS model used for reply playback.</p>
-                  </div>
-                  <div class="settings-setting-control">
-                    <div id="ttsModelDropdown" class="custom-dropdown" data-disabled="true">
-                      <button type="button" class="custom-dropdown-trigger" disabled>
-                        <span class="custom-dropdown-value">Checking...</span>
-                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                      </button>
-                      <div class="custom-dropdown-menu"></div>
+
+                  <div class="settings-setting-list tts-voice-settings">
+                    <div class="settings-setting-row">
+                      <div class="settings-setting-copy">
+                        <label id="ttsVoiceLabel" class="model-label">Voice</label>
+                        <p id="ttsVoiceText" class="settings-help-text">Checking local TTS runtime...</p>
+                      </div>
+                      <div class="settings-setting-control">
+                        <div id="ttsSpeakerDropdown" class="custom-dropdown" data-disabled="true">
+                          <button type="button" class="custom-dropdown-trigger" disabled>
+                            <span class="custom-dropdown-value">Checking...</span>
+                            <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                          </button>
+                          <div class="custom-dropdown-menu"></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <label id="ttsVoiceLabel" class="model-label">Voice</label>
-                    <p id="ttsVoiceText" class="settings-help-text">Checking local TTS runtime...</p>
-                  </div>
-                  <div class="settings-setting-control">
-                    <div id="ttsSpeakerDropdown" class="custom-dropdown" data-disabled="true">
-                      <button type="button" class="custom-dropdown-trigger" disabled>
-                        <span class="custom-dropdown-value">Checking...</span>
-                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+
+                  <div class="settings-setting-list tts-engine-settings">
+                    <div class="settings-actions-row">
+                      <button id="ttsDownloadBtn" class="ghost-btn settings-action-btn hidden" type="button">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                        Download TTS Runtime
                       </button>
-                      <div class="custom-dropdown-menu"></div>
+                      <button id="ttsDeleteBtn" class="ghost-btn settings-action-btn danger-btn hidden" type="button">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
+                        Delete TTS Runtime
+                      </button>
                     </div>
                   </div>
-                </div>
-                <div class="settings-actions-row">
-                  <button id="ttsDownloadBtn" class="ghost-btn settings-action-btn hidden" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-                    Download TTS Runtime
-                  </button>
-                  <button id="ttsDeleteBtn" class="ghost-btn settings-action-btn danger-btn hidden" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
-                    Delete TTS Runtime
-                  </button>
                 </div>
               </div>
             </section>

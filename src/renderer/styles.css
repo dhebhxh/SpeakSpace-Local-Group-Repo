@@ -701,6 +701,14 @@ body.sidebar-collapsed .sidebar > * {
   border-color: rgba(245, 158, 11, 0.2);
 }
 
+#llmModelsBadge {
+  max-width: 148px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  letter-spacing: 0;
+}
+
 .dropdown-item-check {
   margin-left: auto;
   color: var(--accent-hover);
@@ -1431,6 +1439,65 @@ body.sidebar-collapsed .main-panel::before {
 .composer-toolbar {
   display: flex;
   gap: 4px;
+}
+
+.composer-tooltip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.composer-tooltip[data-tooltip-active="true"] {
+  cursor: help;
+}
+
+.composer-tooltip[data-tooltip-active="true"] .icon-btn:disabled {
+  pointer-events: none;
+}
+
+.composer-tooltip::before,
+.composer-tooltip::after {
+  position: absolute;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 40;
+}
+
+.composer-tooltip::before {
+  content: "";
+  bottom: calc(100% + 5px);
+  left: 14px;
+  border: 6px solid transparent;
+  border-top-color: rgba(12, 14, 22, 0.96);
+}
+
+.composer-tooltip::after {
+  content: attr(data-tooltip);
+  bottom: calc(100% + 16px);
+  width: max-content;
+  max-width: min(260px, 70vw);
+  padding: 9px 11px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  background: rgba(12, 14, 22, 0.96);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.composer-tooltip[data-tooltip-active="true"]:hover::before,
+.composer-tooltip[data-tooltip-active="true"]:hover::after,
+.composer-tooltip[data-tooltip-active="true"]:focus::before,
+.composer-tooltip[data-tooltip-active="true"]:focus::after,
+.composer-tooltip[data-tooltip-active="true"]:focus-within::before,
+.composer-tooltip[data-tooltip-active="true"]:focus-within::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .icon-btn,
@@ -2484,6 +2551,17 @@ body.sidebar-collapsed .main-panel::before {
 
 .stt-engine-settings {
   margin-top: 0;
+}
+
+.llm-engine-settings,
+.tts-feature-settings,
+.tts-voice-settings,
+.tts-engine-settings {
+  margin-top: 14px;
+}
+
+.tts-feature-settings {
+  margin-bottom: 14px;
 }
 
 .stt-engine-notice {

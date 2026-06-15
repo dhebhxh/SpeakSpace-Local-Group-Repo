@@ -4,10 +4,7 @@
 
 This handoff summarizes the latest UI refinement and verification session for this repository. It is meant for a fresh agent continuing review, PR follow-up, or post-review fixes.
 
-For broader pre-existing context, reference the existing project handoff in the repo:
-
-- `docs/speakspace-handoff-2026-06-15.md`
-- `AGENTS.md` in the repo root for local-first constraints and workflow rules
+For broader project context, reference `AGENTS.md` in the repo root for local-first constraints and workflow rules.
 
 Do not duplicate the full diff here. Use the commit and PR links below.
 
@@ -29,9 +26,7 @@ Tracked files changed by the latest UI work:
 Untracked local-only items remained uncommitted and should not be staged casually:
 
 - `.speakspace-data/`
-- `AGENTS.md`
 - `node_modules/`
-- `speakspace-handoff-2026-06-15.md`
 
 ## Work Completed
 

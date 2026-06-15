@@ -3,6 +3,7 @@ const DEFAULT_APP_LANGUAGE = "en";
 const LANGUAGE_OPTIONS = ["en", "zh-CN"];
 const SETTINGS_CATEGORY_STORAGE_KEY = "speakspace.settingsCategory";
 const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storage"];
+const STT_ENGINE_OPTIONS = ["whisper", "parakeet"];
 const textInputEvents = window.SpeakSpaceIme;
 const I18N = {
   en: {
@@ -88,6 +89,36 @@ const I18N = {
     language: "Language",
     interfaceLanguage: "Interface Language",
     sttTitle: "Speech-to-Text",
+    sttEngineListTitle: "Local Engines",
+    sttEngineActive: "Active",
+    sttEngineAvailable: "Available",
+    sttEngineNotInstalled: "Not installed",
+    sttEngineWhisperDesc: "Cross-platform default engine.",
+    sttEngineParakeetDesc: "Local ONNX engine candidate.",
+    sttWhisperDetailDesc:
+      "Whisper is the current connected STT engine. It keeps the app usable on macOS and Windows while covering the project language set.",
+    sttParakeetDetailDesc:
+      "Parakeet runs through sherpa-onnx as a local ONNX STT engine. Select it here to use it for transcription.",
+    sttCapabilityCoverage: "Language coverage",
+    sttCapabilityRuntime: "Runtime path",
+    sttWhisperCoverage:
+      "Broad multilingual coverage including English, Mandarin, Hindi, Japanese, Korean, Spanish, French, and Arabic in the existing benchmark set.",
+    sttWhisperRuntime:
+      "Runs through whisper.cpp and the existing model download flow. This remains the default fallback across macOS and Windows.",
+    sttParakeetNotice:
+      "Parakeet uses sherpa-onnx-node locally. WAV files work directly; other audio formats require ffmpeg for conversion before decoding.",
+    sttParakeetCoverage:
+      "Public Parakeet options are strong for English and selected multilingual sets. No current candidate covers English, Mandarin, and Hindi together as cleanly as Whisper.",
+    sttParakeetRuntime:
+      "Runs through sherpa-onnx-node on CPU in this desktop app. The model packages are stored under the project-managed STT data directory.",
+    sttWhisperModelsTitle: "Whisper models",
+    sttParakeetModelsTitle: "Parakeet models",
+    currentModel: "Current",
+    sttParakeetV2Desc:
+      "English-focused TDT model with strong speed and punctuation support.",
+    sttParakeetV3Desc:
+      "Multilingual TDT model for 25 European languages; does not cover Mandarin or Hindi.",
+    switchSttEngineFailed: "Failed to switch STT engine: {message}",
     llmTitle: "Local LLM",
     ttsTitle: "Text-to-Speech",
     ttsAutoplayTitle: "Autoplay Replies",
@@ -167,7 +198,6 @@ const I18N = {
     deleteFailed: "Delete failed: {message}",
     languageEnglish: "English",
     languageChinese: "简体中文",
-    sttModelLabel: "Model",
     llmModelLabel: "Model",
     ttsStatusChecking: "Checking...",
     sttHelpReady: "STT runtime and default model are ready.",
@@ -178,11 +208,11 @@ const I18N = {
     sttHelpMissingRuntime:
       "Local STT runtime is missing. Download it using the button below.",
     sttHelpMissingModelProject:
-      "Project-managed STT runtime is ready, but no STT model is installed yet. Select a model from the dropdown and tap the download icon.",
+      "Project-managed STT runtime is ready, but no STT model is installed yet. Choose a model card below and tap the download icon.",
     sttHelpMissingModelSystem:
-      "Using STT runtime already installed on this device, but no STT model is installed yet. Select a model from the dropdown and tap the download icon.",
+      "Using STT runtime already installed on this device, but no STT model is installed yet. Choose a model card below and tap the download icon.",
     sttHelpMissingModel:
-      "No STT model found. Select a model from the dropdown and tap the download icon.",
+      "No STT model found. Choose a model card below and tap the download icon.",
     llmHelpReadyProject:
       "Project-managed Ollama is ready. Models directory: {path}. If the first reply is slow, Ollama may still be starting.",
     llmHelpReadyExternal:
@@ -305,6 +335,36 @@ const I18N = {
     language: "语言",
     interfaceLanguage: "界面语言",
     sttTitle: "语音转写",
+    sttEngineListTitle: "本地引擎",
+    sttEngineActive: "当前使用",
+    sttEngineAvailable: "可用",
+    sttEngineNotInstalled: "未安装",
+    sttEngineWhisperDesc: "跨平台默认转写引擎。",
+    sttEngineParakeetDesc: "本地 ONNX 转写引擎候选。",
+    sttWhisperDetailDesc:
+      "Whisper 是当前已接入的 STT 引擎，可在 macOS 和 Windows 上保持稳定可用，并覆盖项目重点语言。",
+    sttParakeetDetailDesc:
+      "Parakeet 会通过 sherpa-onnx 作为本地 ONNX 转写引擎运行；选中它后会直接用于转写。",
+    sttCapabilityCoverage: "语言覆盖",
+    sttCapabilityRuntime: "运行路径",
+    sttWhisperCoverage:
+      "覆盖面较广，现有 benchmark 已包含英文、中文普通话、印地语、日语、韩语、西语、法语和阿语。",
+    sttWhisperRuntime:
+      "通过 whisper.cpp 和现有模型下载流程运行；继续作为 macOS 与 Windows 的默认兜底方案。",
+    sttParakeetNotice:
+      "Parakeet 会在本地通过 sherpa-onnx-node 运行。WAV 文件可直接识别；其他音频格式需要系统安装 ffmpeg 后先转换再识别。",
+    sttParakeetCoverage:
+      "公开 Parakeet 选项在英文和部分多语言场景较强，但目前没有一个候选能像 Whisper 一样同时完整覆盖英文、中文普通话和印地语。",
+    sttParakeetRuntime:
+      "当前桌面应用中通过 sherpa-onnx-node 的 CPU 路径运行；模型包存放在项目管理的 STT 数据目录下。",
+    sttWhisperModelsTitle: "Whisper 模型",
+    sttParakeetModelsTitle: "Parakeet 模型",
+    currentModel: "当前模型",
+    sttParakeetV2Desc:
+      "偏英文的 TDT 模型，速度和标点能力较强。",
+    sttParakeetV3Desc:
+      "支持 25 种欧洲语言的多语言 TDT 模型；不覆盖中文普通话或印地语。",
+    switchSttEngineFailed: "切换 STT 引擎失败: {message}",
     llmTitle: "本地大语言模型",
     ttsTitle: "语音播报",
     ttsAutoplayTitle: "回答后自动播放",
@@ -384,7 +444,6 @@ const I18N = {
     deleteFailed: "删除失败: {message}",
     languageEnglish: "English",
     languageChinese: "简体中文",
-    sttModelLabel: "模型",
     llmModelLabel: "模型",
     ttsStatusChecking: "检查中...",
     sttHelpReady: "STT 运行时和默认模型已就绪。",
@@ -395,11 +454,11 @@ const I18N = {
     sttHelpMissingRuntime:
       "未检测到本地 STT 运行时，请点击下方按钮下载。",
     sttHelpMissingModelProject:
-      "项目内托管的 STT 运行时已就绪，但还没有安装 STT 模型。请在下拉框中选择模型并点击下载图标。",
+      "项目内托管的 STT 运行时已就绪，但还没有安装 STT 模型。请在下方模型卡片中选择并点击下载图标。",
     sttHelpMissingModelSystem:
-      "当前正在使用设备里已安装的 STT 运行时，但还没有安装 STT 模型。请在下拉框中选择模型并点击下载图标。",
+      "当前正在使用设备里已安装的 STT 运行时，但还没有安装 STT 模型。请在下方模型卡片中选择并点击下载图标。",
     sttHelpMissingModel:
-      "未检测到 STT 模型，请在下拉框中选择模型并点击下载图标。",
+      "未检测到 STT 模型，请在下方模型卡片中选择并点击下载图标。",
     llmHelpReadyProject:
       "项目内托管的 Ollama 已就绪。模型目录：{path}。如果首条回复稍慢，可能是 Ollama 正在启动。",
     llmHelpReadyExternal:
@@ -460,10 +519,17 @@ const state = {
   uiLanguage: DEFAULT_APP_LANGUAGE,
   runtime: {
     sttReady: false,
+    sttEngineName: "whisper",
     llmReady: false,
     sttWhisperCliExists: false,
     sttModelExists: false,
     sttRuntimeLocation: "",
+    sttParakeetReady: false,
+    sttParakeetDependencyReady: false,
+    sttParakeetModelExists: false,
+    sttParakeetBackend: "",
+    sttParakeetModelName: "",
+    sttParakeetModels: [],
     llmOllamaExists: false,
     llmModelExists: false,
     llmRuntimeLocation: "",
@@ -501,6 +567,7 @@ const state = {
   recordingSeconds: 0,
   runtimeDownloadTarget: "",
   runtimeDeleteTarget: "",
+  sttEngineView: "whisper",
   assetCleanupInProgress: false,
   modelDownloadTarget: "",
   modelDownloadKind: "",
@@ -526,13 +593,13 @@ const ttsStatusDotPanelEl = document.querySelector("#ttsStatusDotPanel");
 const ttsStatusTextEl = document.querySelector("#ttsStatusText");
 const sttHelpTextEl = document.querySelector("#sttHelpText");
 const llmHelpTextEl = document.querySelector("#llmHelpText");
+const sttEngineSettingsEl = document.querySelector(".stt-engine-settings");
 const sttDownloadBtn = document.querySelector("#sttDownloadBtn");
 const sttDeleteBtn = document.querySelector("#sttDeleteBtn");
 const llmDownloadBtn = document.querySelector("#llmDownloadBtn");
 const llmDeleteBtn = document.querySelector("#llmDeleteBtn");
 const ttsDownloadBtn = document.querySelector("#ttsDownloadBtn");
 const ttsDeleteBtn = document.querySelector("#ttsDeleteBtn");
-const sttModelDropdownEl = document.querySelector("#sttModelDropdown");
 const llmModelDropdownEl = document.querySelector("#llmModelDropdown");
 const ttsModelDropdownEl = document.querySelector("#ttsModelDropdown");
 const languageDropdownEl = document.querySelector("#languageDropdown");
@@ -582,6 +649,30 @@ const statusChip = document.querySelector("#statusChip");
 const settingsOverlay = document.querySelector("#settingsOverlay");
 const settingsCloseBtn = document.querySelector("#settingsCloseBtn");
 const settingsNavEl = document.querySelector("#settingsNav");
+const sttEngineNavEl = document.querySelector("#sttEngineNav");
+const sttEngineListTitleEl = document.querySelector("#sttEngineListTitle");
+const sttWhisperEngineStatusEl = document.querySelector("#sttWhisperEngineStatus");
+const sttParakeetEngineStatusEl = document.querySelector("#sttParakeetEngineStatus");
+const sttWhisperEngineDescEl = document.querySelector("#sttWhisperEngineDesc");
+const sttParakeetEngineDescEl = document.querySelector("#sttParakeetEngineDesc");
+const sttEngineDetailTitleEl = document.querySelector("#sttEngineDetailTitle");
+const sttEngineDetailDescEl = document.querySelector("#sttEngineDetailDesc");
+const sttEngineDetailBadgeEl = document.querySelector("#sttEngineDetailBadge");
+const sttWhisperCoverageTitleEl = document.querySelector("#sttWhisperCoverageTitle");
+const sttWhisperCoverageTextEl = document.querySelector("#sttWhisperCoverageText");
+const sttWhisperRuntimeTitleEl = document.querySelector("#sttWhisperRuntimeTitle");
+const sttWhisperRuntimeTextEl = document.querySelector("#sttWhisperRuntimeText");
+const sttWhisperModelsTitleEl = document.querySelector("#sttWhisperModelsTitle");
+const sttWhisperModelsBadgeEl = document.querySelector("#sttWhisperModelsBadge");
+const sttWhisperModelCardsEl = document.querySelector("#sttWhisperModelCards");
+const sttParakeetNoticeEl = document.querySelector("#sttParakeetNotice");
+const sttParakeetCoverageTitleEl = document.querySelector("#sttParakeetCoverageTitle");
+const sttParakeetCoverageTextEl = document.querySelector("#sttParakeetCoverageText");
+const sttParakeetRuntimeTitleEl = document.querySelector("#sttParakeetRuntimeTitle");
+const sttParakeetRuntimeTextEl = document.querySelector("#sttParakeetRuntimeText");
+const sttParakeetModelsTitleEl = document.querySelector("#sttParakeetModelsTitle");
+const sttParakeetModelsBadgeEl = document.querySelector("#sttParakeetModelsBadge");
+const sttParakeetModelCardsEl = document.querySelector("#sttParakeetModelCards");
 const managedDataPathEl = document.querySelector("#managedDataPath");
 const trashOverlay = document.querySelector("#trashOverlay");
 const trashCloseBtn = document.querySelector("#trashCloseBtn");
@@ -718,7 +809,6 @@ function applyLanguageUI() {
   document.querySelector("#languageLabel").textContent = t("interfaceLanguage");
   document.querySelector("#languageHelpText").textContent = t("languageHelp");
   document.querySelector("#sttGroupTitle").textContent = t("sttTitle");
-  document.querySelector("#sttModelLabel").textContent = t("sttModelLabel");
   document.querySelector("#llmGroupTitle").textContent = t("llmTitle");
   document.querySelector("#llmModelLabel").textContent = t("llmModelLabel");
   updateRuntimeDownloadButtons();
@@ -889,6 +979,16 @@ settingsNavEl?.addEventListener("click", (event) => {
   if (!button) return;
   setSettingsCategory(button.dataset.settingsCategory);
 });
+sttEngineNavEl?.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const button = target?.closest("[data-stt-engine]");
+  if (!button) return;
+  void setSTTEngineView(button.dataset.sttEngine);
+});
+sttWhisperModelCardsEl?.addEventListener("click", handleWhisperModelCardClick);
+sttWhisperModelCardsEl?.addEventListener("keydown", handleWhisperModelCardKeydown);
+sttParakeetModelCardsEl?.addEventListener("click", handleParakeetModelCardClick);
+sttParakeetModelCardsEl?.addEventListener("keydown", handleParakeetModelCardKeydown);
 [sidebarToggleBtn, sidebarToggleBtnDetail, sidebarCollapseBtn].forEach((button) => {
   button?.addEventListener("click", () => toggleSidebar());
 });
@@ -1163,9 +1263,355 @@ function updateTTSUI() {
   }
 }
 
+function createModelBadge(text, variant = "") {
+  const badge = document.createElement("span");
+  badge.className = `stt-model-badge${variant ? ` ${variant}` : ""}`;
+  badge.textContent = text;
+  return badge;
+}
+
+function createSTTModelCardShell(titleText, badges = []) {
+  const card = document.createElement("article");
+  card.className = "stt-model-card";
+
+  const head = document.createElement("div");
+  head.className = "stt-model-card-head";
+
+  const titleGroup = document.createElement("div");
+  titleGroup.className = "stt-model-card-title-group";
+
+  const title = document.createElement("h4");
+  title.textContent = titleText;
+
+  const badgeRow = document.createElement("div");
+  badgeRow.className = "stt-model-badge-row";
+  for (const badge of badges) {
+    badgeRow.append(createModelBadge(badge.text, badge.variant));
+  }
+
+  titleGroup.append(title, badgeRow);
+  head.append(titleGroup);
+  card.append(head);
+
+  return { card, head };
+}
+
+function createModelMetricsElement(meta) {
+  const metrics = document.createElement("div");
+  metrics.className = "stt-model-card-metrics";
+  metrics.innerHTML = `
+    <div class="metric">
+      <svg class="metric-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span class="metric-label">${t("speed")}</span>
+      <span class="metric-dots">${createRatingDots(meta.speed, 5, "speed")}</span>
+    </div>
+    <div class="metric">
+      <svg class="metric-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span class="metric-label">${t("quality")}</span>
+      <span class="metric-dots">${createRatingDots(meta.quality, 5, "quality")}</span>
+    </div>
+  `;
+  return metrics;
+}
+
+function renderWhisperModelCards() {
+  if (!sttWhisperModelCardsEl) return;
+
+  sttWhisperModelCardsEl.innerHTML = "";
+  const options = getAllOptionsForKind("stt");
+  const installedOptions = new Set(getInstalledModelsByKind("stt"));
+
+  if (options.length === 0) {
+    sttWhisperModelCardsEl.innerHTML = `<div class="dropdown-empty">${t("dropdownEmptyModel")}</div>`;
+    return;
+  }
+
+  for (const name of options) {
+    const meta = getModelMeta(name, "stt");
+    const isActive = name === state.runtime.sttModelName;
+    const isInstalled = installedOptions.has(name);
+    const badges = [
+      { text: isInstalled ? t("installed") : t("missingModel"), variant: isInstalled ? "" : "warning" },
+    ];
+
+    if (isActive) {
+      badges.unshift({ text: t("currentModel"), variant: "active" });
+    }
+    if (meta.recommended) {
+      badges.push({ text: t("recommended"), variant: "recommended" });
+    }
+    if (meta.sizeMB) {
+      badges.push({ text: `${meta.sizeMB} MB`, variant: "muted" });
+    }
+
+    const { card, head } = createSTTModelCardShell(meta.label, badges);
+    card.dataset.value = name;
+    card.dataset.installed = isInstalled ? "true" : "false";
+    card.classList.toggle("active", isActive);
+    card.classList.toggle("missing", !isInstalled);
+    if (isInstalled) {
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+      card.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
+
+    const actionButtons = getModelActionButtonsHTML("stt", name, isInstalled, isActive);
+    if (actionButtons) {
+      const actions = document.createElement("div");
+      actions.className = "stt-model-card-actions";
+      actions.innerHTML = actionButtons;
+      head.append(actions);
+    }
+
+    if (meta.desc) {
+      const desc = document.createElement("p");
+      desc.className = "settings-help-text";
+      desc.textContent = meta.desc;
+      card.append(desc);
+    }
+
+    card.append(createModelMetricsElement(meta));
+    sttWhisperModelCardsEl.append(card);
+  }
+}
+
+function renderParakeetModelCards() {
+  if (!sttParakeetModelCardsEl) return;
+
+  sttParakeetModelCardsEl.innerHTML = "";
+  const options = getAllOptionsForKind("parakeet");
+  const installedOptions = new Set(getInstalledModelsByKind("parakeet"));
+
+  if (options.length === 0) {
+    sttParakeetModelCardsEl.innerHTML = `<div class="dropdown-empty">${t("dropdownEmptyModel")}</div>`;
+    return;
+  }
+
+  for (const name of options) {
+    const meta = getModelMeta(name, "parakeet");
+    const isActive = name === state.runtime.sttParakeetModelName;
+    const isInstalled = installedOptions.has(name);
+    const badges = [
+      { text: isInstalled ? t("installed") : t("missingModel"), variant: isInstalled ? "" : "warning" },
+    ];
+
+    if (isActive) {
+      badges.unshift({ text: t("currentModel"), variant: "active" });
+    }
+    if (meta.recommended) {
+      badges.push({ text: t("recommended"), variant: "recommended" });
+    }
+    if (meta.sizeMB) {
+      badges.push({ text: `${meta.sizeMB} MB`, variant: "muted" });
+    }
+
+    const { card, head } = createSTTModelCardShell(meta.label, badges);
+    card.dataset.value = name;
+    card.dataset.installed = isInstalled ? "true" : "false";
+    card.classList.toggle("active", isActive);
+    card.classList.toggle("missing", !isInstalled);
+    if (isInstalled) {
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+      card.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
+
+    const actionButtons = getModelActionButtonsHTML("parakeet", name, isInstalled, isActive);
+    if (actionButtons) {
+      const actions = document.createElement("div");
+      actions.className = "stt-model-card-actions";
+      actions.innerHTML = actionButtons;
+      head.append(actions);
+    }
+
+    if (meta.desc) {
+      const desc = document.createElement("p");
+      desc.className = "settings-help-text";
+      desc.textContent = meta.desc;
+      card.append(desc);
+    }
+
+    card.append(createModelMetricsElement(meta));
+    sttParakeetModelCardsEl.append(card);
+  }
+}
+
+function renderSTTEnginePanel() {
+  const activeEngine = STT_ENGINE_OPTIONS.includes(state.sttEngineView)
+    ? state.sttEngineView
+    : "whisper";
+  const selectedEngine = state.runtime.sttEngineName || activeEngine;
+  state.sttEngineView = activeEngine;
+
+  sttEngineNavEl?.querySelectorAll("[data-stt-engine]").forEach((button) => {
+    const isActive = button.dataset.sttEngine === activeEngine;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+
+  document.querySelectorAll("[data-stt-engine-pane]").forEach((pane) => {
+    pane.classList.toggle("active", pane.dataset.sttEnginePane === activeEngine);
+  });
+
+  if (sttEngineListTitleEl) sttEngineListTitleEl.textContent = t("sttEngineListTitle");
+  if (sttWhisperEngineStatusEl) {
+    sttWhisperEngineStatusEl.textContent =
+      selectedEngine === "whisper" ? t("sttEngineActive") : t("sttEngineAvailable");
+    sttWhisperEngineStatusEl.classList.toggle("warning", false);
+  }
+  if (sttParakeetEngineStatusEl) {
+    sttParakeetEngineStatusEl.textContent =
+      selectedEngine === "parakeet" ? t("sttEngineActive") : t("sttEngineAvailable");
+    sttParakeetEngineStatusEl.classList.toggle("warning", false);
+  }
+  if (sttWhisperEngineDescEl) sttWhisperEngineDescEl.textContent = t("sttEngineWhisperDesc");
+  if (sttParakeetEngineDescEl) sttParakeetEngineDescEl.textContent = t("sttEngineParakeetDesc");
+
+  const isParakeet = activeEngine === "parakeet";
+  if (sttEngineDetailTitleEl) {
+    sttEngineDetailTitleEl.textContent = isParakeet ? "Parakeet" : "Whisper";
+  }
+  if (sttEngineDetailDescEl) {
+    sttEngineDetailDescEl.textContent = t(
+      isParakeet ? "sttParakeetDetailDesc" : "sttWhisperDetailDesc"
+    );
+  }
+  if (sttEngineDetailBadgeEl) {
+    sttEngineDetailBadgeEl.textContent = t(
+      activeEngine === selectedEngine ? "sttEngineActive" : "sttEngineAvailable"
+    );
+    sttEngineDetailBadgeEl.classList.toggle("warning", activeEngine !== selectedEngine);
+  }
+
+  if (sttWhisperCoverageTitleEl) sttWhisperCoverageTitleEl.textContent = t("sttCapabilityCoverage");
+  if (sttWhisperRuntimeTitleEl) sttWhisperRuntimeTitleEl.textContent = t("sttCapabilityRuntime");
+  if (sttWhisperCoverageTextEl) sttWhisperCoverageTextEl.textContent = t("sttWhisperCoverage");
+  if (sttWhisperRuntimeTextEl) sttWhisperRuntimeTextEl.textContent = t("sttWhisperRuntime");
+  if (sttWhisperModelsTitleEl) sttWhisperModelsTitleEl.textContent = t("sttWhisperModelsTitle");
+  if (sttWhisperModelsBadgeEl) {
+    sttWhisperModelsBadgeEl.textContent =
+      selectedEngine === "whisper" ? t("sttEngineActive") : t("sttEngineAvailable");
+    sttWhisperModelsBadgeEl.classList.toggle("warning", selectedEngine !== "whisper");
+  }
+  if (sttParakeetNoticeEl) sttParakeetNoticeEl.textContent = t("sttParakeetNotice");
+  if (sttParakeetCoverageTitleEl) sttParakeetCoverageTitleEl.textContent = t("sttCapabilityCoverage");
+  if (sttParakeetRuntimeTitleEl) sttParakeetRuntimeTitleEl.textContent = t("sttCapabilityRuntime");
+  if (sttParakeetCoverageTextEl) sttParakeetCoverageTextEl.textContent = t("sttParakeetCoverage");
+  if (sttParakeetRuntimeTextEl) sttParakeetRuntimeTextEl.textContent = t("sttParakeetRuntime");
+  if (sttParakeetModelsTitleEl) sttParakeetModelsTitleEl.textContent = t("sttParakeetModelsTitle");
+  if (sttParakeetModelsBadgeEl) {
+    sttParakeetModelsBadgeEl.textContent =
+      selectedEngine === "parakeet" ? t("sttEngineActive") : t("sttEngineAvailable");
+    sttParakeetModelsBadgeEl.classList.toggle("warning", false);
+  }
+  renderWhisperModelCards();
+  renderParakeetModelCards();
+}
+
+async function setSTTEngineView(engine) {
+  if (!STT_ENGINE_OPTIONS.includes(engine)) {
+    return;
+  }
+
+  const previousEngine = state.runtime.sttEngineName || state.sttEngineView || "whisper";
+  state.sttEngineView = engine;
+  renderSTTEnginePanel();
+
+  if (engine === state.runtime.sttEngineName) {
+    return;
+  }
+
+  try {
+    await window.desktopSTT.setSTTEngine(engine);
+    state.runtime.sttEngineName = engine;
+    await refreshRuntime();
+  } catch (error) {
+    state.sttEngineView = previousEngine;
+    renderSTTEnginePanel();
+    setJobStatus(t("switchSttEngineFailed", { message: error.message }), true);
+  }
+}
+
+function handleWhisperModelCardClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const downloadBtn = target.closest(".dropdown-item-download");
+  if (downloadBtn) {
+    event.stopPropagation();
+    if (downloadBtn.dataset.action === "cancel") {
+      handleCancelModelDownload();
+    } else {
+      void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
+    }
+    return;
+  }
+
+  const deleteBtn = target.closest(".dropdown-item-delete");
+  if (deleteBtn && !deleteBtn.disabled) {
+    event.stopPropagation();
+    void handleModelDelete(deleteBtn.dataset.kind, deleteBtn.dataset.value);
+    return;
+  }
+
+  const card = target.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+  void handleSTTModelChange(card.dataset.value);
+}
+
+function handleWhisperModelCardKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest("button")) return;
+  const card = target?.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+
+  event.preventDefault();
+  void handleSTTModelChange(card.dataset.value);
+}
+
+function handleParakeetModelCardClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const downloadBtn = target.closest(".dropdown-item-download");
+  if (downloadBtn) {
+    event.stopPropagation();
+    if (downloadBtn.dataset.action === "cancel") {
+      handleCancelModelDownload();
+    } else {
+      void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
+    }
+    return;
+  }
+
+  const deleteBtn = target.closest(".dropdown-item-delete");
+  if (deleteBtn && !deleteBtn.disabled) {
+    event.stopPropagation();
+    void handleModelDelete(deleteBtn.dataset.kind, deleteBtn.dataset.value);
+    return;
+  }
+
+  const card = target.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+  void handleParakeetModelChange(card.dataset.value);
+}
+
+function handleParakeetModelCardKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest("button")) return;
+  const card = target?.closest(".stt-model-card");
+  if (!card || card.dataset.installed === "false") return;
+
+  event.preventDefault();
+  void handleParakeetModelChange(card.dataset.value);
+}
+
 function updateRuntimeHelpTexts() {
   if (sttHelpTextEl) {
-    if (state.runtime.sttReady) {
+    const whisperReady = Boolean(state.runtime.sttWhisperCliExists && state.runtime.sttModelExists);
+    if (whisperReady) {
       sttHelpTextEl.textContent = t(
         state.runtime.sttRuntimeLocation === "portable"
           ? "sttHelpReadyProject"
@@ -1209,6 +1655,8 @@ function updateRuntimeHelpTexts() {
       llmHelpTextEl.textContent = t("llmSetupHint");
     }
   }
+
+  renderSTTEnginePanel();
 }
 
 function updateRuntimeDownloadButtons() {
@@ -1245,6 +1693,13 @@ function updateRuntimeDownloadButtons() {
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteSttRuntime")}`;
     sttDeleteBtn.classList.toggle("runtime-downloading", isSttDeleting);
     sttDeleteBtn.classList.toggle("hidden", !sttCanDeleteRuntime && !isSttDeleting);
+  }
+
+  if (sttEngineSettingsEl) {
+    const hasVisibleRuntimeAction =
+      (sttDownloadBtn && !sttDownloadBtn.classList.contains("hidden")) ||
+      (sttDeleteBtn && !sttDeleteBtn.classList.contains("hidden"));
+    sttEngineSettingsEl.classList.toggle("hidden", !hasVisibleRuntimeAction);
   }
 
   if (llmDownloadBtn) {
@@ -1747,6 +2202,26 @@ const STT_MODEL_META = {
   },
 };
 
+const PARAKEET_MODEL_META = {
+  "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8": {
+    label: "Parakeet TDT 0.6B v2",
+    speed: 5,
+    quality: 4,
+    ramMB: 1800,
+    sizeMB: 632,
+    desc: "English-focused ONNX model with punctuation and casing support.",
+    recommended: true,
+  },
+  "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8": {
+    label: "Parakeet TDT 0.6B v3",
+    speed: 4,
+    quality: 4,
+    ramMB: 1900,
+    sizeMB: 640,
+    desc: "Multilingual ONNX model for 25 European languages.",
+  },
+};
+
 const LLM_MODEL_META = {
   "qwen3:4b-instruct": {
     label: "Qwen3 4B Instruct",
@@ -1888,9 +2363,15 @@ function getModelMeta(modelName, kind) {
   }
 
   const catalog =
-    kind === "stt" ? STT_MODEL_META : kind === "llm" ? LLM_MODEL_META : TTS_SPEAKER_META;
+    kind === "stt"
+      ? STT_MODEL_META
+      : kind === "parakeet"
+      ? PARAKEET_MODEL_META
+      : kind === "llm"
+      ? LLM_MODEL_META
+      : TTS_SPEAKER_META;
   return catalog[modelName] || {
-    label: modelName.replace(/\.bin$/, "").replace(/[-_]/g, " "),
+    label: String(modelName || "").replace(/\.bin$/, "").replace(/[-_]/g, " "),
     speed: 0,
     quality: 0,
     ramMB: 0,
@@ -1901,6 +2382,9 @@ function getModelMeta(modelName, kind) {
 function getInstalledModelsByKind(kind) {
   if (kind === "stt") {
     return state.runtime.sttModels || [];
+  }
+  if (kind === "parakeet") {
+    return state.runtime.sttParakeetModels || [];
   }
   if (kind === "llm") {
     return state.runtime.llmModels || [];
@@ -1913,6 +2397,10 @@ function getInstalledModelsByKind(kind) {
 
 function canDeleteInstalledModel(kind) {
   if (kind === "stt") {
+    return true;
+  }
+
+  if (kind === "parakeet") {
     return true;
   }
 
@@ -1930,6 +2418,10 @@ function canDeleteInstalledModel(kind) {
 function getAllOptionsForKind(kind) {
   if (kind === "stt") {
     return [...new Set([...Object.keys(STT_MODEL_META), ...state.runtime.sttModels, state.runtime.sttModelName].filter(Boolean))];
+  }
+
+  if (kind === "parakeet") {
+    return [...new Set([...Object.keys(PARAKEET_MODEL_META), ...state.runtime.sttParakeetModels, state.runtime.sttParakeetModelName].filter(Boolean))];
   }
 
   if (kind === "llm") {
@@ -1984,7 +2476,7 @@ function getModelActionButtonsHTML(kind, name, isInstalled, isActive) {
     actions.push(`<button type="button" class="dropdown-item-delete" data-kind="${kind}" data-value="${name}" title="${t("deleteModel")}" aria-label="${t("deleteModel")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`);
   }
 
-  if (isActive) {
+  if (isActive && isInstalled) {
     actions.push(`<span class="dropdown-item-check"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>`);
   }
 
@@ -2135,7 +2627,9 @@ let modelDownloadAbortController = null;
 
 function refreshDropdownForKind(kind) {
   if (kind === "stt") {
-    renderDropdownMenu(sttModelDropdownEl, getAllOptionsForKind("stt"), state.runtime.sttModelName, "stt");
+    renderWhisperModelCards();
+  } else if (kind === "parakeet") {
+    renderParakeetModelCards();
   } else if (kind === "llm") {
     renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
   } else if (kind === "tts-model") {
@@ -2161,6 +2655,8 @@ async function handleModelDownload(kind, modelName) {
     await refreshRuntime();
     if (kind === "stt") {
       await handleSTTModelChange(modelName);
+    } else if (kind === "parakeet") {
+      await handleParakeetModelChange(modelName);
     } else if (kind === "llm") {
       await handleLLMModelChange(modelName);
     } else if (kind === "tts-model") {
@@ -2815,53 +3311,75 @@ async function loadHardwareInfo() {
 async function refreshRuntime() {
   setEngineStatus("stt", "pending");
   setEngineStatus("llm", "pending");
-  setDropdownDisabled(sttModelDropdownEl, true);
   setDropdownDisabled(llmModelDropdownEl, true);
   setDropdownDisabled(ttsModelDropdownEl, true);
   setDropdownDisabled(ttsSpeakerDropdownEl, true);
 
   try {
     const runtime = await window.desktopSTT.getRuntimeInfo();
-    const sttReady = Boolean(runtime.transcription.runtimeReady);
-    const llmReady = Boolean(runtime.llm.runtimeReady);
+    const transcription = runtime.transcription || {};
+    const whisper = transcription.whisper || transcription;
+    const parakeet = transcription.parakeet || {};
+    const activeSTTEngine = STT_ENGINE_OPTIONS.includes(transcription.engineName)
+      ? transcription.engineName
+      : "whisper";
+    const llm = runtime.llm || {};
+    const sttReady = Boolean(transcription.runtimeReady);
+    const llmReady = Boolean(llm.runtimeReady);
 
     state.runtime.managedDataRoot = runtime.managedDataRoot || "";
     state.runtime.sttReady = sttReady;
+    state.runtime.sttEngineName = activeSTTEngine;
+    state.sttEngineView = activeSTTEngine;
     state.runtime.llmReady = llmReady;
-    state.runtime.sttWhisperCliExists = Boolean(runtime.transcription.whisperCliExists);
-    state.runtime.sttModelExists = Boolean(runtime.transcription.modelExists);
-    state.runtime.sttRuntimeLocation = runtime.transcription.runtimeLocation || "";
-    state.runtime.llmOllamaExists = Boolean(runtime.llm.ollamaExists);
-    state.runtime.llmModelExists = Boolean(runtime.llm.modelExists);
-    state.runtime.llmRuntimeLocation = runtime.llm.runtimeLocation || "";
-    state.runtime.llmModelDir = runtime.llm.modelDir || "";
-    state.runtime.sttModelName = runtime.transcription.modelName;
-    state.runtime.llmModelName = runtime.llm.modelName;
-    state.runtime.sttModels = runtime.transcription.availableModels || [];
-    state.runtime.llmModels = runtime.llm.installedModels || [];
+    state.runtime.sttWhisperCliExists = Boolean(whisper.whisperCliExists);
+    state.runtime.sttModelExists = Boolean(whisper.modelExists);
+    state.runtime.sttRuntimeLocation = whisper.runtimeLocation || "";
+    state.runtime.sttModelName = whisper.modelName || "";
+    state.runtime.sttModels = whisper.availableModels || [];
+    state.runtime.sttParakeetReady = Boolean(parakeet.runtimeReady);
+    state.runtime.sttParakeetDependencyReady = Boolean(parakeet.dependencyReady);
+    state.runtime.sttParakeetModelExists = Boolean(parakeet.modelExists);
+    state.runtime.sttParakeetBackend = parakeet.backend || "";
+    state.runtime.sttParakeetModelName = parakeet.modelName || "";
+    state.runtime.sttParakeetModels = parakeet.availableModels || [];
+    state.runtime.llmOllamaExists = Boolean(llm.ollamaExists);
+    state.runtime.llmModelExists = Boolean(llm.modelExists);
+    state.runtime.llmRuntimeLocation = llm.runtimeLocation || "";
+    state.runtime.llmModelDir = llm.modelDir || "";
+    state.runtime.llmModelName = llm.modelName;
+    state.runtime.llmModels = llm.installedModels || [];
     applyLocalTTSRuntime(runtime.tts || {});
     if (managedDataPathEl) {
       managedDataPathEl.textContent = state.runtime.managedDataRoot || t("managedDataChecking");
     }
 
+    let sttStatus = "error";
+    let sttStatusLabel = t("statusError");
+    if (activeSTTEngine === "parakeet") {
+      if (state.runtime.sttParakeetReady) {
+        sttStatus = "ready";
+        sttStatusLabel = getModelMeta(state.runtime.sttParakeetModelName, "parakeet").label;
+      } else if (state.runtime.sttParakeetDependencyReady) {
+        sttStatus = "pending";
+        sttStatusLabel = t("setupStepModel");
+      }
+    } else if (state.runtime.sttWhisperCliExists && state.runtime.sttModelExists) {
+      sttStatus = state.runtime.sttRuntimeLocation === "portable" ? "ready" : "pending";
+      sttStatusLabel =
+        state.runtime.sttRuntimeLocation === "portable"
+          ? getModelMeta(state.runtime.sttModelName, "stt").label
+          : t("systemRuntime");
+    } else if (state.runtime.sttWhisperCliExists) {
+      sttStatus = "pending";
+      sttStatusLabel =
+        state.runtime.sttRuntimeLocation === "portable" ? t("projectRuntime") : t("systemRuntime");
+    }
+
     setEngineStatus(
       "stt",
-      sttReady
-        ? state.runtime.sttRuntimeLocation === "portable"
-          ? "ready"
-          : "pending"
-        : state.runtime.sttWhisperCliExists
-        ? "pending"
-        : "error",
-      sttReady
-        ? state.runtime.sttRuntimeLocation === "portable"
-          ? getModelMeta(state.runtime.sttModelName, "stt").label
-          : t("systemRuntime")
-        : state.runtime.sttWhisperCliExists
-        ? state.runtime.sttRuntimeLocation === "portable"
-          ? t("projectRuntime")
-          : t("systemRuntime")
-        : t("statusError")
+      sttStatus,
+      sttStatusLabel
     );
     setEngineStatus(
       "llm",
@@ -2877,14 +3395,22 @@ async function refreshRuntime() {
         : t("statusError")
     );
 
-    populateDropdown(sttModelDropdownEl, getAllOptionsForKind("stt"), state.runtime.sttModelName, "stt");
+    renderWhisperModelCards();
+    renderParakeetModelCards();
     populateDropdown(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
   } catch (error) {
     state.runtime.sttReady = false;
+    state.runtime.sttEngineName = "whisper";
     state.runtime.llmReady = false;
     state.runtime.sttWhisperCliExists = false;
     state.runtime.sttModelExists = false;
     state.runtime.sttRuntimeLocation = "";
+    state.runtime.sttParakeetReady = false;
+    state.runtime.sttParakeetDependencyReady = false;
+    state.runtime.sttParakeetModelExists = false;
+    state.runtime.sttParakeetBackend = "";
+    state.runtime.sttParakeetModelName = "";
+    state.runtime.sttParakeetModels = [];
     state.runtime.llmOllamaExists = false;
     state.runtime.llmModelExists = false;
     state.runtime.llmRuntimeLocation = "";
@@ -2995,11 +3521,33 @@ async function handleSTTModelChange(modelName) {
   if (!modelName || modelName === state.runtime.sttModelName) return;
 
   try {
-    await window.desktopSTT.setSTTModel(modelName);
+    await window.desktopSTT.setSTTModel("whisper", modelName);
     state.runtime.sttModelName = modelName;
-    setEngineStatus("stt", "ready", getModelMeta(modelName, "stt").label);
-    setDropdownValue(sttModelDropdownEl, modelName, "stt");
-    renderDropdownMenu(sttModelDropdownEl, getAllOptionsForKind("stt"), modelName, "stt");
+    if (state.runtime.sttEngineName === "whisper") {
+      setEngineStatus("stt", "ready", getModelMeta(modelName, "stt").label);
+    }
+    renderWhisperModelCards();
+  } catch (error) {
+    setJobStatus(t("switchSttFailed", { message: error.message }), true);
+  }
+}
+
+async function handleParakeetModelChange(modelName) {
+  if (!modelName || modelName === state.runtime.sttParakeetModelName) return;
+
+  try {
+    await window.desktopSTT.setSTTModel("parakeet", modelName);
+    state.runtime.sttParakeetModelName = modelName;
+    if (!state.runtime.sttParakeetModels.includes(modelName)) {
+      state.runtime.sttParakeetModels = [...state.runtime.sttParakeetModels, modelName];
+    }
+    if (state.runtime.sttEngineName === "parakeet") {
+      state.runtime.sttReady = true;
+      state.runtime.sttParakeetReady = true;
+      state.runtime.sttParakeetModelExists = true;
+      setEngineStatus("stt", "ready", getModelMeta(modelName, "parakeet").label);
+    }
+    renderParakeetModelCards();
   } catch (error) {
     setJobStatus(t("switchSttFailed", { message: error.message }), true);
   }
@@ -4122,7 +4670,6 @@ copyBtn.addEventListener("click", handleCopy);
 saveAsNoteBtn.addEventListener("click", handleSaveAsNote);
 sendBtn.addEventListener("click", handleSend);
 
-initDropdown(sttModelDropdownEl, "stt", handleSTTModelChange);
 initDropdown(llmModelDropdownEl, "llm", handleLLMModelChange);
 initDropdown(ttsModelDropdownEl, "tts-model", handleTTSModelChange);
 initDropdown(languageDropdownEl, "language", handleLanguageChange);

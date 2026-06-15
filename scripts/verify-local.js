@@ -11,6 +11,7 @@ const syntaxTargets = [
   "scripts/verify-local.js",
   "src/main/main.js",
   "src/main/note-store.js",
+  "src/main/transcription-service.js",
   "src/preload/preload.js",
   "src/renderer/ime-events.js",
   "src/renderer/renderer.js",
@@ -206,10 +207,37 @@ async function verifyNoteStoreAppDataFallback() {
   console.log("note-store APPDATA fallback passed");
 }
 
+function verifyTranscriptionRuntimeState() {
+  const transcription = require("../src/main/transcription-service");
+  const initialInfo = transcription.getRuntimeInfo();
+
+  if (!initialInfo.whisper || !initialInfo.parakeet) {
+    throw new Error("Transcription runtime info should expose whisper and parakeet sections.");
+  }
+
+  const selectedEngine = transcription.setActiveSTTEngine("parakeet");
+  if (selectedEngine !== "parakeet") {
+    throw new Error("Parakeet engine selection did not return the selected engine.");
+  }
+
+  const parakeetInfo = transcription.getRuntimeInfo();
+  if (parakeetInfo.engineName !== "parakeet") {
+    throw new Error("Parakeet engine selection did not update runtime info.");
+  }
+
+  if (parakeetInfo.runtimeReady && !parakeetInfo.parakeet.modelExists) {
+    throw new Error("Parakeet runtime cannot be ready without an installed model.");
+  }
+
+  transcription.setActiveSTTEngine("whisper");
+  console.log("transcription runtime state passed");
+}
+
 async function main() {
   verifySyntax();
   verifyRendererDomIds();
   verifyImeEnterHandling();
+  verifyTranscriptionRuntimeState();
   await verifyNoteStoreTrashFlow();
   await verifyNoteStoreAppDataFallback();
   console.log("local verification passed");

@@ -3,16 +3,51 @@ const fs = require("fs/promises");
 const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
+const { pipeline } = require("stream/promises");
+const { Readable } = require("stream");
 const {
   getProjectRoot,
+  getSTTCacheDir,
   getSTTModelsDir,
   getSTTOutputDir,
+  getSTTParakeetCacheDir,
+  getSTTParakeetModelsDir,
   getSTTRoot,
+  getSTTWhisperRoot,
   getSTTWhisperBinDir,
 } = require("./managed-paths");
 
 const DEFAULT_MODEL = "ggml-large-v3-turbo-q5_0.bin";
-let activeModel = DEFAULT_MODEL;
+const DEFAULT_STT_ENGINE = "whisper";
+const DEFAULT_PARAKEET_MODEL = "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8";
+const PARAKEET_MODEL_CATALOG = {
+  "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8": {
+    archiveUrl:
+      "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2",
+    archiveName: "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2",
+    modelType: "nemo_transducer",
+  },
+  "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8": {
+    archiveUrl:
+      "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2",
+    archiveName: "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2",
+    modelType: "nemo_transducer",
+  },
+};
+const PARAKEET_REQUIRED_FILES = [
+  "encoder.int8.onnx",
+  "decoder.int8.onnx",
+  "joiner.int8.onnx",
+  "tokens.txt",
+];
+const STT_ENGINES = new Set(["whisper", "parakeet"]);
+
+let activeEngine = DEFAULT_STT_ENGINE;
+let activeWhisperModel = DEFAULT_MODEL;
+let activeParakeetModel = DEFAULT_PARAKEET_MODEL;
+let parakeetRecognizer = null;
+let parakeetRecognizerKey = "";
+let parakeetNodeModule = null;
 
 function commandExists(commandName) {
   const checker = process.platform === "win32" ? "where.exe" : "which";
@@ -98,56 +133,238 @@ function listAvailableModels() {
   }
 }
 
-function setActiveModel(modelName) {
-  const modelsDir = getSTTModelsDir();
-  const modelPath = path.join(modelsDir, modelName);
-  if (!fsSync.existsSync(modelPath)) {
-    throw new Error(`Model not found: ${modelName}`);
-  }
-  activeModel = modelName;
-  return activeModel;
+function getParakeetModelDir(modelName) {
+  return path.join(getSTTParakeetModelsDir(), modelName);
 }
 
-async function deleteSTTModel(modelName) {
+function getParakeetModelFiles(modelName) {
+  const modelDir = getParakeetModelDir(modelName);
+  return {
+    modelDir,
+    encoder: path.join(modelDir, "encoder.int8.onnx"),
+    decoder: path.join(modelDir, "decoder.int8.onnx"),
+    joiner: path.join(modelDir, "joiner.int8.onnx"),
+    tokens: path.join(modelDir, "tokens.txt"),
+  };
+}
+
+function isParakeetModelInstalled(modelName) {
+  const files = getParakeetModelFiles(modelName);
+  return PARAKEET_REQUIRED_FILES.every((fileName) => {
+    return fsSync.existsSync(path.join(files.modelDir, fileName));
+  });
+}
+
+function listAvailableParakeetModels() {
+  const modelsDir = getSTTParakeetModelsDir();
+  try {
+    return fsSync
+      .readdirSync(modelsDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && isParakeetModelInstalled(entry.name))
+      .map((entry) => entry.name);
+  } catch (_error) {
+    return [];
+  }
+}
+
+function resolvePackageInfo(packageName) {
+  try {
+    const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+      paths: [getProjectRoot()],
+    });
+    const packageJson = JSON.parse(fsSync.readFileSync(packageJsonPath, "utf8"));
+    return {
+      name: packageName,
+      installed: true,
+      packageJsonPath,
+      version: packageJson.version || "",
+    };
+  } catch (_error) {
+    return {
+      name: packageName,
+      installed: false,
+      packageJsonPath: "",
+      version: "",
+    };
+  }
+}
+
+function getParakeetDependencyInfo() {
+  const node = resolvePackageInfo("sherpa-onnx-node");
+  const wasm = resolvePackageInfo("sherpa-onnx");
+  return {
+    node,
+    wasm,
+    dependencyReady: node.installed,
+    backend: node.installed ? "sherpa-onnx-node" : "",
+  };
+}
+
+function setActiveSTTEngine(engineName) {
+  if (!STT_ENGINES.has(engineName)) {
+    throw new Error(`Unsupported STT engine: ${engineName}`);
+  }
+
+  activeEngine = engineName;
+  return activeEngine;
+}
+
+function normalizeModelArgs(engineName, modelName) {
+  if (modelName === undefined) {
+    return {
+      engineName: "whisper",
+      modelName: engineName,
+    };
+  }
+
+  return {
+    engineName,
+    modelName,
+  };
+}
+
+function setActiveModel(engineName, modelName) {
+  const normalized = normalizeModelArgs(engineName, modelName);
+  const targetEngine = normalized.engineName || "whisper";
+  const targetModel = normalized.modelName;
+
+  if (targetEngine === "parakeet") {
+    if (!PARAKEET_MODEL_CATALOG[targetModel]) {
+      throw new Error(`Unknown Parakeet model: ${targetModel}`);
+    }
+    if (!isParakeetModelInstalled(targetModel)) {
+      throw new Error(`Parakeet model not found: ${targetModel}`);
+    }
+    activeParakeetModel = targetModel;
+    return activeParakeetModel;
+  }
+
+  if (targetEngine !== "whisper") {
+    throw new Error(`Unsupported STT model engine: ${targetEngine}`);
+  }
+
   const modelsDir = getSTTModelsDir();
-  const modelPath = path.join(modelsDir, modelName);
+  const modelPath = path.join(modelsDir, targetModel);
+  if (!fsSync.existsSync(modelPath)) {
+    throw new Error(`Model not found: ${targetModel}`);
+  }
+  activeWhisperModel = targetModel;
+  return activeWhisperModel;
+}
+
+async function deleteSTTModel(engineName, modelName) {
+  const normalized = normalizeModelArgs(engineName, modelName);
+  const targetEngine = normalized.engineName || "whisper";
+  const targetModel = normalized.modelName;
+
+  if (targetEngine === "parakeet") {
+    const modelDir = getParakeetModelDir(targetModel);
+    const meta = PARAKEET_MODEL_CATALOG[targetModel];
+    const archivePath = meta
+      ? path.join(getSTTParakeetCacheDir(), meta.archiveName)
+      : "";
+    const extractDir = path.join(getSTTParakeetCacheDir(), `${targetModel}-extract`);
+    const modelAlreadyMissing = !fsSync.existsSync(modelDir);
+    const archiveAlreadyMissing = !archivePath || !fsSync.existsSync(archivePath);
+    const extractAlreadyMissing = !fsSync.existsSync(extractDir);
+
+    if (modelAlreadyMissing && archiveAlreadyMissing && extractAlreadyMissing) {
+      return {
+        ok: true,
+        target: "parakeet-model",
+        modelName: targetModel,
+        alreadyMissing: true,
+      };
+    }
+
+    await fs.rm(modelDir, { recursive: true, force: true });
+    if (archivePath) {
+      await fs.rm(archivePath, { force: true });
+      await fs.rm(`${archivePath}.tmp`, { force: true });
+    }
+    await fs.rm(extractDir, { recursive: true, force: true });
+
+    if (activeParakeetModel === targetModel) {
+      const remainingModels = listAvailableParakeetModels();
+      activeParakeetModel = remainingModels[0] || DEFAULT_PARAKEET_MODEL;
+      parakeetRecognizer = null;
+      parakeetRecognizerKey = "";
+    }
+
+    return {
+      ok: true,
+      target: "parakeet-model",
+      modelName: targetModel,
+    };
+  }
+
+  if (targetEngine !== "whisper") {
+    throw new Error(`Unsupported STT model delete target: ${targetEngine}`);
+  }
+
+  const modelsDir = getSTTModelsDir();
+  const modelPath = path.join(modelsDir, targetModel);
   if (!fsSync.existsSync(modelPath)) {
     return {
       ok: true,
       target: "stt-model",
-      modelName,
+      modelName: targetModel,
       alreadyMissing: true,
     };
   }
 
   await fs.rm(modelPath, { force: true });
 
-  if (activeModel === modelName) {
+  if (activeWhisperModel === targetModel) {
     const remainingModels = listAvailableModels();
-    activeModel = remainingModels[0] || DEFAULT_MODEL;
+    activeWhisperModel = remainingModels[0] || DEFAULT_MODEL;
   }
 
   return {
     ok: true,
     target: "stt-model",
-    modelName,
+    modelName: targetModel,
   };
 }
 
 async function deleteSTTRuntime() {
-  const runtimeDir = getSTTRoot();
+  const runtimeDir = getSTTWhisperRoot();
+  const modelDir = getSTTModelsDir();
+  const cacheDir = getSTTCacheDir();
   await fs.rm(runtimeDir, { recursive: true, force: true });
+  await fs.rm(modelDir, { recursive: true, force: true });
+  await fs.rm(cacheDir, { recursive: true, force: true });
 
   return {
     ok: true,
     target: "stt-runtime",
     runtimeDir,
+    modelDir,
+    cacheDir,
   };
 }
 
 function getRuntimeInfo() {
+  const whisperInfo = getWhisperRuntimeInfo();
+  const parakeetInfo = getParakeetRuntimeInfo();
+  const activeInfo = activeEngine === "parakeet" ? parakeetInfo : whisperInfo;
+
+  return {
+    ...whisperInfo,
+    engineName: activeEngine,
+    runtimeReady: activeInfo.runtimeReady,
+    modelName: activeInfo.modelName,
+    modelPath: activeInfo.modelPath,
+    modelExists: activeInfo.modelExists,
+    activeEngineInfo: activeInfo,
+    whisper: whisperInfo,
+    parakeet: parakeetInfo,
+  };
+}
+
+function getWhisperRuntimeInfo() {
   const whisperRuntime = resolveWhisperBinary();
-  const modelPath = path.join(getSTTModelsDir(), activeModel);
+  const modelPath = path.join(getSTTModelsDir(), activeWhisperModel);
   const outputDir = getSTTOutputDir();
   const recordingsDir = path.join(outputDir, "recordings");
 
@@ -158,12 +375,37 @@ function getRuntimeInfo() {
     modelPath,
     outputDir,
     recordingsDir,
-    modelName: activeModel,
+    modelName: activeWhisperModel,
     availableModels: listAvailableModels(),
     runtimeLocation: whisperRuntime.runtimeLocation,
     whisperCliExists: whisperRuntime.whisperCliExists,
     modelExists: fsSync.existsSync(modelPath),
     runtimeReady: whisperRuntime.whisperCliExists && fsSync.existsSync(modelPath),
+  };
+}
+
+function getParakeetRuntimeInfo() {
+  const files = getParakeetModelFiles(activeParakeetModel);
+  const dependencyInfo = getParakeetDependencyInfo();
+  const modelExists = isParakeetModelInstalled(activeParakeetModel);
+
+  return {
+    resourcesRoot: getSTTRoot(),
+    modelRoot: getSTTParakeetModelsDir(),
+    cacheDir: getSTTParakeetCacheDir(),
+    modelDir: files.modelDir,
+    modelPath: files.encoder,
+    modelName: activeParakeetModel,
+    availableModels: listAvailableParakeetModels(),
+    modelExists,
+    dependencyReady: dependencyInfo.dependencyReady,
+    backend: dependencyInfo.backend,
+    packageInfo: {
+      node: dependencyInfo.node,
+      wasm: dependencyInfo.wasm,
+    },
+    requiredFiles: files,
+    runtimeReady: dependencyInfo.dependencyReady && modelExists,
   };
 }
 
@@ -173,7 +415,7 @@ function sanitizeBaseName(filePath) {
   return rawName.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 80) || "audio";
 }
 
-async function ensureRuntime(info) {
+async function ensureWhisperRuntime(info) {
   if (!info.whisperCliExists) {
     throw new Error(
       `whisper.cpp executable not found: ${info.whisperCliPath}\nRun: npm run download:runtime or place whisper-cli under .speakspace-data/stt/whisper/bin`
@@ -190,9 +432,26 @@ async function ensureRuntime(info) {
   await fs.mkdir(info.recordingsDir, { recursive: true });
 }
 
+async function ensureParakeetRuntime(info) {
+  if (!info.dependencyReady) {
+    throw new Error("sherpa-onnx dependency is not ready. Run `npm install` first.");
+  }
+
+  if (!info.modelExists) {
+    throw new Error(`Parakeet model file not found: ${info.modelDir}`);
+  }
+
+  await fs.mkdir(getSTTOutputDir(), { recursive: true });
+  await fs.mkdir(path.join(getSTTOutputDir(), "recordings"), { recursive: true });
+}
+
 async function saveMicrophoneRecording(arrayBuffer) {
   const info = getRuntimeInfo();
-  await ensureRuntime(info);
+  if (activeEngine === "parakeet") {
+    await ensureParakeetRuntime(info.parakeet);
+  } else {
+    await ensureWhisperRuntime(info.whisper);
+  }
 
   if (!arrayBuffer || arrayBuffer.byteLength === 0) {
     throw new Error("No recording data received.");
@@ -215,7 +474,15 @@ async function transcribeAudio(filePath) {
   }
 
   const info = getRuntimeInfo();
-  await ensureRuntime(info);
+  if (activeEngine === "parakeet") {
+    return transcribeAudioWithParakeet(filePath, info.parakeet);
+  }
+
+  return transcribeAudioWithWhisper(filePath, info.whisper);
+}
+
+async function transcribeAudioWithWhisper(filePath, info) {
+  await ensureWhisperRuntime(info);
 
   const absoluteInputPath = path.resolve(filePath);
   const outputBaseName = `${sanitizeBaseName(absoluteInputPath)}-${Date.now()}`;
@@ -296,12 +563,247 @@ async function transcribeAudio(filePath) {
   return result;
 }
 
+function ensureParakeetNodeModule() {
+  if (parakeetNodeModule) {
+    return parakeetNodeModule;
+  }
+
+  parakeetNodeModule = require("sherpa-onnx-node");
+  return parakeetNodeModule;
+}
+
+function createParakeetRecognizerConfig(info) {
+  const files = info.requiredFiles;
+  return {
+    featConfig: {
+      sampleRate: 16000,
+      featureDim: 80,
+    },
+    modelConfig: {
+      transducer: {
+        encoder: files.encoder,
+        decoder: files.decoder,
+        joiner: files.joiner,
+      },
+      tokens: files.tokens,
+      numThreads: Math.max(1, Math.min(os.cpus().length - 1, 4)),
+      provider: "cpu",
+      modelType: PARAKEET_MODEL_CATALOG[info.modelName]?.modelType || "nemo_transducer",
+    },
+    decodingMethod: "greedy_search",
+  };
+}
+
+async function getParakeetRecognizer(info) {
+  const runtimeKey = [
+    info.modelName,
+    info.requiredFiles.encoder,
+    info.requiredFiles.decoder,
+    info.requiredFiles.joiner,
+    info.requiredFiles.tokens,
+  ].join("|");
+
+  if (parakeetRecognizer && parakeetRecognizerKey === runtimeKey) {
+    return parakeetRecognizer;
+  }
+
+  const sherpa = ensureParakeetNodeModule();
+  parakeetRecognizer = await sherpa.OfflineRecognizer.createAsync(
+    createParakeetRecognizerConfig(info)
+  );
+  parakeetRecognizerKey = runtimeKey;
+  return parakeetRecognizer;
+}
+
+function runProcess(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    let stderr = "";
+    const child = spawn(command, args, {
+      stdio: ["ignore", "ignore", "pipe"],
+      windowsHide: process.platform === "win32",
+      ...options,
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      reject(new Error((stderr || `Command failed: ${command} ${args.join(" ")}`).trim()));
+    });
+  });
+}
+
+async function prepareParakeetWaveInput(absoluteInputPath, outputBasePath) {
+  if (path.extname(absoluteInputPath).toLowerCase() === ".wav") {
+    return absoluteInputPath;
+  }
+
+  const ffmpegPath = resolveCommandPath("ffmpeg");
+  if (!ffmpegPath) {
+    throw new Error(
+      "Parakeet local transcription currently requires WAV input unless ffmpeg is installed for audio conversion."
+    );
+  }
+
+  const convertedPath = `${outputBasePath}.parakeet.wav`;
+  await runProcess(ffmpegPath, [
+    "-y",
+    "-i",
+    absoluteInputPath,
+    "-ac",
+    "1",
+    "-ar",
+    "16000",
+    convertedPath,
+  ]);
+  return convertedPath;
+}
+
+async function transcribeAudioWithParakeet(filePath, info) {
+  await ensureParakeetRuntime(info);
+
+  const absoluteInputPath = path.resolve(filePath);
+  const outputDir = getSTTOutputDir();
+  const outputBaseName = `${sanitizeBaseName(absoluteInputPath)}-${Date.now()}-parakeet`;
+  const outputBasePath = path.join(outputDir, outputBaseName);
+  const outputTextPath = `${outputBasePath}.txt`;
+  await fs.mkdir(outputDir, { recursive: true });
+
+  const wavePath = await prepareParakeetWaveInput(absoluteInputPath, outputBasePath);
+  const sherpa = ensureParakeetNodeModule();
+  const recognizer = await getParakeetRecognizer(info);
+  const stream = recognizer.createStream();
+  const wave = sherpa.readWave(wavePath);
+  stream.acceptWaveform(wave);
+  const result = await recognizer.decodeAsync(stream);
+  const text = (result.text || "").trim();
+  await fs.writeFile(outputTextPath, text, "utf8");
+
+  return {
+    text,
+    stdout: "",
+    stderr: "",
+    outputTextPath,
+    outputBasePath,
+    modelPath: info.modelDir,
+    modelName: info.modelName,
+    engineName: "parakeet",
+    backend: info.backend,
+    inputPath: absoluteInputPath,
+    wavePath,
+  };
+}
+
+async function downloadFile(url, destinationPath) {
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "SpeakSpace-Parakeet-Setup",
+    },
+    redirect: "follow",
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+  }
+
+  const tempPath = `${destinationPath}.tmp`;
+  await pipeline(Readable.fromWeb(response.body), fsSync.createWriteStream(tempPath));
+  await fs.rename(tempPath, destinationPath);
+}
+
+function findParakeetExtractedDir(rootDir) {
+  if (!fsSync.existsSync(rootDir)) return null;
+
+  const queue = [rootDir];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const entries = fsSync.readdirSync(current, { withFileTypes: true });
+    const hasRequiredFiles = PARAKEET_REQUIRED_FILES.every((fileName) => {
+      return fsSync.existsSync(path.join(current, fileName));
+    });
+    if (hasRequiredFiles) {
+      return current;
+    }
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        queue.push(path.join(current, entry.name));
+      }
+    }
+  }
+
+  return null;
+}
+
+async function downloadParakeetModel(modelName) {
+  const meta = PARAKEET_MODEL_CATALOG[modelName];
+  if (!meta) {
+    throw new Error(`Unknown Parakeet model: ${modelName}`);
+  }
+
+  const targetDir = getParakeetModelDir(modelName);
+  if (isParakeetModelInstalled(modelName)) {
+    return {
+      ok: true,
+      target: "parakeet",
+      modelName,
+      alreadyExisted: true,
+      modelDir: targetDir,
+    };
+  }
+
+  const cacheDir = getSTTParakeetCacheDir();
+  const archivePath = path.join(cacheDir, meta.archiveName);
+  const extractDir = path.join(cacheDir, `${modelName}-extract`);
+
+  await fs.mkdir(cacheDir, { recursive: true });
+  await fs.mkdir(getSTTParakeetModelsDir(), { recursive: true });
+  await fs.rm(extractDir, { recursive: true, force: true });
+  await fs.mkdir(extractDir, { recursive: true });
+
+  if (!fsSync.existsSync(archivePath)) {
+    await downloadFile(meta.archiveUrl, archivePath);
+  }
+
+  await runProcess("tar", ["-xf", archivePath, "-C", extractDir]);
+
+  const extractedModelDir = findParakeetExtractedDir(extractDir);
+  if (!extractedModelDir) {
+    throw new Error(`Downloaded Parakeet archive does not contain required model files: ${modelName}`);
+  }
+
+  await fs.rm(targetDir, { recursive: true, force: true });
+  await fs.rename(extractedModelDir, targetDir);
+  await fs.rm(extractDir, { recursive: true, force: true });
+
+  if (!isParakeetModelInstalled(modelName)) {
+    throw new Error(`Parakeet model install is incomplete: ${modelName}`);
+  }
+
+  return {
+    ok: true,
+    target: "parakeet",
+    modelName,
+    modelDir: targetDir,
+  };
+}
+
 module.exports = {
+  downloadParakeetModel,
   deleteSTTModel,
   deleteSTTRuntime,
   getRuntimeInfo,
   listAvailableModels,
+  listAvailableParakeetModels,
   setActiveModel,
+  setActiveSTTEngine,
   saveMicrophoneRecording,
   transcribeAudio,
 };

@@ -382,31 +382,90 @@
                 <span id="sttGroupTitle" class="settings-group-title">Speech-to-Text</span>
                 <span id="sttStatusText" class="settings-group-status">Checking...</span>
               </div>
-              <div class="settings-setting-list">
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <label id="sttModelLabel" class="model-label">Model</label>
-                    <p id="sttHelpText" class="settings-help-text"></p>
-                  </div>
-                  <div class="settings-setting-control">
-                    <div id="sttModelDropdown" class="custom-dropdown" data-disabled="true">
-                      <button type="button" class="custom-dropdown-trigger" disabled>
-                        <span class="custom-dropdown-value">Checking...</span>
-                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                      </button>
-                      <div class="custom-dropdown-menu"></div>
+              <div class="stt-engine-layout">
+                <aside id="sttEngineNav" class="stt-engine-nav" aria-label="Speech-to-text engines">
+                  <p id="sttEngineListTitle" class="stt-engine-nav-title">Local Engines</p>
+                  <button class="stt-engine-btn active" type="button" data-stt-engine="whisper" aria-pressed="true">
+                    <span class="stt-engine-btn-main">
+                      <span id="sttWhisperEngineName" class="stt-engine-btn-name">Whisper</span>
+                      <span id="sttWhisperEngineStatus" class="stt-engine-status">Active</span>
+                    </span>
+                    <span id="sttWhisperEngineDesc" class="stt-engine-btn-desc">Cross-platform default engine.</span>
+                  </button>
+                  <button class="stt-engine-btn" type="button" data-stt-engine="parakeet" aria-pressed="false">
+                    <span class="stt-engine-btn-main">
+                      <span id="sttParakeetEngineName" class="stt-engine-btn-name">Parakeet</span>
+                      <span id="sttParakeetEngineStatus" class="stt-engine-status">Available</span>
+                    </span>
+                    <span id="sttParakeetEngineDesc" class="stt-engine-btn-desc">Local ONNX engine candidate.</span>
+                  </button>
+                </aside>
+
+                <div class="stt-engine-detail">
+                  <header class="stt-engine-detail-head">
+                    <div>
+                      <h3 id="sttEngineDetailTitle">Whisper</h3>
+                      <p id="sttEngineDetailDesc" class="settings-help-text"></p>
+                    </div>
+                    <span id="sttEngineDetailBadge" class="dropdown-item-badge">Active</span>
+                  </header>
+
+                  <div class="stt-engine-pane active" data-stt-engine-pane="whisper">
+                    <div class="stt-capability-grid">
+                      <div class="stt-capability-card">
+                        <span id="sttWhisperCoverageTitle" class="stt-capability-title">Language coverage</span>
+                        <p id="sttWhisperCoverageText" class="settings-help-text"></p>
+                      </div>
+                      <div class="stt-capability-card">
+                        <span id="sttWhisperRuntimeTitle" class="stt-capability-title">Runtime path</span>
+                        <p id="sttWhisperRuntimeText" class="settings-help-text"></p>
+                      </div>
+                    </div>
+
+                    <div class="stt-models-panel">
+                      <div class="stt-models-head">
+                        <div>
+                          <span id="sttWhisperModelsTitle" class="stt-capability-title">Whisper models</span>
+                          <p id="sttHelpText" class="settings-help-text"></p>
+                        </div>
+                        <span id="sttWhisperModelsBadge" class="dropdown-item-badge">Active</span>
+                      </div>
+                      <div id="sttWhisperModelCards" class="stt-model-card-list"></div>
+                    </div>
+                    <div class="settings-setting-list stt-engine-settings">
+                      <div class="settings-actions-row">
+                        <button id="sttDownloadBtn" class="ghost-btn settings-action-btn hidden" type="button">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                          Download STT Runtime
+                        </button>
+                        <button id="sttDeleteBtn" class="ghost-btn settings-action-btn danger-btn hidden" type="button">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
+                          Delete STT Runtime
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="settings-actions-row">
-                  <button id="sttDownloadBtn" class="ghost-btn settings-action-btn hidden" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-                    Download STT Runtime
-                  </button>
-                  <button id="sttDeleteBtn" class="ghost-btn settings-action-btn danger-btn hidden" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
-                    Delete STT Runtime
-                  </button>
+
+                  <div class="stt-engine-pane" data-stt-engine-pane="parakeet">
+                    <div id="sttParakeetNotice" class="stt-engine-notice"></div>
+                    <div class="stt-capability-grid">
+                      <div class="stt-capability-card">
+                        <span id="sttParakeetCoverageTitle" class="stt-capability-title">Language coverage</span>
+                        <p id="sttParakeetCoverageText" class="settings-help-text"></p>
+                      </div>
+                      <div class="stt-capability-card">
+                        <span id="sttParakeetRuntimeTitle" class="stt-capability-title">Runtime path</span>
+                        <p id="sttParakeetRuntimeText" class="settings-help-text"></p>
+                      </div>
+                    </div>
+                    <div class="stt-models-panel">
+                      <div class="stt-models-head">
+                        <span id="sttParakeetModelsTitle" class="stt-capability-title">Candidate models</span>
+                        <span id="sttParakeetModelsBadge" class="dropdown-item-badge warning">Not installed</span>
+                      </div>
+                      <div id="sttParakeetModelCards" class="stt-model-card-list"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>

@@ -25,3 +25,6 @@ replay_pid*
 
 # macOS metadata
 .DS_Store
+
+# Electron build output(Too Big for GitHub)
+node_modules/

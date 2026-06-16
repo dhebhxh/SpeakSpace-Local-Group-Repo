@@ -6,7 +6,6 @@ const { app } = require('electron');
 const dbPath = path.join(app.getPath('userData'), 'notes.db');
 const db = new Database(dbPath);
 
-// Initialize the database and create the notes table if it doesn't exist
 // 初始化表格
 db.exec(`
   CREATE TABLE IF NOT EXISTS notes (
@@ -28,6 +27,7 @@ db.exec(`
   );
 `);
 
+//在notes表中添加新筆記
 function createNote(note) {
 const insert = db.prepare(`
     INSERT INTO notes (id, title, content, syncStatus, createdAt, hasMedia, mediaPath) 
@@ -36,6 +36,7 @@ const insert = db.prepare(`
   return insert.run(note);
 }
 
+//根據關鍵字搜尋筆記
 function searchNotesByKeyword(keyword) {
   const sql = `
     SELECT DISTINCT n.* FROM notes n
@@ -49,10 +50,12 @@ function searchNotesByKeyword(keyword) {
   return db.prepare(sql).all(pattern, pattern, pattern);
 }
 
+//返回所有筆記
 function listNotes() {
   return db.prepare("SELECT * FROM notes ORDER BY createdAt DESC").all();
 }
 
+//在notes表中添加新對話
 function addConversation(conv) {
   const insert = db.prepare(`
     INSERT INTO conversations (id, note_id, role, content, timestamp)
@@ -61,6 +64,7 @@ function addConversation(conv) {
   return insert.run(conv);
 }
 
+//取得note及其對話
 function getNoteWithConversations(noteId) {
   const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId);
   const conversations = db.prepare("SELECT * FROM conversations WHERE note_id = ? ORDER BY timestamp ASC").all(noteId);

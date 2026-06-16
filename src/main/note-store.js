@@ -3,6 +3,7 @@ const fsSync = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { app } = require("electron");
+const dbService = require('./db-service');
 
 function getStoreDir() {
   let userDataDir;

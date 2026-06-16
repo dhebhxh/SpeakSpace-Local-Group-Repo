@@ -5,6 +5,7 @@ const SETTINGS_CATEGORY_STORAGE_KEY = "speakspace.settingsCategory";
 const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storage"];
 const STT_ENGINE_OPTIONS = ["whisper", "parakeet"];
 const textInputEvents = window.SpeakSpaceIme;
+const THEME_STORAGE_KEY = "speakspace.theme";
 const I18N = {
   en: {
     systemPrompt:
@@ -797,11 +798,24 @@ function getStoredAppLanguage() {
   }
 }
 
+function initTheme() {
+  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY) || "dark";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "light" ? "dark" : "light";
+  
+  document.documentElement.setAttribute("data-theme", newTheme);
+  window.localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+}
+initTheme();
+
 function persistAppLanguage(language) {
   try {
     window.localStorage.setItem(APP_LANGUAGE_STORAGE_KEY, language);
   } catch (_error) {
-    // Ignore persistence issues.
   }
 }
 
@@ -818,7 +832,6 @@ function persistSettingsCategory(category) {
   try {
     window.localStorage.setItem(SETTINGS_CATEGORY_STORAGE_KEY, category);
   } catch (_error) {
-    // Ignore persistence issues.
   }
 }
 
@@ -5093,6 +5106,8 @@ noteQaInput.addEventListener("input", () => {
   autoResizeNoteQaInput();
   updateButtons();
 });
+
+document.querySelector("#themeToggleBtn").addEventListener("click", toggleTheme);
 
 textInputEvents.bindTextCompositionTracking(noteQaInput);
 noteQaInput.addEventListener("keydown", async (event) => {

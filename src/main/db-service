@@ -64,7 +64,7 @@ function addConversation(conv) {
   return insert.run(conv);
 }
 
-//取得note及其對話
+//根據note_id取得note及其對話
 function getNoteWithConversations(noteId) {
   const note = db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId);
   const conversations = db.prepare("SELECT * FROM conversations WHERE note_id = ? ORDER BY timestamp ASC").all(noteId);

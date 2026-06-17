@@ -1,0 +1,24 @@
+{
+  "defaultModel": "qwen3:4b-instruct",
+  "presets": {
+    "default": [
+      "qwen3:4b-instruct"
+    ],
+    "candidates": [
+      "qwen3:4b-instruct",
+      "qwen2.5:3b-instruct",
+      "ministral-3:3b",
+      "ibm/granite4:micro-h",
+      "phi4-mini",
+      "qwen2.5:1.5b-instruct"
+    ]
+  },
+  "descriptions": {
+    "qwen3:4b-instruct": "Current project default baseline model.",
+    "qwen2.5:3b-instruct": "Qwen2.5-3B-Instruct.",
+    "ministral-3:3b": "Ministral-3-3B-Instruct.",
+    "ibm/granite4:micro-h": "Granite-4.0-Micro-H.",
+    "phi4-mini": "Phi-4-mini-instruct.",
+    "qwen2.5:1.5b-instruct": "Qwen2.5-1.5B-Instruct."
+  }
+}

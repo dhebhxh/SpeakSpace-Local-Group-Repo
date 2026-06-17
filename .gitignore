@@ -28,3 +28,4 @@ replay_pid*
 
 # Electron build output(Too Big for GitHub)
 node_modules/
+.speakspace-data/

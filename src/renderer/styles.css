@@ -24,24 +24,70 @@
   --radius-lg: 24px;
   --radius-full: 999px;
 }
-:root[data-theme="light"]{
+:root[data-theme="light"] {
   color-scheme: light;
 
-  --surface-0: #f8fafc;  
-  --surface-1: #ffffff;  
-  --surface-2: #f1f5f9;  
-  --surface-3: #e2e8f0;  
-  --surface-4: #cbd5e1;  
-  
-  --text-primary: #0f172a;   
-  --text-secondary: #64748b; 
-  
-  --border: rgba(0, 0, 0, 0.08);
-  --glass: rgba(255, 255, 255, 0.7);
-  
-  --accent-glow: rgba(99, 102, 241, 0.15);
-  --secondary-glow: rgba(6, 182, 212, 0.1);
-  --green-glow: rgba(16, 185, 129, 0.1);
+  --surface-0: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --surface-4: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+
+  .topbar {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  .composer {
+    background: rgba(241, 245, 249, 0.9) !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  .sidebar-nav-btn,
+  .status-chip,
+  .sidebar-toggle-btn,
+  .topbar-actions .ghost-btn {
+    background: #f1f5f9 !important;
+    border: 1px solid var(--border) !important;
+    color: #475569 !important;
+    box-shadow: none !important;
+  }
+
+  .sidebar-nav-btn:hover:not(:disabled),
+  .status-chip:hover,
+  .sidebar-toggle-btn:hover:not(:disabled),
+  .topbar-actions .ghost-btn:hover:not(:disabled) {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: var(--surface-4) !important;
+  }
+
+  .settings-panel,
+  .stt-engine-layout,
+  .settings-setting-list,
+  .hardware-panel,
+  .stt-model-card,
+  .stt-models-panel {
+    background: var(--surface-1) !important;
+    border-color: var(--border) !important;
+  }
+
+  .stt-engine-nav {
+    background: var(--surface-2) !important;
+    border-right: 1px solid var(--border) !important;
+  }
+
+  .stt-engine-btn {
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  .stt-engine-btn.active,
+  .settings-nav-btn.active {
+    background: var(--surface-3) !important;
+  }
 }
 
 @keyframes float {

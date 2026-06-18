@@ -4,7 +4,7 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-18 19:23
+- 最后更新：2026-06-18 22:00
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 - 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`
 
@@ -33,13 +33,13 @@ SpeakSpace Local 是一个基于 Electron 的本地离线桌面应用，目标�
 7. **运行时管理** — 下载/清理/状态检测：STT runtime、TTS runtime（sherpa-onnx）、LLM runtime（Ollama）
 8. **本地硬件检测** — 推理能力提示
 
-源码位于 `src/` 目录，分为 main（主进程）、preload（预加载）、renderer（渲染进程）三层。依赖包括 `better-sqlite3`（根 package.json 声明）、`sherpa-onnx`、`sherpa-onnx-node`。
+源码位于 `src/` 目录，分为 main（主进程）、preload（预加载）、renderer（渲染进程）三层。依赖包括 `better-sqlite3`、`sherpa-onnx`、`sherpa-onnx-node`。
 
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 | --- | --- | --- | --- | --- |
-| `origin/Jack` | `80b4556` | SQL Feature added | Jack8ot | 2026-06-18 |
+| `origin/Jack` | `4ca0cf9` | Close SQLite store during local verification | Yanqing | 2026-06-18 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/YQ` | `1c7066b` | Move UI handoff into agent docs | Yanqing | 2026-06-16 |
@@ -49,16 +49,17 @@ SpeakSpace Local 是一个基于 Electron 的本地离线桌面应用，目标�
 
 ## 最近变化摘要
 
-**`origin/Jack` 更新：1593624 → 80b4556（Jack8ot: SQL Feature added）**
+**`origin/Jack` 更新：`80b4556` → `4ca0cf9`（Yanqing: 3 commits）**
 
-本次提交对数据层进行了重构：
-- 删除 `src/main/db-service/` 目录（旧的非功能存根）
-- 删除 `src/main/note-store.js`（笔记存储模块）
-- 删除 `src/main/sync-service/` 目录（同步服务模块）
-- 新增 `src/main/db-service.js`（统一的 SQLite 数据服务）
-- 修改 `src/main/main.js` 以适配新数据层
+Yanqing 对 Jack 分支进行了 3 轮修复性提交，全部针对 SQLite 数据层集成后的本地验证和兼容性问题：
 
-从变更文件推断，`origin/Jack` 正在推进 SQLite 数据层的统一，将之前分散的 note 和 sync 功能整合到一个 db-service 中。该分支尚未合并入 `origin/main`。
+1. **Fix local LLM selection and light theme messages** (`ffbeb31`) — 修复本地 LLM 模型选择逻辑和亮色模式消息显示
+2. **Fix local verification for SQLite service** (`27d9698`) — 修复 SQLite 数据层的本地验证流程
+3. **Close SQLite store during local verification** (`4ca0cf9`) — 在本地验证完成后确保正确关闭 SQLite 连接
+
+涉及文件：`scripts/verify-local.js`、`src/main/db-service.js`、`src/main/main.js`、`src/renderer/renderer.js`、`src/renderer/styles.css`
+
+该分支持续独立于 main 演进，仍在 SQLite 数据层方案上进行稳定性打磨。
 
 ## 运行与开发信息（静态识别）
 
@@ -120,8 +121,8 @@ GitHub Actions：`.github/workflows/verify-local.yml` — 表明有 CI 关注本
    - 证据：当前静态上下文仍出现相关证据：readme, tts, 功能
 
 7. **[SPK-ORIGIN-JACK-合并-同步计划] origin/Jack 合并/同步计划**
-   - origin/Jack 有新的远端变化（数据层重构：SQL Feature added），是否需要合并入主线或同步方案待确认。
-   - 证据：updated origin/Jack: 1593624 → 80b4556；涉及文件：D src/main/db-service, A src/main/db-service.js, M src/main/main.js, D src/main/note-store.js, D src/main/sync-service
+   - origin/Jack 有新的远端变化（SQLite 数据层验证修复），是否需要合并入主线或同步方案待确认。
+   - 证据：当前静态上下文仍出现相关证据：origin/jack
 
 ## 已解决或已变化事项
 
@@ -134,6 +135,39 @@ GitHub Actions：`.github/workflows/verify-local.yml` — 表明有 CI 关注本
 ---
 
 ## 更新记录
+
+### 2026-06-18 22:00 — origin/Jack SQLite 验证与 LLM 选择修复
+
+`origin/Jack` 更新：`80b4556` → `4ca0cf9`（Yanqing: 3 commits）
+
+Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层集成后的稳定性：
+
+1. **Fix local LLM selection and light theme messages** — 修复本地 LLM 模型选择逻辑和亮色模式消息显示问题
+2. **Fix local verification for SQLite service** — 调整本地验证流程以适配 SQLite 数据层架构
+3. **Close SQLite store during local verification** — 确保 verify-local 脚本执行后正确关闭 SQLite 连接，避免资源泄漏
+
+涉及文件均为修改（无新增/删除）：`scripts/verify-local.js`、`src/main/db-service.js`、`src/main/main.js`、`src/renderer/renderer.js`、`src/renderer/styles.css`
+
+本次更新为快速迭代修复，无新功能引入，无新增待确认事项。
+
+| 类型 | 说明 |
+| --- | --- |
+| 当前待确认 | 7 项（无新增/解决/过期） |
+| 已解决 | 0 |
+| 过期 | 0 |
+
+| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
+| --- | --- | --- | --- | --- | --- |
+| updated | origin/Jack | 80b4556 | 4ca0cf9 | Yanqing | Close SQLite store during local verification |
+
+**变更文件：**
+- `M  scripts/verify-local.js`
+- `M  src/main/db-service.js`
+- `M  src/main/main.js`
+- `M  src/renderer/renderer.js`
+- `M  src/renderer/styles.css`
+
+---
 
 ### 2026-06-18 17:00 — origin/Jack 数据层重构（SQL Feature added）
 
@@ -252,4 +286,4 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 
 ---
 
-*本文件共保留 7 条更新记录（最近 20 条内）。*
+*本文件共保留 8 条更新记录（最近 20 条内）。*

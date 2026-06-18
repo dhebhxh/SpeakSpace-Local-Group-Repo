@@ -273,6 +273,12 @@ async function getStoreInfo() {
   };
 }
 
+function closeStore() {
+  if (db.open) {
+    db.close();
+  }
+}
+
 module.exports = {
   createNote,
   updateNote,
@@ -287,4 +293,5 @@ module.exports = {
   listTags,
   appendConversation,
   getStoreInfo,
+  closeStore,
 };

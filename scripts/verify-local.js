@@ -18,6 +18,7 @@ const syntaxTargets = [
 ];
 
 const dynamicRendererIds = new Set(["trashRestoreBtn", "trashPermanentDeleteBtn"]);
+const dbServiceModulePath = "../src/main/db-service";
 
 function runNodeCheck(filePath) {
   const result = spawnSync(process.execPath, ["--check", filePath], {
@@ -125,59 +126,77 @@ async function withTemporaryUserData(fn) {
   }
 }
 
+function loadDbService() {
+  const resolvedPath = require.resolve(dbServiceModulePath);
+  delete require.cache[resolvedPath];
+  return require(dbServiceModulePath);
+}
+
+function unloadDbService(store) {
+  if (store?.closeStore) {
+    store.closeStore();
+  }
+  delete require.cache[require.resolve(dbServiceModulePath)];
+}
+
 async function verifyDbServiceTrashFlow() {
   await withTemporaryUserData(async () => {
-    const store = require("../src/main/db-service");
-    const note = await store.createNote({
-      title: "Trash flow verify",
-      transcript: "Temporary audio note transcript.",
-      structured: {
-        summary: "Temporary summary.",
-        keyPoints: ["Temporary point"],
-        actionItems: ["Temporary action"],
+    const store = loadDbService();
+
+    try {
+      const note = await store.createNote({
+        title: "Trash flow verify",
+        transcript: "Temporary audio note transcript.",
+        structured: {
+          summary: "Temporary summary.",
+          keyPoints: ["Temporary point"],
+          actionItems: ["Temporary action"],
+          tags: ["verify"],
+        },
         tags: ["verify"],
-      },
-      tags: ["verify"],
-    });
+      });
 
-    let activeNotes = await store.listNotes();
-    if (activeNotes.length !== 1 || activeNotes[0].id !== note.id) {
-      throw new Error("Created note did not appear in active notes.");
-    }
+      let activeNotes = await store.listNotes();
+      if (activeNotes.length !== 1 || activeNotes[0].id !== note.id) {
+        throw new Error("Created note did not appear in active notes.");
+      }
 
-    const trashed = await store.moveNoteToTrash(note.id);
-    if (!trashed.deletedAt) {
-      throw new Error("moveNoteToTrash did not set deletedAt.");
-    }
+      const trashed = await store.moveNoteToTrash(note.id);
+      if (!trashed.deletedAt) {
+        throw new Error("moveNoteToTrash did not set deletedAt.");
+      }
 
-    activeNotes = await store.listNotes();
-    if (activeNotes.length !== 0) {
-      throw new Error("Trashed note still appears in active notes.");
-    }
+      activeNotes = await store.listNotes();
+      if (activeNotes.length !== 0) {
+        throw new Error("Trashed note still appears in active notes.");
+      }
 
-    let deletedNotes = await store.listDeletedNotes();
-    if (deletedNotes.length !== 1 || deletedNotes[0].id !== note.id) {
-      throw new Error("Trashed note did not appear in deleted notes.");
-    }
+      let deletedNotes = await store.listDeletedNotes();
+      if (deletedNotes.length !== 1 || deletedNotes[0].id !== note.id) {
+        throw new Error("Trashed note did not appear in deleted notes.");
+      }
 
-    await store.restoreNote(note.id);
-    activeNotes = await store.listNotes();
-    deletedNotes = await store.listDeletedNotes();
-    if (activeNotes.length !== 1 || deletedNotes.length !== 0) {
-      throw new Error("restoreNote did not move note back to active notes.");
-    }
+      await store.restoreNote(note.id);
+      activeNotes = await store.listNotes();
+      deletedNotes = await store.listDeletedNotes();
+      if (activeNotes.length !== 1 || deletedNotes.length !== 0) {
+        throw new Error("restoreNote did not move note back to active notes.");
+      }
 
-    await store.moveNoteToTrash(note.id);
-    await store.permanentlyDeleteNote(note.id);
-    activeNotes = await store.listNotes();
-    deletedNotes = await store.listDeletedNotes();
-    if (activeNotes.length !== 0 || deletedNotes.length !== 0) {
-      throw new Error("permanentlyDeleteNote left note data behind.");
-    }
+      await store.moveNoteToTrash(note.id);
+      await store.permanentlyDeleteNote(note.id);
+      activeNotes = await store.listNotes();
+      deletedNotes = await store.listDeletedNotes();
+      if (activeNotes.length !== 0 || deletedNotes.length !== 0) {
+        throw new Error("permanentlyDeleteNote left note data behind.");
+      }
 
-    const info = await store.getStoreInfo();
-    if (info.noteCount !== 0 || info.trashCount !== 0) {
-      throw new Error("Store counts are incorrect after permanent delete.");
+      const info = await store.getStoreInfo();
+      if (info.noteCount !== 0 || info.trashCount !== 0) {
+        throw new Error("Store counts are incorrect after permanent delete.");
+      }
+    } finally {
+      unloadDbService(store);
     }
   });
 
@@ -186,21 +205,26 @@ async function verifyDbServiceTrashFlow() {
 
 async function verifyDbServiceAppDataFallback() {
   await withTemporaryUserData(async () => {
-    const store = require("../src/main/db-service");
-    const info = await store.getStoreInfo();
-    const expectedRoot = process.env.APPDATA;
+    const store = loadDbService();
 
-    if (!expectedRoot) {
-      throw new Error("APPDATA was not set for fallback verification.");
-    }
+    try {
+      const info = await store.getStoreInfo();
+      const expectedRoot = process.env.APPDATA;
 
-    const relativeStorePath = path.relative(expectedRoot, info.storePath);
-    if (relativeStorePath.startsWith("..") || path.isAbsolute(relativeStorePath)) {
-      throw new Error(`Store path does not use APPDATA fallback: ${info.storePath}`);
-    }
+      if (!expectedRoot) {
+        throw new Error("APPDATA was not set for fallback verification.");
+      }
 
-    if (!info.dbPath.endsWith(path.join("speakspace-notes", "notes.db"))) {
-      throw new Error(`Unexpected note database path: ${info.dbPath}`);
+      const relativeStorePath = path.relative(expectedRoot, info.storePath);
+      if (relativeStorePath.startsWith("..") || path.isAbsolute(relativeStorePath)) {
+        throw new Error(`Store path does not use APPDATA fallback: ${info.storePath}`);
+      }
+
+      if (!info.dbPath.endsWith(path.join("speakspace-notes", "notes.db"))) {
+        throw new Error(`Unexpected note database path: ${info.dbPath}`);
+      }
+    } finally {
+      unloadDbService(store);
     }
   });
 

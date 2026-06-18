@@ -93,6 +93,38 @@
     background: var(--surface-1) !important;
     color: var(--text-primary) !important;
   }
+
+  .message.user {
+    background: rgba(99, 102, 241, 0.045);
+  }
+
+  .message.user:hover {
+    background: rgba(99, 102, 241, 0.075);
+  }
+
+  .message.assistant.has-actions {
+    background: rgba(6, 182, 212, 0.04);
+  }
+
+  .message.assistant.has-actions:hover,
+  .message.assistant.has-actions:focus-within {
+    background: rgba(6, 182, 212, 0.07);
+  }
+
+  .message.assistant .rich-text h1,
+  .message.assistant .rich-text h2,
+  .message.assistant .rich-text h3,
+  .message.assistant .rich-text h4,
+  .message.assistant .rich-text strong,
+  .message.assistant .rich-text em,
+  .message.assistant .rich-text blockquote {
+    color: var(--text-primary);
+  }
+
+  .message.assistant .rich-text :not(pre) > code {
+    background: rgba(99, 102, 241, 0.1);
+    color: #4f46e5;
+  }
 }
 
 @keyframes float {

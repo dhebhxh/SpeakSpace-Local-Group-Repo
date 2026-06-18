@@ -1303,6 +1303,16 @@ function getSelectedTTSSpeaker() {
   return state.tts.speakers.find((speaker) => speaker.id === state.tts.localSpeakerId) || null;
 }
 
+function applyLLMRuntime(runtime = {}) {
+  state.runtime.llmReady = Boolean(runtime.runtimeReady);
+  state.runtime.llmOllamaExists = Boolean(runtime.ollamaExists);
+  state.runtime.llmModelExists = Boolean(runtime.modelExists);
+  state.runtime.llmRuntimeLocation = runtime.runtimeLocation || "";
+  state.runtime.llmModelDir = runtime.modelDir || "";
+  state.runtime.llmModelName = runtime.modelName || "";
+  state.runtime.llmModels = Array.isArray(runtime.installedModels) ? runtime.installedModels : [];
+}
+
 function applyLocalTTSRuntime(runtime = {}) {
   state.tts.localAvailable = Boolean(runtime.runtimeReady);
   state.tts.backend = runtime.backend || "";
@@ -3770,7 +3780,6 @@ async function refreshRuntime() {
     state.runtime.sttReady = sttReady;
     state.runtime.sttEngineName = activeSTTEngine;
     state.sttEngineView = activeSTTEngine;
-    state.runtime.llmReady = llmReady;
     state.runtime.sttWhisperCliExists = Boolean(whisper.whisperCliExists);
     state.runtime.sttModelExists = Boolean(whisper.modelExists);
     state.runtime.sttRuntimeLocation = whisper.runtimeLocation || "";
@@ -3782,12 +3791,7 @@ async function refreshRuntime() {
     state.runtime.sttParakeetBackend = parakeet.backend || "";
     state.runtime.sttParakeetModelName = parakeet.modelName || "";
     state.runtime.sttParakeetModels = parakeet.availableModels || [];
-    state.runtime.llmOllamaExists = Boolean(llm.ollamaExists);
-    state.runtime.llmModelExists = Boolean(llm.modelExists);
-    state.runtime.llmRuntimeLocation = llm.runtimeLocation || "";
-    state.runtime.llmModelDir = llm.modelDir || "";
-    state.runtime.llmModelName = llm.modelName;
-    state.runtime.llmModels = llm.installedModels || [];
+    applyLLMRuntime(llm);
     applyLocalTTSRuntime(runtime.tts || {});
     if (managedDataPathEl) {
       managedDataPathEl.textContent = state.runtime.managedDataRoot || t("managedDataChecking");
@@ -3998,12 +4002,25 @@ async function handleLLMModelChange(modelName) {
   if (!modelName || modelName === state.runtime.llmModelName) return;
 
   try {
-    await window.desktopSTT.setLLMModel(modelName);
-    state.runtime.llmModelName = modelName;
-    setEngineStatus("llm", "ready", getModelMeta(modelName, "llm").label);
-    setDropdownValue(llmModelDropdownEl, modelName, "llm");
-    renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), modelName, "llm");
+    const llm = await window.desktopSTT.setLLMModel(modelName);
+    applyLLMRuntime(llm);
+    setEngineStatus(
+      "llm",
+      state.runtime.llmReady
+        ? state.runtime.llmRuntimeLocation === "portable"
+          ? "ready"
+          : "pending"
+        : "error",
+      state.runtime.llmReady
+        ? state.runtime.llmRuntimeLocation === "portable"
+          ? getModelMeta(state.runtime.llmModelName, "llm").label
+          : t("externalRuntime")
+        : t("statusError")
+    );
+    populateDropdown(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
     renderLLMEnginePanel();
+    updateRuntimeHelpTexts();
+    updateButtons();
   } catch (error) {
     setJobStatus(t("switchLlmFailed", { message: error.message }), true);
   }

@@ -736,7 +736,8 @@ ipcMain.handle("stt:set-engine", async (_event, engineName) => {
 });
 
 ipcMain.handle("llm:set-model", async (_event, modelName) => {
-  return setActiveLLMModel(modelName);
+  setActiveLLMModel(modelName);
+  return getLLMRuntimeInfo();
 });
 
 ipcMain.handle("note:create", async (_event, noteData) => {

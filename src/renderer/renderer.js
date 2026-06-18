@@ -6,6 +6,11 @@ const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storag
 const STT_ENGINE_OPTIONS = ["whisper", "parakeet"];
 const textInputEvents = window.SpeakSpaceIme;
 const THEME_STORAGE_KEY = "speakspace.theme";
+const THEME_ICON_SVG = {
+  dark: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  light:
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+};
 const I18N = {
   en: {
     systemPrompt:
@@ -801,6 +806,7 @@ function getStoredAppLanguage() {
 function initTheme() {
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY) || "dark";
   document.documentElement.setAttribute("data-theme", savedTheme);
+  updateThemeToggle(savedTheme);
 }
 
 function toggleTheme() {
@@ -809,6 +815,20 @@ function toggleTheme() {
   
   document.documentElement.setAttribute("data-theme", newTheme);
   window.localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+  updateThemeToggle(newTheme);
+}
+
+function updateThemeToggle(theme) {
+  const themeToggleBtn = document.querySelector("#themeToggleBtn");
+  const themeIcon = document.querySelector("#themeIcon");
+  const isLight = theme === "light";
+
+  if (themeIcon) {
+    themeIcon.innerHTML = isLight ? THEME_ICON_SVG.light : THEME_ICON_SVG.dark;
+  }
+
+  themeToggleBtn?.setAttribute("title", isLight ? "Light theme" : "Dark theme");
+  themeToggleBtn?.setAttribute("aria-label", isLight ? "Light theme" : "Dark theme");
 }
 initTheme();
 

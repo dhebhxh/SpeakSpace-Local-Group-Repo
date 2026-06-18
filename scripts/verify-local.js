@@ -10,7 +10,7 @@ const syntaxTargets = [
   "scripts/download-llm-runtime.js",
   "scripts/verify-local.js",
   "src/main/main.js",
-  "src/main/note-store.js",
+  "src/main/db-service.js",
   "src/main/transcription-service.js",
   "src/preload/preload.js",
   "src/renderer/ime-events.js",
@@ -125,9 +125,9 @@ async function withTemporaryUserData(fn) {
   }
 }
 
-async function verifyNoteStoreTrashFlow() {
+async function verifyDbServiceTrashFlow() {
   await withTemporaryUserData(async () => {
-    const store = require("../src/main/note-store");
+    const store = require("../src/main/db-service");
     const note = await store.createNote({
       title: "Trash flow verify",
       transcript: "Temporary audio note transcript.",
@@ -181,12 +181,12 @@ async function verifyNoteStoreTrashFlow() {
     }
   });
 
-  console.log("note-store trash flow passed");
+  console.log("db-service trash flow passed");
 }
 
-async function verifyNoteStoreAppDataFallback() {
+async function verifyDbServiceAppDataFallback() {
   await withTemporaryUserData(async () => {
-    const store = require("../src/main/note-store");
+    const store = require("../src/main/db-service");
     const info = await store.getStoreInfo();
     const expectedRoot = process.env.APPDATA;
 
@@ -199,12 +199,12 @@ async function verifyNoteStoreAppDataFallback() {
       throw new Error(`Store path does not use APPDATA fallback: ${info.storePath}`);
     }
 
-    if (!info.dbPath.endsWith(path.join("speakspace-notes", "notes-db.json"))) {
+    if (!info.dbPath.endsWith(path.join("speakspace-notes", "notes.db"))) {
       throw new Error(`Unexpected note database path: ${info.dbPath}`);
     }
   });
 
-  console.log("note-store APPDATA fallback passed");
+  console.log("db-service APPDATA fallback passed");
 }
 
 function verifyTranscriptionRuntimeState() {
@@ -238,8 +238,8 @@ async function main() {
   verifyRendererDomIds();
   verifyImeEnterHandling();
   verifyTranscriptionRuntimeState();
-  await verifyNoteStoreTrashFlow();
-  await verifyNoteStoreAppDataFallback();
+  await verifyDbServiceTrashFlow();
+  await verifyDbServiceAppDataFallback();
   console.log("local verification passed");
 }
 

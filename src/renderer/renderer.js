@@ -852,6 +852,24 @@ function getNoteQaMessageSourceKey(message) {
   return `noteqa:${ensureClientMessageId(message, "noteqa")}`;
 }
 
+function setInlineButtonLabel(button, label) {
+  if (!button) return;
+
+  const textNodes = [...button.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE);
+  const labelNode = textNodes.find((node) => node.textContent.trim());
+
+  textNodes.forEach((node) => {
+    if (node !== labelNode) node.remove();
+  });
+
+  if (labelNode) {
+    labelNode.textContent = ` ${label}`;
+    return;
+  }
+
+  button.append(document.createTextNode(` ${label}`));
+}
+
 function applyLanguageUI() {
   document.documentElement.lang = state.uiLanguage === "zh-CN" ? "zh-CN" : "en";
 
@@ -918,16 +936,8 @@ function applyLanguageUI() {
   document.querySelector("#hwCpuLabel").textContent = t("cpu");
   document.querySelector("#hwMemLabel").textContent = t("memory");
   document.querySelector("#hwGpuLabel").textContent = t("gpu");
-  document.querySelector("#refreshRuntimeBtn").childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      node.textContent = ` ${t("refreshStatus")}`;
-    }
-  });
-  document.querySelector("#cleanAllAssetsBtn").childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      node.textContent = ` ${t("cleanAllAssets")}`;
-    }
-  });
+  setInlineButtonLabel(document.querySelector("#refreshRuntimeBtn"), t("refreshStatus"));
+  setInlineButtonLabel(document.querySelector("#cleanAllAssetsBtn"), t("cleanAllAssets"));
 
   [sidebarToggleBtn, sidebarToggleBtnDetail].forEach((button) => {
     button?.setAttribute("title", t("toggleSidebar"));

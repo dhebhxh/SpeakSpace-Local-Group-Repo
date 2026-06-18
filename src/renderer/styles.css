@@ -65,28 +65,33 @@
   }
 
   .settings-panel,
-  .stt-engine-layout,
+  .settings-nav,
+  .settings-group,
   .settings-setting-list,
-  .hardware-panel,
+  .settings-close,
+  .stt-engine-layout,
+  .stt-engine-nav,
+  .stt-engine-btn,
+  .stt-capability-card,
   .stt-model-card,
-  .stt-models-panel {
+  .stt-models-panel,
+  .hardware-panel,
+  .hw-item,
+  .custom-dropdown-trigger,
+  .custom-dropdown-menu {
     background: var(--surface-1) !important;
     border-color: var(--border) !important;
   }
 
+  .settings-nav,
   .stt-engine-nav {
-    background: var(--surface-2) !important;
     border-right: 1px solid var(--border) !important;
-  }
-
-  .stt-engine-btn {
-    background: var(--surface-1) !important;
-    border: 1px solid var(--border) !important;
   }
 
   .stt-engine-btn.active,
   .settings-nav-btn.active {
-    background: var(--surface-3) !important;
+    background: var(--surface-1) !important;
+    color: var(--text-primary) !important;
   }
 }
 
@@ -1545,9 +1550,9 @@ body.sidebar-collapsed .main-panel::before {
   width: max-content;
   max-width: min(260px, 70vw);
   padding: 9px 11px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(226, 232, 240, 0.24);
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: #ffffff !important;
   background: rgba(12, 14, 22, 0.96);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   font-size: 12px;
@@ -2157,6 +2162,21 @@ body.sidebar-collapsed .main-panel::before {
   margin: 0;
   padding: 8px 12px;
   white-space: nowrap;
+}
+
+:root[data-theme="light"] .trash-list-pane {
+  background: var(--surface-1);
+  border-right-color: var(--border);
+}
+
+:root[data-theme="light"] .trash-note-card:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+:root[data-theme="light"] .trash-note-card.active {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.18);
 }
 
 /* ========== Settings Overlay ========== */
@@ -3073,6 +3093,50 @@ body.sidebar-collapsed .main-panel::before {
 .settings-action-btn.runtime-downloading .btn-spinner {
   border-color: rgba(99, 102, 241, 0.2);
   border-top-color: var(--accent-hover);
+}
+
+#refreshRuntimeBtn.refresh-btn {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.26) !important;
+  color: var(--accent-hover) !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+#refreshRuntimeBtn.refresh-btn:disabled,
+#refreshRuntimeBtn.refresh-btn.runtime-downloading {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.22) !important;
+  color: var(--accent-hover) !important;
+  opacity: 1 !important;
+}
+
+#refreshRuntimeBtn.refresh-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.16) !important;
+  border-color: rgba(99, 102, 241, 0.34) !important;
+  color: #f5f5ff !important;
+}
+
+:root[data-theme="light"] #refreshRuntimeBtn.refresh-btn {
+  background: var(--surface-1) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+:root[data-theme="light"] #refreshRuntimeBtn.refresh-btn:disabled,
+:root[data-theme="light"] #refreshRuntimeBtn.refresh-btn.runtime-downloading {
+  background: var(--surface-1) !important;
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+:root[data-theme="light"] #refreshRuntimeBtn.refresh-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.24) !important;
+  color: var(--accent) !important;
 }
 
 /* ========== Responsive ========== */

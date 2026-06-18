@@ -46,13 +46,19 @@ SpeakSpace Local 是一个基于 Electron 的本地离线桌面应用，目标�
 | `origin/feature/dod` | `44e3059` | Update README.md | Jack8ot | 2026-06-07 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
-| `origin/project-status` | `b7caff2` | docs: update project status dashboard | Hermes.Yanqing | 2026-06-18 |
 
 ## 最近变化摘要
 
-**新增 `origin/project-status`**（Hermes.Yanqing: docs: update project status dashboard）
+**`origin/Jack` 更新：1593624 → 80b4556（Jack8ot: SQL Feature added）**
 
-新增 orphan 分支 `origin/project-status`，用于在 GitHub 上独立展示项目状态页面（README.md）。该分支通过独立 worktree 维护，不干扰主仓库 checkout。首次建立，尚无实质性内容差异。
+本次提交对数据层进行了重构：
+- 删除 `src/main/db-service/` 目录（旧的非功能存根）
+- 删除 `src/main/note-store.js`（笔记存储模块）
+- 删除 `src/main/sync-service/` 目录（同步服务模块）
+- 新增 `src/main/db-service.js`（统一的 SQLite 数据服务）
+- 修改 `src/main/main.js` 以适配新数据层
+
+从变更文件推断，`origin/Jack` 正在推进 SQLite 数据层的统一，将之前分散的 note 和 sync 功能整合到一个 db-service 中。该分支尚未合并入 `origin/main`。
 
 ## 运行与开发信息（静态识别）
 
@@ -128,18 +134,6 @@ GitHub Actions：`.github/workflows/verify-local.yml` — 表明有 CI 关注本
 ---
 
 ## 更新记录
-
-### 2026-06-18 19:23 — 新增 `origin/project-status` 分支（GitHub 项目状态展示）
-
-新增 `origin/project-status` 分支（`b7caff2`，Hermes.Yanqing: docs: update project status dashboard）。该分支以 orphan 方式独立维护 GitHub 可读的项目状态页面（README.md），用于向团队成员公开实时进展。
-
-事项状态无变化：7 项待确认、0 项已解决、0 项过期。
-
-| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
-| --- | --- | --- | --- | --- | --- |
-| added | origin/project-status | — | b7caff2 | Hermes.Yanqing | docs: update project status dashboard |
-
----
 
 ### 2026-06-18 17:00 — origin/Jack 数据层重构（SQL Feature added）
 

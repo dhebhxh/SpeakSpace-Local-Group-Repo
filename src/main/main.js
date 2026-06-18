@@ -48,7 +48,7 @@ const {
   listTags,
   appendConversation,
   getStoreInfo,
-} = require("./note-store");
+} = require("./db-service");
 const { generateStructuredNote, askAboutNote } = require("./structured-processor");
 const {
   getManagedCleanupTargets,

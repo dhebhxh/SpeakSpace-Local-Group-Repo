@@ -4,7 +4,7 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-18 17:00
+- 最后更新：2026-06-18 19:23
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 - 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`
 
@@ -33,7 +33,7 @@ SpeakSpace Local 是一个基于 Electron 的本地离线桌面应用，目标�
 7. **运行时管理** — 下载/清理/状态检测：STT runtime、TTS runtime（sherpa-onnx）、LLM runtime（Ollama）
 8. **本地硬件检测** — 推理能力提示
 
-源码位于 `src/` 目录，分为 main（主进程）、preload（预加载）、renderer（渲染进程）三层。依赖包括 `better-sqlite3`（根 package.json 声明，各分支均可用）、`sherpa-onnx`、`sherpa-onnx-node`。
+源码位于 `src/` 目录，分为 main（主进程）、preload（预加载）、renderer（渲染进程）三层。依赖包括 `better-sqlite3`（根 package.json 声明）、`sherpa-onnx`、`sherpa-onnx-node`。
 
 ## 分支状态
 
@@ -46,19 +46,13 @@ SpeakSpace Local 是一个基于 Electron 的本地离线桌面应用，目标�
 | `origin/feature/dod` | `44e3059` | Update README.md | Jack8ot | 2026-06-07 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
+| `origin/project-status` | `b7caff2` | docs: update project status dashboard | Hermes.Yanqing | 2026-06-18 |
 
 ## 最近变化摘要
 
-**`origin/Jack` 更新：1593624 → 80b4556（Jack8ot: SQL Feature added）**
+**新增 `origin/project-status`**（Hermes.Yanqing: docs: update project status dashboard）
 
-本次提交对数据层进行了重构：
-- 删除 `src/main/db-service/` 目录（旧的非功能存根）
-- 删除 `src/main/note-store.js`（笔记存储模块）
-- 删除 `src/main/sync-service/` 目录（同步服务模块）
-- 新增 `src/main/db-service.js`（统一的 SQLite 数据服务）
-- 修改 `src/main/main.js` 以适配新数据层
-
-从变更文件推断，`origin/Jack` 正在推进 SQLite 数据层的统一，将之前分散的 note 和 sync 功能整合到一个 db-service 中。该分支尚未合并入 `origin/main`。
+新增 orphan 分支 `origin/project-status`，用于在 GitHub 上独立展示项目状态页面（README.md）。该分支通过独立 worktree 维护，不干扰主仓库 checkout。首次建立，尚无实质性内容差异。
 
 ## 运行与开发信息（静态识别）
 
@@ -134,6 +128,18 @@ GitHub Actions：`.github/workflows/verify-local.yml` — 表明有 CI 关注本
 ---
 
 ## 更新记录
+
+### 2026-06-18 19:23 — 新增 `origin/project-status` 分支（GitHub 项目状态展示）
+
+新增 `origin/project-status` 分支（`b7caff2`，Hermes.Yanqing: docs: update project status dashboard）。该分支以 orphan 方式独立维护 GitHub 可读的项目状态页面（README.md），用于向团队成员公开实时进展。
+
+事项状态无变化：7 项待确认、0 项已解决、0 项过期。
+
+| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
+| --- | --- | --- | --- | --- | --- |
+| added | origin/project-status | — | b7caff2 | Hermes.Yanqing | docs: update project status dashboard |
+
+---
 
 ### 2026-06-18 17:00 — origin/Jack 数据层重构（SQL Feature added）
 

@@ -12,21 +12,41 @@
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/YQ` | `1c7066b` | Move UI handoff into agent docs | Yanqing | 2026-06-16 |
+| `origin/codex/meeting-note-templates` | `77b9620` | Add resilient transcription and note workflows | Yanqing | 2026-06-20 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 更新 `origin/Jack`：`113b428` → `367fd0a`，修复了 `db-service.js` 的合并冲突标记
+- 新增 `origin/codex/meeting-note-templates`：`77b9620`
 
 ### 最近提交
-- `origin/Jack` `367fd0a`：fix: resolve db-service merge conflict markers（Yanqing，2026-06-19）
+- `origin/codex/meeting-note-templates` `77b9620`：Add resilient transcription and note workflows（Yanqing，2026-06-20）
+- `origin/codex/meeting-note-templates` `367fd0a`：fix: resolve db-service merge conflict markers（Yanqing，2026-06-19）
+- `origin/codex/meeting-note-templates` `113b428`：db-service comment added & code review done（Jack8ot，2026-06-19）
+- `origin/codex/meeting-note-templates` `6f6915a`：db-service comment added & code review done（Jack8ot，2026-06-19）
+- `origin/codex/meeting-note-templates` `4ca0cf9`：Close SQLite store during local verification（Yanqing，2026-06-18）
 
 ### 主要文件变化
-- `origin/Jack`: `M  src/main/db-service.js`
+- 暂无可列出的文件 diff。
 
 ## 更新记录
+
+### 2026-06-20 00:27 — 自动更新
+
+**分支变化**
+- 新增 `origin/codex/meeting-note-templates`：`77b9620`
+
+**提交摘要**
+- `origin/codex/meeting-note-templates` `77b9620`：Add resilient transcription and note workflows（Yanqing，2026-06-20）
+- `origin/codex/meeting-note-templates` `367fd0a`：fix: resolve db-service merge conflict markers（Yanqing，2026-06-19）
+- `origin/codex/meeting-note-templates` `113b428`：db-service comment added & code review done（Jack8ot，2026-06-19）
+- `origin/codex/meeting-note-templates` `6f6915a`：db-service comment added & code review done（Jack8ot，2026-06-19）
+- `origin/codex/meeting-note-templates` `4ca0cf9`：Close SQLite store during local verification（Yanqing，2026-06-18）
+
+**主要文件变化**
+- 暂无可列出的文件 diff。
 
 ### 2026-06-19 18:12 — origin/Jack 合并冲突修复
 
@@ -56,6 +76,8 @@
 
 ---
 
+
+
 ### 2026-06-19 11:49 — origin/feature/dod README 再次更新
 
 **分支变化**
@@ -83,6 +105,8 @@
 - `M  README.md`
 
 ---
+
+
 
 ### 2026-06-19 11:26 — origin/feature/dod README 更新
 
@@ -112,6 +136,8 @@
 
 ---
 
+
+
 ### 2026-06-19 11:23 — origin/feature/dod 更新 README.md
 
 **分支变化**
@@ -139,6 +165,8 @@
 - `M  README.md`
 
 ---
+
+
 
 ### 2026-06-19 09:02 — origin/Jack 代码审查与注释完善
 
@@ -168,6 +196,8 @@
 - `M  src/main/db-service.js`
 
 ---
+
+
 
 ### 2026-06-18 22:00 — origin/Jack SQLite 验证与 LLM 选择修复
 
@@ -201,6 +231,8 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 - `M  src/renderer/styles.css`
 
 ---
+
+
 
 ### 2026-06-18 17:00 — origin/Jack 数据层重构（SQL Feature added）
 
@@ -236,6 +268,8 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 
 ---
 
+
+
 ### 2026-06-18 15:39 — 文档刷新与 dashboard 同步
 
 本次更新无远端分支变化（所有分支 SHA 保持不变）。文档进行了以下调整：
@@ -252,6 +286,8 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 | 过期 | 0 |
 
 ---
+
+
 
 ### 2026-06-18 15:00 — origin/Jack 侧边栏主题切换完善
 
@@ -270,6 +306,8 @@ Yanqing 完善了亮色模式中侧边栏区域的主题切换交互，修改了
 
 ---
 
+
+
 ### 2026-06-18 10:00 — origin/Jack 亮色模式 UI 打磨修复
 
 `origin/Jack` 更新：`e54f1b3` → `ca4a834`（Yanqing）
@@ -287,6 +325,8 @@ Yanqing 对 Jack 分支的亮色模式前端做了打磨修复，修改了 note-
 
 ---
 
+
+
 ### 2026-06-18 01:00 — origin/Jack 前端亮色主题完善
 
 `origin/Jack` 更新：`f499af0` → `e54f1b3`（Jack8ot）
@@ -302,6 +342,8 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 - `M  .gitignore`
 
 ---
+
+
 
 ### 2026-06-17 11:00 — origin/main 里程碑合并
 
@@ -323,19 +365,13 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 
 ## 当前待确认事项
 
-1. **[SPK-SQLITE-VS-JSON-存储方案] SQLite vs JSON 存储方案** — `origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。
-
-2. **[SPK-ORIGIN-JACK-合并计划] `origin/Jack` 合并计划** — 该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。
-
-3. **[SPK-LLM-评估结果落地] LLM 评估结果落地** — `origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。
-
-4. **[SPK-多语言支持范围] 多语言支持范围** — 客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。
-
-5. **[SPK-WINDOWS-兼容性验证] Windows 兼容性验证** — GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。
-
-6. **[SPK-TTS-V2-时间线] TTS V2 时间线** — README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。
-
-7. **[SPK-ORIGIN-JACK-合并-同步计划] origin/Jack 合并/同步计划** — origin/Jack 有新的远端变化，是否需要合并入主线或同步方案待确认。
+- [SPK-SQLITE-VS-JSON-存储方案] **SQLite vs JSON 存储方案** — `origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。；证据：当前静态上下文仍出现相关证据：json, notes, origin/jack, origin/main, sqlite
+- [SPK-ORIGIN-JACK-合并计划] **`origin/Jack` 合并计划** — 该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。；证据：当前静态上下文仍出现相关证据：main, origin/jack, sqlite
+- [SPK-LLM-评估结果落地] **LLM 评估结果落地** — `origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。；证据：当前静态上下文仍出现相关证据：llm, main, origin/yq, qwen3:4b-instruct
+- [SPK-多语言支持范围] **多语言支持范围** — 客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。；证据：当前静态上下文仍出现相关证据：readme, 切换
+- [SPK-WINDOWS-兼容性验证] **Windows 兼容性验证** — GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。；证据：当前静态上下文仍出现相关证据：github, npm.ps1, powershell, verify-local.yml, windows, 工作流, 拦截, 确认
+- [SPK-TTS-V2-时间线] **TTS V2 时间线** — README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。；证据：当前静态上下文仍出现相关证据：readme, tts, 功能
+- [SPK-ORIGIN-JACK-合并-同步计划] **origin/Jack 合并/同步计划** — origin/Jack 有新的远端变化，是否需要合并入主线或同步方案待确认。；证据：当前静态上下文仍出现相关证据：origin/jack
 
 ## 已解决或已变化事项
 
@@ -345,71 +381,39 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 
 - 最近没有过期或证据不足事项。
 
----
-
 ## 当前项目概览
 
-SpeakSpace Local 是一个本地优先的桌面项目，基于 Electron 构建，目标是把本地录音、文件导入、语音转写、本地大模型整理、本地语音播报、笔记沉淀串成一条完整的桌面端工作流。
-
-当前三条本地 AI 能力已统一接入：
-- **STT**：`whisper.cpp` + `ggml-large-v3-turbo-q5_0.bin`
-- **LLM**：`Ollama` + 可切换本地模型，默认 `qwen3:4b-instruct`
-- **TTS**：`sherpa-onnx-node` + `kokoro-multi-lang-v1_0`（V2 功能）
-
-从项目提案文档看，该项目定位为「一个由本地 AI 推理驱动的语音优先办公生产力系统」，注重模块化设计，便于灵活替换不同语音识别、语音合成和文本理解模型。
+SpeakSpace Local 是一个本地优先的桌面项目。当前总览基于仓库文档、提交记录、分支状态和项目结构静态生成；具体功能完成度仍以人工验收为准。
 
 ## 当前功能与模块
 
-从 README 和项目结构静态识别到以下核心功能：
+从仓库结构和 package.json 静态识别到：
 
-1. **本地聊天与多模型切换** — 支持本地 LLM 对话、设置面板切换已安装模型、下载/删除项目内模型
-2. **文件转写** — 支持选择本地音频/视频文件，通过 whisper.cpp 离线转写，结果落盘到 `.speakspace-data/stt/output`
-3. **麦克风录音** — 应用内录音，保存到本地托管目录，可直接进入转写和整理流程
-4. **结构化笔记生成** — 将原始转写结果交给本地 LLM，自动生成标题、摘要、关键要点、行动项、标签
-5. **笔记存储与检索** — 保存笔记，支持按文件夹、标签、关键词过滤，支持在笔记详情页继续问答
-6. **针对笔记的继续提问** — 在单条笔记下继续追问
-7. **中英文界面切换** — 界面语言切换与本地状态持久化
-8. **本地硬件检测与推理能力提示**
-9. **运行时与模型管理** — 下载、删除、状态检测，统一托管目录 `.speakspace-data/`
-10. **Clean All Local Assets** — 一键清理
+- Electron/Node 项目入口：`npm start` / `electron .`
+- 本地 runtime 下载与检查脚本：见下方开发信息
+- 文档与交付材料位于 `docs/`、根目录 README / proposal 等文件
+- 源码主要位于 `src/`
 
 ## 运行与开发信息（静态识别）
 
-**package.json**：
-- 名称：`speakspace-local-desktop` v1.0.0
-- 描述：Local Electron desktop speech-to-text MVP powered by whisper.cpp
-- 入口：`npm start` / `electron .`
-- 核心依赖：`better-sqlite3`、`sherpa-onnx`、`sherpa-onnx-node`
-- 开发依赖：`electron`
+package.json scripts：
 
-**可用脚本：**
+- `native:electron`: `node ./scripts/prepare-native.js electron`
+- `native:node`: `node ./scripts/prepare-native.js node`
+- `start`: `npm run native:electron && electron .`
+- `download:runtime`: `node ./scripts/download-runtime.js`
+- `download:tts`: `node ./scripts/download-tts-runtime.js`
+- `download:llm`: `node ./scripts/download-llm-runtime.js`
+- `download:llm:candidates`: `node ./scripts/download-llm-runtime.js --preset candidates`
+- `download:runtime:check`: `node ./scripts/download-runtime.js --check`
+- `download:tts:check`: `node ./scripts/download-tts-runtime.js --check`
+- `download:llm:check`: `node ./scripts/download-llm-runtime.js --check`
+- `cleanup:assets`: `node ./scripts/cleanup-local-assets.js`
+- `verify:local`: `npm run native:node && node ./scripts/verify-local.js`
+- `test`: `npm run native:node && node --test tests/*.test.js`
 
-| 命令 | 功能 |
-|---|---|
-| `npm start` | 启动 Electron 应用 |
-| `npm run download:runtime` | 下载 whisper.cpp 运行时 |
-| `npm run download:tts` | 下载 TTS 运行时 |
-| `npm run download:llm` | 下载 LLM 运行时 |
-| `npm run download:llm:candidates` | 下载候选 LLM 模型 |
-| `npm run download:runtime:check` | 检查 whisper.cpp 运行时状态 |
-| `npm run download:tts:check` | 检查 TTS 运行时状态 |
-| `npm run download:llm:check` | 检查 LLM 运行时状态 |
-| `npm run cleanup:assets` | 一键清理本地资源 |
-| `npm run verify:local` | 本地环境验证 |
-| `npm test` | 测试（当前无自动化测试） |
+> 注意：自动任务未运行测试、build 或 dev server；上面只是静态识别到的命令。
 
-**文档与交付物：**
-
-- `desktop-stt-model-summary-report.md` — STT 模型评估报告，推荐 `whisper.cpp ggml-large-v3-turbo-q5_0` 为首选方案
-- `project-proposal.md` — 中英双语项目提案文档
-- `docs/client-meeting-model-evaluation-prep.md` / `.zh.md` — 客户会议模型评估准备材料（中英双语）
-- `scripts/ollama-model-catalog.json` — Ollama 模型目录
-
-**CI 配置：**
-- `.github/workflows/verify-local.yml` — GitHub Actions 验证工作流
-
-> 注意：自动任务未运行测试、build 或 dev server；上面只是静态识别到的命令和文件。
-
-- 最后更新：2026-06-19 18:12
+- 最后更新：2026-06-20 00:27
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 - 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`

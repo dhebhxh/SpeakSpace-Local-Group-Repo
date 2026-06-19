@@ -8,7 +8,7 @@
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
-| `origin/Jack` | `113b428` | db-service comment added & code review done | Jack8ot | 2026-06-19 |
+| `origin/Jack` | `367fd0a` | fix: resolve db-service merge conflict markers | Yanqing | 2026-06-19 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/YQ` | `1c7066b` | Move UI handoff into agent docs | Yanqing | 2026-06-16 |
@@ -18,15 +18,43 @@
 
 ## 最近变化摘要
 
-- 更新 `origin/feature/dod`：`a4fb32b` → `6c82d18`
+- 更新 `origin/Jack`：`113b428` → `367fd0a`，修复了 `db-service.js` 的合并冲突标记
 
 ### 最近提交
-- `origin/feature/dod` `6c82d18`：Update README.md（Jack8ot，2026-06-19）
+- `origin/Jack` `367fd0a`：fix: resolve db-service merge conflict markers（Yanqing，2026-06-19）
 
 ### 主要文件变化
-- `origin/feature/dod`: `M  README.md`
+- `origin/Jack`: `M  src/main/db-service.js`
 
 ## 更新记录
+
+### 2026-06-19 18:12 — origin/Jack 合并冲突修复
+
+**分支变化**
+- 更新 `origin/Jack`：`113b428` → `367fd0a`
+
+**提交摘要**
+- `origin/Jack` `367fd0a`：fix: resolve db-service merge conflict markers（Yanqing，2026-06-19）
+
+**主要文件变化**
+- `origin/Jack`: `M  src/main/db-service.js`
+
+**说明：** Yanqing 修复了 `origin/Jack` 分支中 `db-service.js` 的合并冲突标记。从 Git 信息看为代码清理与修复，未引入新功能或架构变化。所有远端分支无其他变动，待确认事项保持 7 项不变。
+
+| 类型 | 说明 |
+|---|---|
+| 当前待确认 | 7 项（无新增/解决/过期） |
+| 已解决 | 0 |
+| 过期 | 0 |
+
+| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
+|---|---|---|---|---|---|
+| updated | origin/Jack | 113b428 | 367fd0a | Yanqing | fix: resolve db-service merge conflict markers |
+
+**变更文件：**
+- `M  src/main/db-service.js`
+
+---
 
 ### 2026-06-19 11:49 — origin/feature/dod README 再次更新
 
@@ -291,7 +319,7 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 
 ---
 
-*本文件共保留 12 条更新记录（最近 20 条内）。*
+*本文件共保留 13 条更新记录（最近 20 条内）。*
 
 ## 当前待确认事项
 
@@ -382,6 +410,6 @@ SpeakSpace Local 是一个本地优先的桌面项目，基于 Electron 构建�
 
 > 注意：自动任务未运行测试、build 或 dev server；上面只是静态识别到的命令和文件。
 
-- 最后更新：2026-06-19 11:49
+- 最后更新：2026-06-19 18:12
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 - 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`

@@ -8,28 +8,84 @@
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
-| `origin/Jack` | `367fd0a` | fix: resolve db-service merge conflict markers | Yanqing | 2026-06-19 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/codex/meeting-note-templates` | `e7ac17c` | Fix Windows native rebuild invocation | Yanqing | 2026-06-20 |
+| `origin/codex/remove-agent-handoff` | `dab0ebb` | Remove obsolete agent handoff | Yanqing | 2026-06-20 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 删除 `origin/YQ`：远端分支 `1c7066b` 已被移除，该分支包含的 LLM 评估报告此前已合入 `origin/main`
+- 新增 `origin/codex/remove-agent-handoff`：`dab0ebb`
+- 更新 `origin/Jack`：`367fd0a` → `e23164a`
 
-### 已解决的待确认事项
-- **LLM 评估结果落地**（SPK-LLM-评估结果落地）— 因关联的远端分支 `origin/YQ` 已不存在，脚本自动标记为已解决
+### 最近提交
+- `origin/codex/remove-agent-handoff` `dab0ebb`：Remove obsolete agent handoff（Yanqing，2026-06-20）
+- `origin/Jack` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
+- `origin/Jack` `77b9620`：Add resilient transcription and note workflows（Yanqing，2026-06-20）
 
-### 待确认事项变化
-- 当前待确认：6 项（减少 1 项）
-- 已解决：1 项（LLM 评估结果落地）
-- 过期：0 项
-- 无新增待确认事项
+### 主要文件变化
+- `origin/codex/remove-agent-handoff`: `M	AGENTS.md`
+- `origin/codex/remove-agent-handoff`: `D	docs/agents/speakspace-ui-pr6-handoff-2026-06-15.md`
+- `origin/Jack`: `M	.github/workflows/verify-local.yml`
+- `origin/Jack`: `M	package-lock.json`
+- `origin/Jack`: `M	package.json`
+- `origin/Jack`: `A	scripts/prepare-native.js`
+- `origin/Jack`: `M	scripts/verify-local.js`
+- `origin/Jack`: `A	src/main/audio-duration.js`
+- `origin/Jack`: `A	src/main/audio-retention.js`
+- `origin/Jack`: `M	src/main/db-service.js`
+- `origin/Jack`: `M	src/main/llm-service.js`
+- `origin/Jack`: `M	src/main/main.js`
+- `origin/Jack`: `M	src/main/structured-processor.js`
+- `origin/Jack`: `A	src/main/transcript-segments.js`
+- `origin/Jack`: `A	src/main/transcription-job-manager.js`
+- `origin/Jack`: `M	src/main/transcription-service.js`
+- `origin/Jack`: `M	src/preload/preload.js`
+- `origin/Jack`: `A	src/renderer/draft-conversation-context.js`
+- `origin/Jack`: `A	src/renderer/drop-input.js`
+- `origin/Jack`: `M	src/renderer/index.html`
+- `origin/Jack`: `A	src/renderer/note-draft-source.js`
+- `origin/Jack`: `A	src/renderer/note-library-state.js`
 
 ## 更新记录
+
+### 2026-06-20 00:49 — 自动更新
+
+**分支变化**
+- 新增 `origin/codex/remove-agent-handoff`：`dab0ebb`
+- 更新 `origin/Jack`：`367fd0a` → `e23164a`
+
+**提交摘要**
+- `origin/codex/remove-agent-handoff` `dab0ebb`：Remove obsolete agent handoff（Yanqing，2026-06-20）
+- `origin/Jack` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
+- `origin/Jack` `77b9620`：Add resilient transcription and note workflows（Yanqing，2026-06-20）
+
+**主要文件变化**
+- `origin/codex/remove-agent-handoff`: `M	AGENTS.md`
+- `origin/codex/remove-agent-handoff`: `D	docs/agents/speakspace-ui-pr6-handoff-2026-06-15.md`
+- `origin/Jack`: `M	.github/workflows/verify-local.yml`
+- `origin/Jack`: `M	package-lock.json`
+- `origin/Jack`: `M	package.json`
+- `origin/Jack`: `A	scripts/prepare-native.js`
+- `origin/Jack`: `M	scripts/verify-local.js`
+- `origin/Jack`: `A	src/main/audio-duration.js`
+- `origin/Jack`: `A	src/main/audio-retention.js`
+- `origin/Jack`: `M	src/main/db-service.js`
+- `origin/Jack`: `M	src/main/llm-service.js`
+- `origin/Jack`: `M	src/main/main.js`
+- `origin/Jack`: `M	src/main/structured-processor.js`
+- `origin/Jack`: `A	src/main/transcript-segments.js`
+- `origin/Jack`: `A	src/main/transcription-job-manager.js`
+- `origin/Jack`: `M	src/main/transcription-service.js`
+- `origin/Jack`: `M	src/preload/preload.js`
+- `origin/Jack`: `A	src/renderer/draft-conversation-context.js`
+- `origin/Jack`: `A	src/renderer/drop-input.js`
+- `origin/Jack`: `M	src/renderer/index.html`
+- `origin/Jack`: `A	src/renderer/note-draft-source.js`
+- `origin/Jack`: `A	src/renderer/note-library-state.js`
 
 ### 2026-06-20 00:32 — 自动更新
 
@@ -43,6 +99,8 @@
 | deleted | origin/YQ | 1c7066b | 已移除 | — | — |
 
 ---
+
+
 
 
 ### 2026-06-20 00:30 — 自动更新
@@ -76,6 +134,8 @@
 ---
 
 
+
+
 ### 2026-06-20 00:27 — 自动更新
 
 **分支变化**
@@ -92,6 +152,8 @@
 - 暂无可列出的文件 diff。
 
 ---
+
+
 
 
 ### 2026-06-19 18:12 — origin/Jack 合并冲突修复
@@ -123,6 +185,8 @@
 ---
 
 
+
+
 ### 2026-06-19 11:49 — origin/feature/dod README 再次更新
 
 **分支变化**
@@ -150,6 +214,8 @@
 - `M  README.md`
 
 ---
+
+
 
 
 ### 2026-06-19 11:26 — origin/feature/dod README 更新
@@ -181,6 +247,8 @@
 ---
 
 
+
+
 ### 2026-06-19 11:23 — origin/feature/dod 更新 README.md
 
 **分支变化**
@@ -208,6 +276,8 @@
 - `M  README.md`
 
 ---
+
+
 
 
 ### 2026-06-19 09:02 — origin/Jack 代码审查与注释完善
@@ -240,6 +310,8 @@
 ---
 
 
+
+
 ### 2026-06-18 22:00 — origin/Jack SQLite 验证与 LLM 选择修复
 
 `origin/Jack` 更新：`80b4556` → `4ca0cf9`（Yanqing: 3 commits）
@@ -270,6 +342,8 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 - `M  src/renderer/styles.css`
 
 ---
+
+
 
 
 ### 2026-06-18 17:00 — origin/Jack 数据层重构（SQL Feature added）
@@ -307,6 +381,8 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 ---
 
 
+
+
 ### 2026-06-18 15:39 — 文档刷新与 dashboard 同步
 
 本次更新无远端分支变化（所有分支 SHA 保持不变）。文档进行了以下调整：
@@ -322,6 +398,8 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 | 过期 | 0 |
 
 ---
+
+
 
 
 ### 2026-06-18 15:00 — origin/Jack 侧边栏主题切换完善
@@ -342,6 +420,8 @@ Yanqing 完善了亮色模式中侧边栏区域的主题切换交互，修改了
 ---
 
 
+
+
 ### 2026-06-18 10:00 — origin/Jack 亮色模式 UI 打磨修复
 
 `origin/Jack` 更新：`e54f1b3` → `ca4a834`（Yanqing）
@@ -360,6 +440,8 @@ Yanqing 对 Jack 分支的亮色模式前端做了打磨修复，修改了 note-
 ---
 
 
+
+
 ### 2026-06-18 01:00 — origin/Jack 前端亮色主题完善
 
 `origin/Jack` 更新：`f499af0` → `e54f1b3`（Jack8ot）
@@ -375,6 +457,8 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 - `M  .gitignore`
 
 ---
+
+
 
 
 ### 2026-06-17 11:00 — origin/main 里程碑合并
@@ -449,6 +533,8 @@ SpeakSpace Local 是一个本地优先的桌面项目，基于 Electron 构建�
 - 中英文界面切换与本地状态持久化
 - GitHub Actions CI：`.github/workflows/verify-local.yml`
 
+
+
 ### 最近新增/活跃功能（从提交推断）
 
 - `origin/Jack`：SQLite 数据层（统一 db-service.js），亮色模式主题切换，UI 打磨
@@ -456,6 +542,8 @@ SpeakSpace Local 是一个本地优先的桌面项目，基于 Electron 构建�
 - `origin/LF-c-patch-1`：亮色模式切换按钮
 
 ## 运行与开发信息（静态识别）
+
+
 
 ### package.json scripts
 
@@ -475,26 +563,62 @@ SpeakSpace Local 是一个本地优先的桌面项目，基于 Electron 构建�
 | `npm run verify:local` | 验证本地环境与集成 |
 | `npm test` | 运行单元测试 |
 
+
+
 ### 依赖（package.json 识别）
 
 - `dependencies`：`better-sqlite3`、`sherpa-onnx`、`sherpa-onnx-node`
 - `devDependencies`：`electron`
 
-### 项目结构概览
+## 当前待确认事项
 
-- `src/main/` — 主进程：音频、转录、LLM、TTS、数据层服务
-- `src/preload/` — Electron preload 脚本
-- `src/renderer/` — 渲染进程：HTML/CSS/JS 前端、笔记视图、转写视图
-- `scripts/` — 工具脚本（下载、清理、验证、runtime 管理）
-- `tests/` — 单元测试（Node `--test`，共 17 个测试文件）
-- `docs/` — 客户会议评估准备文档（中英双语）
+- [SPK-SQLITE-VS-JSON-存储方案] **SQLite vs JSON 存储方案** — `origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。；证据：当前静态上下文仍出现相关证据：json, origin/jack, origin/main
+- [SPK-ORIGIN-JACK-合并计划] **`origin/Jack` 合并计划** — 该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。；证据：当前静态上下文仍出现相关证据：main, origin/jack
+- [SPK-多语言支持范围] **多语言支持范围** — 客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。；证据：当前静态上下文仍出现相关证据：readme, 切换
+- [SPK-WINDOWS-兼容性验证] **Windows 兼容性验证** — GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。；证据：当前静态上下文仍出现相关证据：github, npm.ps1, powershell, verify-local.yml, windows, 工作流, 拦截, 确认
+- [SPK-TTS-V2-时间线] **TTS V2 时间线** — README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。；证据：当前静态上下文仍出现相关证据：readme, tts, 功能
+- [SPK-ORIGIN-JACK-合并-同步计划] **origin/Jack 合并/同步计划** — origin/Jack 有新的远端变化，是否需要合并入主线或同步方案待确认。；证据：当前静态上下文仍出现相关证据：origin/jack
+- [SPK-LLM-评估结果落地] **LLM 评估结果落地** — `origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。；证据：当前静态上下文仍出现相关证据：llm, main, qwen3:4b-instruct
 
-### 注意事项
+## 已解决或已变化事项
 
-- 自动任务未运行测试、build 或 dev server；以上命令为静态识别，实际执行可能有环境依赖差异。
-- Windows 环境下 `npm.ps1` 可能被 PowerShell 执行策略拦截，建议先在 PowerShell 中检查执行策略或使用 `cmd` 替代。
-- 项目默认使用本地模型，首次运行需要下载相应的 runtime 和模型文件。
+- 最近没有脚本确认的已解决/已变化事项。
 
-- 最后更新：2026-06-20 00:32
+## 过期或证据不足事项
+
+- 最近没有过期或证据不足事项。
+
+## 当前项目概览
+
+SpeakSpace Local 是一个本地优先的桌面项目。当前总览基于仓库文档、提交记录、分支状态和项目结构静态生成；具体功能完成度仍以人工验收为准。
+
+## 当前功能与模块
+
+从仓库结构和 package.json 静态识别到：
+
+- Electron/Node 项目入口：`npm start` / `electron .`
+- 本地 runtime 下载与检查脚本：见下方开发信息
+- 文档与交付材料位于 `docs/`、根目录 README / proposal 等文件
+- 源码主要位于 `src/`
+
+## 运行与开发信息（静态识别）
+
+package.json scripts：
+
+- `start`: `electron .`
+- `download:runtime`: `node ./scripts/download-runtime.js`
+- `download:tts`: `node ./scripts/download-tts-runtime.js`
+- `download:llm`: `node ./scripts/download-llm-runtime.js`
+- `download:llm:candidates`: `node ./scripts/download-llm-runtime.js --preset candidates`
+- `download:runtime:check`: `node ./scripts/download-runtime.js --check`
+- `download:tts:check`: `node ./scripts/download-tts-runtime.js --check`
+- `download:llm:check`: `node ./scripts/download-llm-runtime.js --check`
+- `cleanup:assets`: `node ./scripts/cleanup-local-assets.js`
+- `verify:local`: `node ./scripts/verify-local.js`
+- `test`: `echo "No automated tests configured"`
+
+> 注意：自动任务未运行测试、build 或 dev server；上面只是静态识别到的命令。
+
+- 最后更新：2026-06-20 00:49
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 - 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`

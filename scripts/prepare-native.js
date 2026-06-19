@@ -20,6 +20,23 @@ function buildRebuildArgs(runtime, electronVersion = getElectronVersion()) {
   return args;
 }
 
+function buildNpmInvocation(
+  platform = process.platform,
+  execPath = process.execPath,
+  npmExecPath = process.env.npm_execpath
+) {
+  if (npmExecPath) {
+    return { command: execPath, argsPrefix: [npmExecPath] };
+  }
+  if (platform === "win32") {
+    return {
+      command: process.env.ComSpec || "cmd.exe",
+      argsPrefix: ["/d", "/s", "/c", "npm"],
+    };
+  }
+  return { command: "npm", argsPrefix: [] };
+}
+
 function probeRuntime(runtime) {
   const isElectron = runtime === "electron";
   const executable = isElectron
@@ -44,13 +61,20 @@ function prepareNative(runtime) {
     return;
   }
 
-  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  const npmInvocation = buildNpmInvocation();
   console.log(`Rebuilding better-sqlite3 for ${runtime}...`);
-  const rebuild = spawnSync(npmCommand, buildRebuildArgs(runtime), {
-    cwd: projectRoot,
-    env: process.env,
-    stdio: "inherit",
-  });
+  const rebuild = spawnSync(
+    npmInvocation.command,
+    [...npmInvocation.argsPrefix, ...buildRebuildArgs(runtime)],
+    {
+      cwd: projectRoot,
+      env: process.env,
+      stdio: "inherit",
+    }
+  );
+  if (rebuild.error) {
+    console.error(rebuild.error.message);
+  }
   if (rebuild.status !== 0 || !probeRuntime(runtime)) {
     throw new Error(`Failed to prepare better-sqlite3 for ${runtime}.`);
   }
@@ -67,6 +91,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildNpmInvocation,
   buildRebuildArgs,
   prepareNative,
 };

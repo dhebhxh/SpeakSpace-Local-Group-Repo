@@ -4,6 +4,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { app } = require('electron');
 
+//Get the directory where the database will be stored
 function getStoreDir() {
   let userDataDir;
   try {
@@ -17,10 +18,12 @@ function getStoreDir() {
   return path.join(userDataDir, "speakspace-notes");
 }
 
+//Get the full path to the database file
 function getDbPath() {
   return path.join(getStoreDir(), "notes.db");
 }
 
+//Ensure that the store directory exists
 function ensureStoreDir() {
   const dir = getStoreDir();
   if (!fs.existsSync(dir)) {
@@ -28,10 +31,12 @@ function ensureStoreDir() {
   }
 }
 
+//Initialize the database
 ensureStoreDir();
 const dbPath = getDbPath();
 const db = new Database(dbPath);
 
+//Create the notes table if it doesn't exist
 db.exec(`
   CREATE TABLE IF NOT EXISTS notes (
     id TEXT PRIMARY KEY,
@@ -51,10 +56,12 @@ db.exec(`
   );
 `);
 
+//Generate a unique ID for a new note
 function generateId() {
   return crypto.randomUUID();
 }
 
+//Parse a database row into a note object with structured fields / String -> Array / DB -> Frontend
 function deserializeNote(row) {
   if (!row) return null;
   const note = {
@@ -74,6 +81,7 @@ function deserializeNote(row) {
   return note;
 }
 
+//Create a new note in the database / Serialize(Arr -> String) / Frontend -> DB
 async function createNote(noteData) {
   const now = new Date().toISOString();
   const st = noteData.structured || {};
@@ -104,6 +112,7 @@ async function createNote(noteData) {
   return deserializeNote(note);
 }
 
+//Update an existing note in the database
 async function updateNote(noteId, updates) {
   const note = await getNote(noteId);
   const now = new Date().toISOString();
@@ -146,6 +155,7 @@ async function updateNote(noteId, updates) {
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
 }
 
+//Move a note to the trash (soft delete)
 async function moveNoteToTrash(noteId) {
   const note = await getNote(noteId);
   const now = new Date().toISOString();
@@ -156,6 +166,8 @@ async function moveNoteToTrash(noteId) {
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
 }
 
+
+//Restore a note from the trash (soft undelete)
 async function restoreNote(noteId) {
   const now = new Date().toISOString();
   const update = db.prepare(`UPDATE notes SET deletedAt = NULL, updatedAt = ? WHERE id = ?`);
@@ -164,16 +176,19 @@ async function restoreNote(noteId) {
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
 }
 
+//Permanently delete a note from the database
 async function permanentlyDeleteNote(noteId) {
   const del = db.prepare(`DELETE FROM notes WHERE id = ?`);
   del.run(noteId);
   return { success: true };
 }
 
+//Delete a note by moving it to the trash (soft delete)
 async function deleteNote(noteId) {
   return moveNoteToTrash(noteId);
 }
 
+//Retrieve a note by its ID
 async function getNote(noteId) {
   const row = db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId);
   if (!row) {
@@ -182,6 +197,7 @@ async function getNote(noteId) {
   return deserializeNote(row);
 }
 
+//List notes with optional filtering by folder, tag, and search term
 async function listNotes({ folder, tag, search } = {}) {
   let query = "SELECT * FROM notes WHERE deletedAt IS NULL";
   const params = [];
@@ -212,6 +228,7 @@ async function listNotes({ folder, tag, search } = {}) {
   return rows.map(deserializeNote);
 }
 
+//List deleted notes with optional search filtering
 async function listDeletedNotes({ search } = {}) {
   let query = "SELECT * FROM notes WHERE deletedAt IS NOT NULL";
   const params = [];
@@ -232,6 +249,7 @@ async function listDeletedNotes({ search } = {}) {
   return rows.map(deserializeNote);
 }
 
+//List all unique folders from the notes, including a default folder
 async function listFolders() {
   const rows = db.prepare("SELECT DISTINCT folder FROM notes WHERE deletedAt IS NULL").all();
   const folders = new Set(rows.map(r => r.folder));
@@ -239,11 +257,13 @@ async function listFolders() {
   return Array.from(folders).sort();
 }
 
+//List all unique tags from the notes
 async function listTags() {
   const rows = db.prepare("SELECT DISTINCT value as tag FROM notes, json_each(notes.tags) WHERE deletedAt IS NULL").all();
   return rows.map(r => r.tag).sort();
 }
 
+//Append a new message to the conversation of a note
 async function appendConversation(noteId, message) {
   const note = await getNote(noteId);
   const conversations = note.conversations || [];
@@ -259,6 +279,7 @@ async function appendConversation(noteId, message) {
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
 }
 
+//Get store information including counts of active and deleted notes, folders, and tags
 async function getStoreInfo() {
   const activeCount = db.prepare("SELECT COUNT(*) as count FROM notes WHERE deletedAt IS NULL").get().count;
   const trashCount = db.prepare("SELECT COUNT(*) as count FROM notes WHERE deletedAt IS NOT NULL").get().count;
@@ -273,6 +294,7 @@ async function getStoreInfo() {
   };
 }
 
+//Export the functions for use in other parts of the application
 module.exports = {
   createNote,
   updateNote,

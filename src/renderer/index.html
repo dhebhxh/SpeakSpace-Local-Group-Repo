@@ -11,6 +11,12 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="fileDropOverlay" class="file-drop-overlay hidden" aria-hidden="true">
+      <div class="file-drop-card">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <strong id="fileDropTitle">Drop audio or video to transcribe</strong>
+      </div>
+    </div>
     <main class="layout">
       <aside id="appSidebar" class="sidebar">
         <div class="brand-block">
@@ -95,6 +101,12 @@
           </div>
           <div class="topbar-drag-region"></div>
           <div class="topbar-actions">
+            <label class="template-picker" for="noteTemplateSelect">
+              <span id="noteTemplateLabel">Template</span>
+              <select id="noteTemplateSelect">
+                <option value="general">General</option>
+              </select>
+            </label>
             <button id="copyBtn" class="ghost-btn" type="button" disabled>
               Copy Reply
             </button>
@@ -108,7 +120,7 @@
           <div id="chatList" class="chat-list"></div>
         </section>
 
-        <section class="composer-shell">
+        <section id="assistantComposerShell" class="composer-shell">
           <div id="inputMeta" class="input-meta">
             <div id="selectedFileMeta" class="meta-chip hidden"></div>
             <div id="recordingMeta" class="meta-chip hidden"></div>
@@ -201,6 +213,56 @@
                 />
               </svg>
             </button>
+          </div>
+        </section>
+      </section>
+
+      <!-- VIEW: Meeting processing and review -->
+      <section id="viewMeetingReview" class="main-panel">
+        <header class="topbar">
+          <div class="topbar-leading">
+            <button id="meetingReviewBackBtn" class="ghost-btn" type="button">Cancel</button>
+          </div>
+          <div class="topbar-drag-region"></div>
+          <div class="topbar-actions">
+            <span id="meetingReviewDraftState" class="review-draft-state"></span>
+            <button id="meetingReviewSaveBtn" class="ghost-btn accent-btn" type="button" disabled>Save Note</button>
+          </div>
+        </header>
+
+        <section class="meeting-review-shell">
+          <div id="meetingProgressPanel" class="meeting-progress-panel hidden" role="status" aria-live="polite">
+            <p id="meetingProgressKicker" class="sidebar-label">MEETING NOTE</p>
+            <h2 id="meetingProgressTitle">Analyzing transcript</h2>
+            <p id="meetingProgressDetail" class="meeting-progress-detail"></p>
+            <div class="meeting-progress-meta">
+              <span id="meetingProgressElapsed"></span>
+              <span id="meetingProgressModel"></span>
+            </div>
+            <div class="meeting-progress-actions">
+              <button id="meetingPauseBtn" class="ghost-btn" type="button">Pause</button>
+              <button id="meetingRetryBtn" class="ghost-btn hidden" type="button">Retry</button>
+              <button id="meetingCancelBtn" class="ghost-btn danger-btn" type="button">Cancel</button>
+            </div>
+            <pre id="meetingRawOutput" class="meeting-raw-output hidden"></pre>
+          </div>
+
+          <div id="meetingReviewWorkspace" class="meeting-review-workspace hidden">
+            <nav class="meeting-review-tabs" aria-label="Meeting review panes">
+              <button class="meeting-review-tab active" type="button" data-review-pane="transcript">Transcript</button>
+              <button class="meeting-review-tab" type="button" data-review-pane="minutes">Minutes</button>
+            </nav>
+            <section class="meeting-source-pane" data-review-panel="transcript">
+              <label class="meeting-search-label" for="meetingTranscriptSearch">Search transcript</label>
+              <input id="meetingTranscriptSearch" class="meeting-search-input" type="search" spellcheck="false" />
+              <div id="meetingTranscriptReadOnly" class="meeting-transcript-readonly"></div>
+            </section>
+            <form id="meetingReviewForm" class="meeting-editor-pane" data-review-panel="minutes">
+              <label>Title<input id="meetingTitleInput" name="title" type="text" maxlength="300" required /></label>
+              <label>Summary<textarea id="meetingSummaryInput" name="summary" rows="5" maxlength="10000"></textarea></label>
+              <div id="meetingStructuredSections"></div>
+              <label>Tags<input id="meetingTagsInput" name="tags" type="text" maxlength="1000" /></label>
+            </form>
           </div>
         </section>
       </section>
@@ -792,6 +854,14 @@
       </div>
     </div>
 
+    <script src="./drop-input.js"></script>
+    <script src="./draft-conversation-context.js"></script>
+    <script src="./note-draft-source.js"></script>
+    <script src="./note-library-state.js"></script>
+    <script src="./transcript-view.js"></script>
+    <script src="./note-summary-view.js"></script>
+    <script src="./transcribed-draft-view.js"></script>
+    <script src="./transcription-progress-view.js"></script>
     <script src="./ime-events.js"></script>
     <script src="./renderer.js"></script>
   </body>

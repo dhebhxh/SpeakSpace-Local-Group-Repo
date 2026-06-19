@@ -48,14 +48,39 @@ const {
   listTags,
   appendConversation,
   getStoreInfo,
+  countNotesUsingAudioPath,
+  setActionItemCompletion,
+  markInterruptedTranscriptions,
 } = require("./db-service");
 const { generateStructuredNote, askAboutNote } = require("./structured-processor");
+const { createTranscriptionJobManager } = require("./transcription-job-manager");
+const { getManagedRecordingDisposition } = require("./audio-retention");
+const { getMediaDurationMs } = require("./audio-duration");
 const {
   getManagedCleanupTargets,
   getManagedDataRoot,
   getProjectRoot,
   getSTTModelsDir,
+  getSTTOutputDir,
 } = require("./managed-paths");
+
+let mainWindow = null;
+
+const transcriptionManager = createTranscriptionJobManager({
+  createNote,
+  getNote,
+  updateNote,
+  transcribeAudio: async (filePath, options) => {
+    const startTime = Date.now();
+    const result = await transcribeAudio(filePath, options);
+    return { ...result, sttDurationMs: Date.now() - startTime };
+  },
+  onStatus: (note) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("transcription:status", note);
+    }
+  },
+});
 
 function execFileText(file, args, options = {}) {
   return new Promise((resolve) => {
@@ -587,7 +612,7 @@ async function detectPhysicalCores(threadCount) {
 function createWindow() {
   Menu.setApplicationMenu(null);
 
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1100,
     height: 760,
     minWidth: 960,
@@ -630,6 +655,10 @@ ipcMain.handle("audio:pick", async () => {
   }
 
   return result.filePaths[0];
+});
+
+ipcMain.handle("audio:get-duration", async (_event, filePath) => {
+  return getMediaDurationMs(filePath);
 });
 
 ipcMain.handle("runtime:get-info", async () => {
@@ -712,6 +741,18 @@ ipcMain.handle("audio:transcribe", async (_event, filePath) => {
   return result;
 });
 
+ipcMain.handle("transcription:start", async (_event, filePath) => {
+  return transcriptionManager.start(filePath);
+});
+
+ipcMain.handle("transcription:cancel", async (_event, noteId) => {
+  return transcriptionManager.cancel(noteId);
+});
+
+ipcMain.handle("transcription:retry", async (_event, noteId) => {
+  return transcriptionManager.retry(noteId);
+});
+
 ipcMain.handle("recording:save", async (_event, arrayBuffer) => {
   return saveMicrophoneRecording(arrayBuffer);
 });
@@ -760,8 +801,26 @@ ipcMain.handle("note:restore", async (_event, noteId) => {
   return restoreNote(noteId);
 });
 
-ipcMain.handle("note:permanent-delete", async (_event, noteId) => {
-  return permanentlyDeleteNote(noteId);
+ipcMain.handle("note:permanent-delete", async (_event, noteId, options = {}) => {
+  const note = await getNote(noteId);
+  const referenceCount = await countNotesUsingAudioPath(note.audioPath);
+  const disposition = getManagedRecordingDisposition(
+    note.audioPath,
+    path.join(getSTTOutputDir(), "recordings"),
+    referenceCount
+  );
+  const result = await permanentlyDeleteNote(noteId);
+  let audioDeleted = false;
+  let audioDeleteError = null;
+  if (options.deleteManagedAudio === true && disposition.canDelete) {
+    try {
+      await fsPromises.rm(note.audioPath, { force: true });
+      audioDeleted = true;
+    } catch (error) {
+      audioDeleteError = error.message;
+    }
+  }
+  return { ...result, audio: { ...disposition, deleted: audioDeleted, deleteError: audioDeleteError } };
 });
 
 ipcMain.handle("note:get", async (_event, noteId) => {
@@ -790,6 +849,10 @@ ipcMain.handle("note:append-conversation", async (_event, noteId, message) => {
 
 ipcMain.handle("note:store-info", async () => {
   return getStoreInfo();
+});
+
+ipcMain.handle("note:set-action-completion", async (_event, noteId, actionItemId, isCompleted) => {
+  return setActionItemCompletion(noteId, actionItemId, isCompleted);
 });
 
 ipcMain.handle("process:structured", async (_event, transcript) => {
@@ -972,7 +1035,9 @@ ipcMain.handle("system:hardware-info", async () => {
   return getHardwareInfo();
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await markInterruptedTranscriptions();
+
   session.defaultSession.setPermissionRequestHandler(
     (_webContents, permission, callback) => {
       callback(permission === "media");

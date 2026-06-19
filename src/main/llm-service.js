@@ -24,6 +24,12 @@ const DOWNLOAD_CACHE_DIRNAME = ".cache";
 let ollamaServerProcess = null;
 let ollamaServerStartupPromise = null;
 
+function chooseAvailableLLMModel(preferredModel, installedModels) {
+  const models = Array.isArray(installedModels) ? installedModels.filter(Boolean) : [];
+  if (models.includes(preferredModel)) return preferredModel;
+  return models[0] || preferredModel;
+}
+
 function commandExists(commandName) {
   const checker = process.platform === "win32" ? "where.exe" : "which";
   const result = spawnSync(checker, [commandName], { stdio: "ignore" });
@@ -422,7 +428,7 @@ async function getLLMRuntimeInfo() {
   const info = getRuntimePaths();
   const manifest = await readRuntimeManifest(info.manifestPath);
   const manifestModels = getManifestModels(manifest);
-  const modelName = await ensureActiveLLMModel(manifest);
+  let modelName = await ensureActiveLLMModel(manifest);
   let serverRunning = await isServerReachable();
   let installedModels = [];
   let modelExists = false;
@@ -448,6 +454,10 @@ async function getLLMRuntimeInfo() {
     installedModels = manifestModels;
     modelExists = installedModels.includes(modelName);
   }
+
+  modelName = chooseAvailableLLMModel(modelName, installedModels);
+  modelExists = installedModels.includes(modelName);
+  activeLLMModel = modelName;
 
   return {
     runtimeName: "Ollama",
@@ -691,56 +701,69 @@ function setActiveLLMModel(modelName) {
   return activeLLMModel;
 }
 
-async function ensureModelAvailable() {
-  const modelName = await ensureActiveLLMModel();
-  const models = await listInstalledModelsFromApi();
-  if (!models.includes(modelName)) {
-    throw new Error(
-      `Ollama model ${modelName} is not installed.\nRun: npm run download:llm`
-    );
-  }
+function createLocalReplyGenerator({
+  ensureServer = ensureLLMServer,
+  fetchImpl = fetch,
+  listModels = listInstalledModelsFromApi,
+} = {}) {
+  return async function generateReply(messages, options = {}) {
+    if (!Array.isArray(messages) || messages.length === 0) {
+      throw new Error("No chat messages provided.");
+    }
+
+    const info = await ensureServer();
+    let modelName = options.modelName || info.modelName;
+    const installedModels = await listModels();
+    if (!options.modelName) {
+      modelName = chooseAvailableLLMModel(modelName, installedModels);
+      activeLLMModel = modelName;
+    }
+    if (!installedModels.includes(modelName)) {
+      throw new Error(
+        `Ollama model ${modelName} is not installed.\nRun: npm run download:llm`
+      );
+    }
+
+    const response = await fetchImpl(`${info.serverUrl}/api/chat`, {
+      method: "POST",
+      signal: options.signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages,
+        stream: false,
+        options: {
+          temperature: 0.3,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Ollama request failed: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data?.message?.content?.trim();
+
+    if (!content) {
+      throw new Error("Ollama returned an empty response.");
+    }
+
+    return {
+      content,
+      modelName,
+      runtimeName: "Ollama",
+    };
+  };
 }
 
-async function generateLocalReply(messages) {
-  if (!Array.isArray(messages) || messages.length === 0) {
-    throw new Error("No chat messages provided.");
-  }
+const defaultLocalReplyGenerator = createLocalReplyGenerator();
 
-  const info = await ensureLLMServer();
-  await ensureModelAvailable();
-
-  const response = await fetch(`${info.serverUrl}/api/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: info.modelName,
-      messages,
-      stream: false,
-      options: {
-        temperature: 0.3,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Ollama request failed: ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data?.message?.content?.trim();
-
-  if (!content) {
-    throw new Error("Ollama returned an empty response.");
-  }
-
-  return {
-    content,
-    modelName: info.modelName,
-    runtimeName: "Ollama",
-  };
+async function generateLocalReply(messages, options) {
+  return defaultLocalReplyGenerator(messages, options);
 }
 
 function killProcessTree(pid) {
@@ -799,6 +822,8 @@ async function stopLLMServerForCleanup() {
 }
 
 module.exports = {
+  chooseAvailableLLMModel,
+  createLocalReplyGenerator,
   deleteLLMModel,
   deleteLLMRuntime,
   downloadLLMModel,

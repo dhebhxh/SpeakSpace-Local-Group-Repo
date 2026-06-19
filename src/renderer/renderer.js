@@ -83,6 +83,9 @@ const I18N = {
     noteDeletedForever: "Note permanently deleted",
     deleteForeverConfirm:
       "Permanently delete this note? This cannot be undone.",
+    deleteManagedRecordingConfirm: "Also delete the app-managed recording file? Choose Cancel to keep the audio.",
+    managedRecordingShared: "The note was deleted, but its recording was kept because another note still uses it.",
+    managedRecordingDeleteFailed: "The note was deleted, but the recording could not be removed: {message}",
     trashLoadFailed: "Failed to load Trash: {message}",
     trashEmpty: "Trash is empty",
     trashEmptyDesc: "Deleted notes will appear here.",
@@ -199,6 +202,18 @@ const I18N = {
     failed: "Failed: {message}",
     sttNotReady: "Local transcription runtime is not ready.",
     transcribing: "Transcribing...",
+    transcriptionProgress: "Transcribing audio",
+    transcriptionReady: "Transcription ready",
+    processingNote: "STRUCTURED NOTE",
+    transcriptionNote: "TRANSCRIPTION",
+    cancelTranscription: "Cancel Transcription",
+    transcriptionCancelled: "Transcription cancelled.",
+    resumeTranscription: "Resume Transcription",
+    deleteTranscriptionNote: "Delete",
+    transcriptionNoteDeleted: "Transcription note moved to trash.",
+    backToAssistant: "Back to Assistant",
+    dropMediaToTranscribe: "Drop audio or video to transcribe",
+    unsupportedDrop: "This file format is not supported.",
     transcriptionEmpty: "Transcription result is empty.",
     transcribeTag: "Transcription",
     importedFile: "Imported File",
@@ -223,6 +238,47 @@ const I18N = {
     keyPoints: "Key Points",
     actionItems: "Action Items",
     originalTranscript: "Original Transcript",
+    decisions: "Decisions",
+    openQuestions: "Open Questions",
+    noteTemplate: "Template",
+    templateGeneral: "General",
+    templateMeeting: "Meeting",
+    convertToMeeting: "Convert to Meeting Note",
+    meetingNote: "Meeting Note",
+    saveNote: "Save Note",
+    cancel: "Cancel",
+    pause: "Pause",
+    resume: "Resume",
+    retry: "Retry",
+    discard: "Discard",
+    analyzingTranscript: "Analyzing transcript",
+    extractingSections: "Extracting section {completed} of {total}",
+    mergingSections: "Merging meeting sections",
+    validatingMeeting: "Validating evidence and structure",
+    meetingReady: "Ready for review",
+    meetingReviewSaved: "Draft saved locally",
+    meetingReviewRecovered: "Recovered an unfinished meeting note",
+    meetingPaused: "Processing paused. You can resume from the latest checkpoint.",
+    meetingInvalidOutput: "The model did not return a valid meeting note. Retry or cancel; nothing was saved.",
+    meetingReviewTitle: "Review Meeting Note",
+    transcript: "Transcript",
+    minutes: "Minutes",
+    searchTranscript: "Search transcript",
+    title: "Title",
+    tags: "Tags",
+    addItem: "Add item",
+    remove: "Remove",
+    assignee: "Assignee",
+    deadline: "Deadline",
+    normalizedDate: "Normalized date",
+    possibleDuplicate: "Possible duplicate",
+    sourceEvidence: "Source: {quote}",
+    edit: "Edit",
+    save: "Save",
+    undo: "Undo",
+    unsavedMeetingConfirm: "Discard unsaved meeting edits?",
+    meetingTooLong: "This recording is longer than 3 hours. Split it into smaller files first.",
+    longMeetingMode: "Long recording mode · checkpoints enabled",
     errorPrefix: "Error: {message}",
     deleteFailed: "Delete failed: {message}",
     languageEnglish: "English",
@@ -352,6 +408,9 @@ const I18N = {
     noteRestored: "笔记已恢复",
     noteDeletedForever: "笔记已永久删除",
     deleteForeverConfirm: "要永久删除这条笔记吗？此操作无法撤销。",
+    deleteManagedRecordingConfirm: "是否同时删除由应用管理的录音文件？选择“取消”会保留音频。",
+    managedRecordingShared: "笔记已删除，但该录音仍被另一条笔记使用，因此已保留。",
+    managedRecordingDeleteFailed: "笔记已删除，但录音文件删除失败：{message}",
     trashLoadFailed: "加载回收站失败: {message}",
     trashEmpty: "回收站为空",
     trashEmptyDesc: "被删除的笔记会显示在这里。",
@@ -468,6 +527,18 @@ const I18N = {
     failed: "失败: {message}",
     sttNotReady: "本地转写运行时未就绪。",
     transcribing: "转写中...",
+    transcriptionProgress: "正在转写音频",
+    transcriptionReady: "转写已完成",
+    processingNote: "结构化笔记",
+    transcriptionNote: "语音转写",
+    cancelTranscription: "取消转写",
+    transcriptionCancelled: "转写已取消。",
+    resumeTranscription: "恢复转写",
+    deleteTranscriptionNote: "删除",
+    transcriptionNoteDeleted: "转写笔记已移入回收站。",
+    backToAssistant: "返回主界面",
+    dropMediaToTranscribe: "松开即可转写音频或视频",
+    unsupportedDrop: "不支持该文件格式",
     transcriptionEmpty: "转写结果为空",
     transcribeTag: "转写",
     importedFile: "导入文件",
@@ -492,6 +563,47 @@ const I18N = {
     keyPoints: "要点",
     actionItems: "待办事项",
     originalTranscript: "原始转录",
+    decisions: "已确认决定",
+    openQuestions: "待确认问题",
+    noteTemplate: "模板",
+    templateGeneral: "通用",
+    templateMeeting: "会议",
+    convertToMeeting: "转为会议纪要",
+    meetingNote: "会议纪要",
+    saveNote: "保存笔记",
+    cancel: "取消",
+    pause: "暂停",
+    resume: "继续",
+    retry: "重试",
+    discard: "放弃",
+    analyzingTranscript: "正在分析转录",
+    extractingSections: "正在提取第 {completed}/{total} 段",
+    mergingSections: "正在合并会议内容",
+    validatingMeeting: "正在校验证据和结构",
+    meetingReady: "可以复核",
+    meetingReviewSaved: "草稿已保存到本地",
+    meetingReviewRecovered: "已恢复未完成的会议纪要",
+    meetingPaused: "处理已暂停，可以从最近检查点继续。",
+    meetingInvalidOutput: "模型未能生成有效会议纪要。可重试或取消；当前内容不会保存。",
+    meetingReviewTitle: "复核会议纪要",
+    transcript: "转录原文",
+    minutes: "会议纪要",
+    searchTranscript: "搜索转录原文",
+    title: "标题",
+    tags: "标签",
+    addItem: "添加一项",
+    remove: "移除",
+    assignee: "负责人",
+    deadline: "截止时间",
+    normalizedDate: "规范日期",
+    possibleDuplicate: "可能重复",
+    sourceEvidence: "原文：{quote}",
+    edit: "编辑",
+    save: "保存",
+    undo: "撤销",
+    unsavedMeetingConfirm: "要放弃尚未保存的会议编辑吗？",
+    meetingTooLong: "该录音超过 3 小时，请先拆分成较小文件。",
+    longMeetingMode: "长录音模式 · 已启用检查点",
     errorPrefix: "错误: {message}",
     deleteFailed: "删除失败: {message}",
     languageEnglish: "English",
@@ -608,11 +720,25 @@ const state = {
     voiceLang: "",
   },
   currentView: "assistant",
+  noteTemplateId: "general",
+  currentMeetingDraft: null,
+  meetingProgress: null,
+  meetingStartedAt: null,
+  meetingDraftDirty: false,
+  meetingEditDirty: false,
+  pendingMeetingSourceNoteId: null,
+  currentProcessingNoteId: null,
+  processingKind: null,
+  activeTranscriptionNoteIds: new Set(),
+  currentNote: null,
+  meetingEditMode: false,
   messages: [],
   draft: "",
   selectedFile: "",
   lastTranscript: "",
   lastAudioPath: "",
+  lastSourceDurationMs: null,
+  lastTranscriptSegments: [],
   lastAssistantText: "",
   lastPerformance: null,
   isWorking: false,
@@ -667,6 +793,7 @@ const noteSelectedFileMetaEl = document.querySelector("#noteSelectedFileMeta");
 const noteRecordingMetaEl = document.querySelector("#noteRecordingMeta");
 const noteJobStatusEl = document.querySelector("#noteJobStatus");
 const chatListEl = document.querySelector("#chatList");
+const assistantComposerShell = document.querySelector("#assistantComposerShell");
 const promptInputEl = document.querySelector("#promptInput");
 const pickFileBtn = document.querySelector("#pickFileBtn");
 const recordToggleBtn = document.querySelector("#recordToggleBtn");
@@ -680,9 +807,35 @@ const copyBtn = document.querySelector("#copyBtn");
 const saveAsNoteBtn = document.querySelector("#saveAsNoteBtn");
 const sendBtn = document.querySelector("#sendBtn");
 const particleCanvas = document.querySelector("#particleCanvas");
+const fileDropOverlay = document.querySelector("#fileDropOverlay");
+const fileDropTitle = document.querySelector("#fileDropTitle");
 
 const viewAssistant = document.querySelector("#viewAssistant");
 const viewNoteDetail = document.querySelector("#viewNoteDetail");
+const viewMeetingReview = document.querySelector("#viewMeetingReview");
+const noteTemplateSelect = document.querySelector("#noteTemplateSelect");
+const noteTemplateLabel = document.querySelector("#noteTemplateLabel");
+const meetingReviewBackBtn = document.querySelector("#meetingReviewBackBtn");
+const meetingReviewSaveBtn = document.querySelector("#meetingReviewSaveBtn");
+const meetingReviewDraftState = document.querySelector("#meetingReviewDraftState");
+const meetingProgressPanel = document.querySelector("#meetingProgressPanel");
+const meetingProgressKicker = document.querySelector("#meetingProgressKicker");
+const meetingProgressTitle = document.querySelector("#meetingProgressTitle");
+const meetingProgressDetail = document.querySelector("#meetingProgressDetail");
+const meetingProgressElapsed = document.querySelector("#meetingProgressElapsed");
+const meetingProgressModel = document.querySelector("#meetingProgressModel");
+const meetingPauseBtn = document.querySelector("#meetingPauseBtn");
+const meetingRetryBtn = document.querySelector("#meetingRetryBtn");
+const meetingCancelBtn = document.querySelector("#meetingCancelBtn");
+const meetingRawOutput = document.querySelector("#meetingRawOutput");
+const meetingReviewWorkspace = document.querySelector("#meetingReviewWorkspace");
+const meetingReviewForm = document.querySelector("#meetingReviewForm");
+const meetingTitleInput = document.querySelector("#meetingTitleInput");
+const meetingSummaryInput = document.querySelector("#meetingSummaryInput");
+const meetingTagsInput = document.querySelector("#meetingTagsInput");
+const meetingStructuredSections = document.querySelector("#meetingStructuredSections");
+const meetingTranscriptSearch = document.querySelector("#meetingTranscriptSearch");
+const meetingTranscriptReadOnly = document.querySelector("#meetingTranscriptReadOnly");
 const sidebarToggleBtn = document.querySelector("#sidebarToggleBtn");
 const sidebarToggleBtnDetail = document.querySelector("#sidebarToggleBtnDetail");
 const sidebarCollapseBtn = document.querySelector("#sidebarCollapseBtn");
@@ -792,6 +945,10 @@ let activeLocalTtsSourceNode = null;
 let activeLocalTtsPlaybackResolve = null;
 let ttsRequestSequence = 0;
 let uiMessageSequence = 0;
+let meetingDraftSaveTimer = null;
+let meetingDraftSavePromise = null;
+let meetingElapsedTimer = null;
+let fileDragDepth = 0;
 const TTS_SEGMENT_MAX_LENGTH = 120;
 
 function getStoredAppLanguage() {
@@ -892,6 +1049,7 @@ function setInlineButtonLabel(button, label) {
 
 function applyLanguageUI() {
   document.documentElement.lang = state.uiLanguage === "zh-CN" ? "zh-CN" : "en";
+  fileDropTitle.textContent = t("dropMediaToTranscribe");
 
   document.querySelector("#newSessionLabel").textContent = t("newSession");
   document.querySelector("#trashLabel").textContent = t("trash");
@@ -903,6 +1061,49 @@ function applyLanguageUI() {
   statusChip.querySelector(".status-chip-text").textContent = t("localEngineLabel");
   copyBtn.textContent = t("copyReply");
   saveAsNoteBtn.textContent = t("saveAsNote");
+  noteTemplateLabel.textContent = t("noteTemplate");
+  noteTemplateSelect.options[0].textContent = t("templateGeneral");
+  meetingReviewBackBtn.textContent = t("cancel");
+  meetingReviewSaveBtn.textContent = t("saveNote");
+  meetingPauseBtn.textContent = t("pause");
+  meetingRetryBtn.textContent = t("retry");
+  meetingCancelBtn.textContent = t("cancel");
+  document.querySelector("#meetingProgressKicker").textContent = t("meetingNote");
+  document.querySelector(".meeting-search-label").textContent = t("searchTranscript");
+  document.querySelector('[data-review-pane="transcript"]').textContent = t("transcript");
+  document.querySelector('[data-review-pane="minutes"]').textContent = t("minutes");
+  meetingReviewForm.querySelector('label:has(#meetingTitleInput)').firstChild.textContent = t("title");
+  meetingReviewForm.querySelector('label:has(#meetingSummaryInput)').firstChild.textContent = t("summary");
+  meetingReviewForm.querySelector('label:has(#meetingTagsInput)').firstChild.textContent = t("tags");
+  const meetingSectionLabels = {
+    keyPoints: t("keyPoints"),
+    decisions: t("decisions"),
+    actionItems: t("actionItems"),
+    openQuestions: t("openQuestions"),
+  };
+  meetingStructuredSections.querySelectorAll(".meeting-section-editor").forEach((section) => {
+    const heading = section.querySelector("h3");
+    if (heading) heading.textContent = meetingSectionLabels[section.dataset.key] || section.dataset.key;
+    const addButton = section.querySelector(".meeting-section-head .ghost-btn");
+    if (addButton) addButton.textContent = t("addItem");
+    section.querySelectorAll(".danger-btn").forEach((button) => { button.textContent = t("remove"); });
+    section.querySelectorAll('[data-field="assignee"]').forEach((input) => { input.placeholder = t("assignee"); });
+    section.querySelectorAll('[data-field="deadlineText"]').forEach((input) => { input.placeholder = t("deadline"); });
+    section.querySelectorAll('[data-field="deadlineDate"]').forEach((input) => { input.title = t("normalizedDate"); });
+    section.querySelectorAll(".meeting-evidence").forEach((source) => {
+      let evidence = [];
+      try { evidence = JSON.parse(source.dataset.evidence || "[]"); } catch (_error) {}
+      source.textContent = evidence
+        .map((entry) => `${formatEvidenceTime(entry)}${t("sourceEvidence", { quote: entry.quote })}`)
+        .join(" · ");
+      if (source.dataset.possibleDuplicate === "true") {
+        const duplicate = document.createElement("span");
+        duplicate.className = "meeting-duplicate-badge";
+        duplicate.textContent = `${source.textContent ? " · " : ""}${t("possibleDuplicate")}`;
+        source.append(duplicate);
+      }
+    });
+  });
   pickFileBtn.title = t("importAudio");
   pickFileBtn.setAttribute("aria-label", t("importAudio"));
   recordToggleBtn.title = t("record");
@@ -1027,9 +1228,12 @@ function switchView(viewName) {
   state.currentView = viewName;
   viewAssistant.classList.toggle("view-active", viewName === "assistant");
   viewNoteDetail.classList.toggle("view-active", viewName === "detail");
+  viewMeetingReview.classList.toggle("view-active", viewName === "meeting-review");
 
   if (viewName === "assistant") {
     state.currentNoteId = null;
+    state.currentNote = null;
+    state.meetingEditMode = false;
     highlightActiveNote();
   }
 
@@ -1038,14 +1242,50 @@ function switchView(viewName) {
   updateButtons();
 }
 
-function startNewSession() {
+async function confirmAndLeaveCurrentWork() {
+  if (
+    state.currentView === "meeting-review" &&
+    state.processingKind &&
+    state.processingKind !== "meeting"
+  ) {
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    stopMeetingElapsedTimer();
+    return true;
+  }
+  if (state.currentView === "meeting-review") {
+    if (state.pendingMeetingSourceNoteId) {
+      const source = await window.desktopSTT.updateNote(state.pendingMeetingSourceNoteId, {
+        status: "transcribed",
+        statusMessage: "",
+      });
+      upsertLibraryNote(source);
+    }
+    state.currentMeetingDraft = null;
+    state.meetingDraftDirty = false;
+    state.pendingMeetingSourceNoteId = null;
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+  }
+  if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) return false;
+  state.meetingEditDirty = false;
+  state.meetingEditMode = false;
+  return true;
+}
+
+async function startNewSession() {
+  if (!(await confirmAndLeaveCurrentWork())) return;
   stopTTS();
   state.messages = [];
   state.lastTranscript = "";
   state.lastAudioPath = "";
+  state.lastSourceDurationMs = null;
+  state.lastTranscriptSegments = [];
   state.lastAssistantText = "";
   state.lastPerformance = null;
   state.selectedFile = "";
+  state.currentProcessingNoteId = null;
+  state.processingKind = null;
   renderMessages();
   updateSelectedFileMeta();
   setJobStatus("");
@@ -3201,30 +3441,40 @@ function updateMainComposerSttTooltips() {
 
 function updateButtons() {
   pickFileBtn.disabled =
-    state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady;
+    state.isWorking || state.isRecording || state.activeTranscriptionNoteIds.size > 0 || state.assetCleanupInProgress || !state.runtime.sttReady;
   if (noteQaPickFileBtn) {
     noteQaPickFileBtn.disabled =
-      state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId;
+      state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId || state.meetingEditMode;
   }
   refreshRuntimeBtn.disabled = state.isWorking || state.isRecording || state.assetCleanupInProgress;
   recordToggleBtn.disabled = state.isWorking || state.assetCleanupInProgress || !state.runtime.sttReady;
   if (noteQaRecordToggleBtn) {
     noteQaRecordToggleBtn.disabled =
-      state.isWorking || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId;
+      state.isWorking || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId || state.meetingEditMode;
   }
   recordToggleBtn.classList.toggle("recording", state.isRecording);
   noteQaRecordToggleBtn?.classList.toggle("recording", state.isRecording);
   sendBtn.disabled =
-    state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.llmReady || !state.draft.trim();
+    state.pendingMeetingSourceNoteId ||
+    state.isWorking ||
+    state.isRecording ||
+    state.assetCleanupInProgress ||
+    !state.runtime.llmReady ||
+    !state.draft.trim();
   noteQaSendBtn.disabled =
     state.isWorking ||
     state.isRecording ||
     state.assetCleanupInProgress ||
     !state.runtime.llmReady ||
     !state.currentNoteId ||
+    state.meetingEditMode ||
     !noteQaInput.value.trim();
   copyBtn.disabled = !state.lastAssistantText;
-  saveAsNoteBtn.disabled = !state.lastTranscript && !state.lastAssistantText;
+  saveAsNoteBtn.disabled =
+    state.isWorking ||
+    !state.runtime.llmReady ||
+    (!state.lastTranscript && !state.lastAssistantText);
+  saveAsNoteBtn.title = !state.runtime.llmReady ? t("llmNotReady") : "";
   updateMainComposerSttTooltips();
   updateRuntimeDownloadButtons();
 }
@@ -3377,6 +3627,26 @@ function createMessageElement(message) {
 }
 
 function renderMessages() {
+  if (state.pendingMeetingSourceNoteId && state.lastTranscript) {
+    const draftView = window.transcribedDraftView.getTranscribedDraftView(
+      {
+        transcript: state.lastTranscript,
+        transcriptSegments: state.lastTranscriptSegments,
+      },
+      {
+        formatTranscript: window.transcriptView.formatTimestampedTranscript,
+      }
+    );
+    assistantComposerShell.classList.toggle("hidden", !draftView.composerVisible);
+    chatListEl.innerHTML = `
+      <div class="transcribed-draft-readonly" data-draft-mode="${draftView.mode}">
+        <pre class="transcribed-draft-text">${escapeHtml(draftView.transcriptText)}</pre>
+      </div>
+    `;
+    return;
+  }
+
+  assistantComposerShell.classList.remove("hidden");
   chatListEl.innerHTML = "";
 
   if (state.messages.length === 0) {
@@ -3418,30 +3688,14 @@ function addMessage(role, content, meta) {
 }
 
 function buildConversationMessages() {
-  const history = state.messages.slice(-10).map((message) => {
-    if (
-      message.role === "user" &&
-      (message.meta.includes("转写") || message.meta.includes("Transcription"))
-    ) {
-      return {
-        role: "user",
-        content: t("transcribedUserPrefix") + message.content,
-      };
-    }
-
-    return {
-      role: message.role,
-      content: message.content,
-    };
+  return window.draftConversationContext.buildDraftConversationMessages({
+    systemPrompt: getSystemPrompt(),
+    transcribedUserPrefix: t("transcribedUserPrefix"),
+    lastTranscript: state.lastTranscript,
+    lastTranscriptSegments: state.lastTranscriptSegments,
+    formatTranscript: window.transcriptView.formatTimestampedTranscript,
+    messages: state.messages,
   });
-
-  return [
-    {
-      role: "system",
-      content: getSystemPrompt(),
-    },
-    ...history,
-  ];
 }
 
 function formatDuration(totalSeconds) {
@@ -4072,6 +4326,12 @@ async function handleLanguageChange(language) {
   if (!LANGUAGE_OPTIONS.includes(language) || language === state.uiLanguage) {
     return;
   }
+  if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) {
+    populateDropdown(languageDropdownEl, LANGUAGE_OPTIONS, state.uiLanguage, "language");
+    return;
+  }
+  state.meetingEditDirty = false;
+  state.meetingEditMode = false;
 
   state.uiLanguage = language;
   persistAppLanguage(language);
@@ -4152,6 +4412,130 @@ async function sendUserMessage(content, meta) {
   }
 }
 
+function upsertLibraryNote(note) {
+  if (!note?.id) return null;
+  const result = window.noteLibraryState.upsertNoteInLibrary(state.notes, note);
+  state.notes = result.notes;
+  renderNotesList();
+  return result.visibleNote;
+}
+
+function showTranscriptionProgress(note) {
+  const progressView = window.transcriptionProgressView.getTranscriptionProgressView(note, {
+    modelName: state.runtime.sttModelName,
+    nowMs: Date.now(),
+    t,
+  });
+  state.currentProcessingNoteId = note.id;
+  state.processingKind = "transcription";
+  state.meetingStartedAt = progressView.startedAtMs;
+  switchView("meeting-review");
+  meetingProgressKicker.textContent = t("transcriptionNote").toLocaleUpperCase();
+  meetingProgressTitle.textContent = progressView.title;
+  meetingProgressDetail.textContent = progressView.detail;
+  meetingProgressModel.textContent = progressView.modelText;
+  meetingProgressPanel.classList.remove("hidden");
+  meetingReviewWorkspace.classList.add("hidden");
+  meetingReviewSaveBtn.disabled = true;
+  const actionIds = new Set(progressView.actions.map((action) => action.id));
+  const actionById = Object.fromEntries(progressView.actions.map((action) => [action.id, action]));
+  meetingPauseBtn.classList.toggle("hidden", !actionIds.has("delete"));
+  meetingPauseBtn.textContent = actionById.delete?.label || t("deleteTranscriptionNote");
+  meetingRetryBtn.classList.toggle("hidden", !actionIds.has("retry"));
+  meetingRetryBtn.textContent = actionById.retry?.label || t("resumeTranscription");
+  meetingRawOutput.classList.add("hidden");
+  meetingCancelBtn.textContent =
+    actionById.cancel?.label || actionById.back?.label || t("backToAssistant");
+  meetingProgressElapsed.textContent = Number.isFinite(progressView.elapsedSeconds)
+    ? formatDuration(progressView.elapsedSeconds)
+    : "";
+  if (progressView.shouldRunElapsedTimer && !meetingElapsedTimer) {
+    meetingElapsedTimer = window.setInterval(updateMeetingElapsed, 1000);
+  } else if (!progressView.shouldRunElapsedTimer) {
+    stopMeetingElapsedTimer();
+  }
+}
+
+function showGeneralProgress(note) {
+  state.currentProcessingNoteId = note.id;
+  state.processingKind = "general";
+  state.meetingStartedAt = Date.now();
+  switchView("meeting-review");
+  meetingProgressKicker.textContent = t("processingNote").toLocaleUpperCase();
+  meetingProgressTitle.textContent = note.status === "error"
+    ? t("saveFailed", { message: note.statusMessage || "" })
+    : t("generatingNote");
+  meetingProgressDetail.textContent = note.title || "";
+  meetingProgressModel.textContent = state.runtime.llmModelName
+    ? `${t("model")}: ${state.runtime.llmModelName}`
+    : "";
+  meetingProgressPanel.classList.remove("hidden");
+  meetingReviewWorkspace.classList.add("hidden");
+  meetingReviewSaveBtn.disabled = true;
+  meetingPauseBtn.classList.add("hidden");
+  meetingRetryBtn.classList.add("hidden");
+  meetingRawOutput.classList.add("hidden");
+  meetingCancelBtn.textContent = t("backToAssistant");
+  updateMeetingElapsed();
+  if (note.status === "structuring" && !meetingElapsedTimer) {
+    meetingElapsedTimer = window.setInterval(updateMeetingElapsed, 1000);
+  } else if (note.status !== "structuring") {
+    stopMeetingElapsedTimer();
+  }
+}
+
+function openTranscribedDraft(note) {
+  state.currentProcessingNoteId = null;
+  state.processingKind = null;
+  state.pendingMeetingSourceNoteId = note.id;
+  state.messages = [];
+  state.lastTranscript = note.transcript || "";
+  state.lastAudioPath = note.audioPath || "";
+  state.lastTranscriptSegments = Array.isArray(note.transcriptSegments)
+    ? note.transcriptSegments
+    : [];
+  state.lastPerformance = note.performance || null;
+  state.selectedFile = note.audioPath || "";
+  state.lastAssistantText = "";
+  state.meetingStartedAt = null;
+  switchView("assistant");
+  renderMessages();
+  updateSelectedFileMeta();
+  updateButtons();
+}
+
+async function startLibraryTranscription(filePath) {
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("sttNotReady"), true);
+    return;
+  }
+  try {
+    const pending = await window.desktopSTT.startTranscription(filePath);
+    const visibleNote = upsertLibraryNote(pending);
+    if (visibleNote.status === "transcribing") state.activeTranscriptionNoteIds.add(pending.id);
+    else state.activeTranscriptionNoteIds.delete(pending.id);
+    if (visibleNote.status === "transcribed") openTranscribedDraft(visibleNote);
+    else showTranscriptionProgress(visibleNote);
+    updateButtons();
+  } catch (error) {
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+function handleTranscriptionStatus(note) {
+  const visibleNote = upsertLibraryNote(note);
+  if (visibleNote.status === "transcribing") state.activeTranscriptionNoteIds.add(note.id);
+  else state.activeTranscriptionNoteIds.delete(note.id);
+  updateButtons();
+  if (state.currentProcessingNoteId !== visibleNote.id) return;
+  if (visibleNote.status === "transcribed") {
+    stopMeetingElapsedTimer();
+    openTranscribedDraft(visibleNote);
+    return;
+  }
+  showTranscriptionProgress(visibleNote);
+}
+
 async function transcribeAudioInput(filePath, sourceLabel) {
   setJobStatus(t("transcribing"));
   const transcription = await window.desktopSTT.transcribeAudio(filePath);
@@ -4164,6 +4548,12 @@ async function transcribeAudioInput(filePath, sourceLabel) {
   state.selectedFile = filePath;
   state.lastTranscript = transcript;
   state.lastAudioPath = filePath;
+  state.lastSourceDurationMs = Number.isFinite(transcription.durationMs)
+    ? transcription.durationMs
+    : state.lastSourceDurationMs;
+  state.lastTranscriptSegments = Array.isArray(transcription.segments)
+    ? transcription.segments
+    : [];
   updateSelectedFileMeta();
 
   if (transcription.sttDurationMs) {
@@ -4212,15 +4602,27 @@ async function handlePickFile() {
     return;
   }
 
+  if (state.currentView !== "detail" && state.noteTemplateId === "meeting") {
+    const durationMs = await window.desktopSTT.getAudioDuration(filePath);
+    if (Number.isFinite(durationMs)) state.lastSourceDurationMs = durationMs;
+    if (durationMs > 3 * 60 * 60 * 1000) {
+      setJobStatus(t("meetingTooLong"), true);
+      return;
+    }
+  }
+
   if (state.currentView === "detail") {
     await transcribeAndAskAboutNote(filePath, t("importedFile"));
     return;
   }
 
-  await transcribeAndSend(filePath, t("importedFile"));
+  await startLibraryTranscription(filePath);
 }
 
 async function handleSend() {
+  if (state.pendingMeetingSourceNoteId) {
+    return;
+  }
   const text = state.draft.trim();
   if (!text) {
     return;
@@ -4228,13 +4630,416 @@ async function handleSend() {
 
   state.draft = "";
   promptInputEl.value = "";
-  state.lastTranscript = text;
-  state.lastAudioPath = "";
+  window.noteDraftSource.applyTypedInputToDraftSource(state, text);
   autoResizePrompt();
   await sendUserMessage(text, t("typedInput"));
 }
 
 /* ========== Save as Note ========== */
+
+function meetingProgressCopy(progress) {
+  if (!progress) return { title: t("analyzingTranscript"), detail: "" };
+  if (progress.phase === "extracting") {
+    return {
+      title: t("extractingSections", {
+        completed: progress.completed || 0,
+        total: progress.total || 0,
+      }),
+      detail: progress.total > 1 ? `${progress.completed || 0} / ${progress.total}` : "",
+    };
+  }
+  if (progress.phase === "merging") return { title: t("mergingSections"), detail: "" };
+  if (progress.phase === "validating") return { title: t("validatingMeeting"), detail: "" };
+  if (progress.phase === "complete") return { title: t("meetingReady"), detail: "" };
+  return { title: t("analyzingTranscript"), detail: "" };
+}
+
+function updateMeetingElapsed() {
+  if (!state.meetingStartedAt) {
+    meetingProgressElapsed.textContent = "";
+    return;
+  }
+  meetingProgressElapsed.textContent = formatDuration(
+    Math.max(0, Math.floor((Date.now() - state.meetingStartedAt) / 1000))
+  );
+}
+
+function showMeetingProgress(progress = state.meetingProgress) {
+  state.processingKind = "meeting";
+  state.meetingProgress = progress;
+  const copy = meetingProgressCopy(progress);
+  meetingProgressTitle.textContent = copy.title;
+  meetingProgressKicker.textContent = t("meetingNote").toLocaleUpperCase();
+  const meetingDurationMs = state.currentMeetingDraft?.durationMs || state.lastSourceDurationMs;
+  const longMode = meetingDurationMs >= 90 * 60 * 1000 && meetingDurationMs <= 3 * 60 * 60 * 1000;
+  meetingProgressDetail.textContent = [copy.detail, longMode ? t("longMeetingMode") : ""]
+    .filter(Boolean)
+    .join(" · ");
+  const progressModelName = state.currentMeetingDraft?.modelName || state.runtime.llmModelName;
+  meetingProgressModel.textContent = progressModelName
+    ? `${t("model")}: ${progressModelName}`
+    : "";
+  meetingProgressPanel.classList.remove("hidden");
+  meetingReviewWorkspace.classList.add("hidden");
+  meetingReviewSaveBtn.disabled = true;
+  meetingPauseBtn.classList.toggle("hidden", !state.isWorking);
+  meetingRetryBtn.classList.add("hidden");
+  meetingCancelBtn.textContent = t("cancel");
+  meetingRawOutput.classList.add("hidden");
+  updateMeetingElapsed();
+  if (!meetingElapsedTimer) {
+    meetingElapsedTimer = window.setInterval(updateMeetingElapsed, 1000);
+  }
+}
+
+function stopMeetingElapsedTimer() {
+  if (meetingElapsedTimer) {
+    window.clearInterval(meetingElapsedTimer);
+    meetingElapsedTimer = null;
+  }
+}
+
+function formatEvidenceTime(evidence) {
+  if (!Number.isFinite(evidence?.startMs)) return "";
+  return `${formatDuration(Math.floor(evidence.startMs / 1000))} · `;
+}
+
+function createMeetingListRow(key, item, index) {
+  const row = document.createElement("div");
+  row.className = `meeting-list-row${key === "actionItems" ? " action-row" : ""}`;
+  row.dataset.itemIndex = String(index);
+
+  const textInput = document.createElement("input");
+  textInput.type = "text";
+  textInput.dataset.field = "text";
+  textInput.value = item?.text || "";
+  textInput.maxLength = 2000;
+  row.append(textInput);
+
+  if (key === "actionItems") {
+    const assignee = document.createElement("input");
+    assignee.type = "text";
+    assignee.dataset.field = "assignee";
+    assignee.placeholder = t("assignee");
+    assignee.value = item?.assignee || "";
+    const deadline = document.createElement("input");
+    deadline.type = "text";
+    deadline.dataset.field = "deadlineText";
+    deadline.placeholder = t("deadline");
+    deadline.value = item?.deadlineText || "";
+    const deadlineDate = document.createElement("input");
+    deadlineDate.type = "date";
+    deadlineDate.dataset.field = "deadlineDate";
+    deadlineDate.title = t("normalizedDate");
+    deadlineDate.value = item?.deadlineDate || "";
+    deadline.addEventListener("input", () => { deadlineDate.value = ""; });
+    row.append(assignee, deadline, deadlineDate);
+  }
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "ghost-btn danger-btn";
+  remove.textContent = t("remove");
+  remove.addEventListener("click", () => {
+    state.currentMeetingDraft.structured = collectMeetingReview();
+    state.currentMeetingDraft.structured[key].splice(index, 1);
+    state.meetingDraftDirty = true;
+    renderMeetingReviewDraft(state.currentMeetingDraft);
+    scheduleMeetingDraftSave();
+  });
+  row.append(remove);
+
+  const evidence = Array.isArray(item?.evidence) ? item.evidence : [];
+  if (evidence.length > 0 || item?.possibleDuplicateGroupId) {
+    const source = document.createElement("p");
+    source.className = "meeting-evidence";
+    source.dataset.evidence = JSON.stringify(evidence);
+    source.dataset.possibleDuplicate = item?.possibleDuplicateGroupId ? "true" : "false";
+    const quotes = evidence
+      .map((entry) => `${formatEvidenceTime(entry)}${t("sourceEvidence", { quote: entry.quote })}`)
+      .join(" · ");
+    source.textContent = quotes;
+    if (item?.possibleDuplicateGroupId) {
+      const duplicate = document.createElement("span");
+      duplicate.className = "meeting-duplicate-badge";
+      duplicate.textContent = `${quotes ? " · " : ""}${t("possibleDuplicate")}`;
+      source.append(duplicate);
+    }
+    row.append(source);
+  }
+  return row;
+}
+
+function renderMeetingSections(structured) {
+  meetingStructuredSections.replaceChildren();
+  const sections = [
+    ["keyPoints", t("keyPoints")],
+    ["decisions", t("decisions")],
+    ["actionItems", t("actionItems")],
+    ["openQuestions", t("openQuestions")],
+  ];
+
+  for (const [key, label] of sections) {
+    const section = document.createElement("section");
+    section.className = "meeting-section-editor";
+    section.dataset.key = key;
+    const head = document.createElement("div");
+    head.className = "meeting-section-head";
+    const heading = document.createElement("h3");
+    heading.textContent = label;
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "ghost-btn";
+    add.textContent = t("addItem");
+    add.addEventListener("click", () => {
+      state.currentMeetingDraft.structured = collectMeetingReview();
+      state.currentMeetingDraft.structured[key].push(key === "actionItems"
+        ? { text: "", assignee: null, deadlineText: null, deadlineDate: null, status: "pending", evidence: [] }
+        : { text: "", evidence: [] });
+      state.meetingDraftDirty = true;
+      renderMeetingReviewDraft(state.currentMeetingDraft);
+    });
+    head.append(heading, add);
+    section.append(head);
+    (structured[key] || []).forEach((item, index) => {
+      section.append(createMeetingListRow(key, item, index));
+    });
+    meetingStructuredSections.append(section);
+  }
+}
+
+function appendHighlightedTranscriptText(container, text, query) {
+  const cleanQuery = String(query || "").trim();
+  if (!cleanQuery) {
+    container.textContent = text;
+    return;
+  }
+  const lowerText = text.toLocaleLowerCase();
+  const lowerQuery = cleanQuery.toLocaleLowerCase();
+  let cursor = 0;
+  while (cursor < text.length) {
+    const index = lowerText.indexOf(lowerQuery, cursor);
+    if (index < 0) {
+      container.append(document.createTextNode(text.slice(cursor)));
+      break;
+    }
+    container.append(document.createTextNode(text.slice(cursor, index)));
+    const mark = document.createElement("mark");
+    mark.textContent = text.slice(index, index + cleanQuery.length);
+    container.append(mark);
+    cursor = index + cleanQuery.length;
+  }
+}
+
+function renderTranscriptRows(container, transcript, segments, query = "") {
+  const rows = window.transcriptView.buildTranscriptRows(transcript, segments);
+  container.replaceChildren();
+  for (const row of rows) {
+    const element = document.createElement("div");
+    element.className = "transcript-segment-row";
+    if (row.label) {
+      const timestamp = document.createElement("span");
+      timestamp.className = "transcript-segment-time";
+      timestamp.textContent = row.label;
+      element.append(timestamp);
+    }
+    const text = document.createElement("span");
+    text.className = "transcript-segment-text";
+    appendHighlightedTranscriptText(text, row.text, query);
+    element.append(text);
+    container.append(element);
+  }
+}
+
+function renderTimestampedTranscriptHtml(transcript, segments) {
+  return window.transcriptView
+    .buildTranscriptRows(transcript, segments)
+    .map((row) => `<div class="transcript-segment-row">
+      ${row.label ? `<span class="transcript-segment-time">${escapeHtml(row.label)}</span>` : ""}
+      <span class="transcript-segment-text">${escapeHtml(row.text)}</span>
+    </div>`)
+    .join("");
+}
+
+function renderStructuredSummaryHtml(summary) {
+  return window.noteSummaryView.renderStructuredSummaryHtml(summary);
+}
+
+function renderMeetingTranscript(query = meetingTranscriptSearch.value) {
+  renderTranscriptRows(
+    meetingTranscriptReadOnly,
+    state.currentMeetingDraft?.transcript || "",
+    state.currentMeetingDraft?.segments || [],
+    query
+  );
+}
+
+function renderMeetingReviewDraft(draft) {
+  state.currentMeetingDraft = draft;
+  stopMeetingElapsedTimer();
+  state.meetingStartedAt = null;
+  meetingProgressPanel.classList.add("hidden");
+  meetingReviewWorkspace.classList.remove("hidden");
+  meetingReviewSaveBtn.disabled = false;
+  meetingTitleInput.value = draft.structured?.title || "";
+  meetingSummaryInput.value = draft.structured?.summary || "";
+  meetingTagsInput.value = (draft.structured?.tags || []).join(", ");
+  draft.structured = {
+    ...draft.structured,
+    keyPoints: [...(draft.structured?.keyPoints || [])],
+    decisions: [...(draft.structured?.decisions || [])],
+    actionItems: [...(draft.structured?.actionItems || [])],
+    openQuestions: [...(draft.structured?.openQuestions || [])],
+  };
+  renderMeetingSections(draft.structured);
+  renderMeetingTranscript();
+  meetingReviewDraftState.textContent = state.meetingDraftDirty
+    ? ""
+    : t("meetingReviewSaved");
+}
+
+function collectMeetingReview() {
+  const structured = {
+    title: meetingTitleInput.value.trim(),
+    summary: meetingSummaryInput.value.trim(),
+    tags: meetingTagsInput.value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean),
+    keyPoints: [],
+    decisions: [],
+    actionItems: [],
+    openQuestions: [],
+  };
+  meetingStructuredSections.querySelectorAll(".meeting-section-editor").forEach((section) => {
+    const key = section.dataset.key;
+    section.querySelectorAll(".meeting-list-row").forEach((row) => {
+      const index = Number(row.dataset.itemIndex);
+      const original = state.currentMeetingDraft?.structured?.[key]?.[index] || {};
+      const text = row.querySelector('[data-field="text"]')?.value.trim() || "";
+      if (!text) return;
+      const item = {
+        ...original,
+        text,
+        evidence: Array.isArray(original.evidence) ? original.evidence : [],
+      };
+      if (key === "actionItems") {
+        item.assignee = row.querySelector('[data-field="assignee"]')?.value.trim() || null;
+        const deadlineInput = row.querySelector('[data-field="deadlineText"]');
+        item.deadlineText = deadlineInput?.value.trim() || null;
+        const deadlineDate = row.querySelector('[data-field="deadlineDate"]')?.value || "";
+        item.deadlineDate = /^\d{4}-\d{2}-\d{2}$/.test(deadlineDate) ? deadlineDate : null;
+        item.status = original.status === "completed" ? "completed" : "pending";
+      }
+      structured[key].push(item);
+    });
+  });
+  return structured;
+}
+
+function scheduleMeetingDraftSave() {
+  state.meetingDraftDirty = true;
+  meetingReviewDraftState.textContent = "";
+}
+
+async function settleMeetingDraftAutosave() {
+  if (meetingDraftSaveTimer) {
+    window.clearTimeout(meetingDraftSaveTimer);
+    meetingDraftSaveTimer = null;
+  }
+  if (meetingDraftSavePromise) await meetingDraftSavePromise;
+}
+
+async function runMeetingGeneration({ resume = false } = {}) {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
+}
+
+async function recoverMeetingDraft() {
+  return null;
+}
+
+async function discardMeetingReview() {
+  if (state.pendingMeetingSourceNoteId) {
+    const source = await window.desktopSTT.updateNote(state.pendingMeetingSourceNoteId, {
+      status: "transcribed",
+      statusMessage: "",
+    });
+    upsertLibraryNote(source);
+  }
+  state.currentMeetingDraft = null;
+  state.meetingDraftDirty = false;
+  state.meetingStartedAt = null;
+  state.pendingMeetingSourceNoteId = null;
+  state.currentProcessingNoteId = null;
+  state.processingKind = null;
+  switchView("assistant");
+}
+
+async function leaveProcessingOrMeeting() {
+  if (state.processingKind === "transcription") {
+    const noteId = state.currentProcessingNoteId;
+    if (noteId && state.activeTranscriptionNoteIds.has(noteId)) {
+      try {
+        const cancelled = await window.desktopSTT.cancelTranscription(noteId);
+        if (cancelled) upsertLibraryNote(cancelled);
+        state.activeTranscriptionNoteIds.delete(noteId);
+        setTemporaryJobStatus(t("transcriptionCancelled"), false, 2000);
+      } catch (error) {
+        setJobStatus(t("failed", { message: error.message }), true);
+        return;
+      }
+    }
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    stopMeetingElapsedTimer();
+    switchView("assistant");
+    return;
+  }
+  if (state.processingKind && state.processingKind !== "meeting") {
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    stopMeetingElapsedTimer();
+    switchView("assistant");
+    return;
+  }
+  await discardMeetingReview();
+}
+
+async function deleteCurrentTranscriptionNote() {
+  if (state.processingKind !== "transcription" || !state.currentProcessingNoteId) return;
+  const noteId = state.currentProcessingNoteId;
+  try {
+    await window.desktopSTT.moveNoteToTrash(noteId);
+    state.activeTranscriptionNoteIds.delete(noteId);
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    state.meetingStartedAt = null;
+    stopMeetingElapsedTimer();
+    await loadNotesList(noteSearchInput.value.trim());
+    switchView("assistant");
+    setTemporaryJobStatus(t("transcriptionNoteDeleted"), false, 2000);
+  } catch (error) {
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+async function retryCurrentTranscriptionNote() {
+  if (state.processingKind !== "transcription" || !state.currentProcessingNoteId) return;
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("sttNotReady"), true);
+    return;
+  }
+  try {
+    const pending = await window.desktopSTT.retryTranscription(state.currentProcessingNoteId);
+    const visibleNote = upsertLibraryNote(pending);
+    state.activeTranscriptionNoteIds.add(visibleNote.id);
+    showTranscriptionProgress(visibleNote);
+    updateButtons();
+  } catch (error) {
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+async function commitMeetingReview() {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
+}
 
 async function handleSaveAsNote() {
   if (!state.lastTranscript && !state.lastAssistantText) {
@@ -4243,19 +5048,44 @@ async function handleSaveAsNote() {
 
   state.isWorking = true;
   updateButtons();
-  setJobStatus(t("generatingNote"));
+  let processingNote = null;
 
   try {
     const textToProcess = state.lastTranscript || state.lastAssistantText;
+    const draftData = {
+      title: state.lastAudioPath
+        ? state.lastAudioPath.replaceAll("\\", "/").split("/").pop()
+        : textToProcess.slice(0, 80) || "Untitled Note",
+      audioPath: state.lastAudioPath || null,
+      transcript: state.lastTranscript || textToProcess,
+      transcriptSegments: state.lastTranscriptSegments,
+      structured: {},
+      tags: [],
+      folder: "default",
+      templateId: "general",
+      status: "structuring",
+      statusMessage: t("generatingNote"),
+      conversations: [],
+    };
+    processingNote = state.pendingMeetingSourceNoteId
+      ? await window.desktopSTT.updateNote(state.pendingMeetingSourceNoteId, draftData)
+      : await window.desktopSTT.createNote(draftData);
+    upsertLibraryNote(processingNote);
+    showGeneralProgress(processingNote);
+
     const result = await window.desktopSTT.processStructured(textToProcess);
 
     const noteData = {
       title: result.structured.title,
       audioPath: state.lastAudioPath || null,
       transcript: state.lastTranscript || "",
+      transcriptSegments: state.lastTranscriptSegments,
       structured: result.structured,
       tags: result.structured.tags || [],
       folder: "default",
+      templateId: "general",
+      status: "ready",
+      statusMessage: "",
       performance: {
         ...state.lastPerformance,
         structuringDurationMs: result.llmDurationMs,
@@ -4264,12 +5094,28 @@ async function handleSaveAsNote() {
       conversations: [],
     };
 
-    const savedNote = await window.desktopSTT.createNote(noteData);
-    setJobStatus(t("saved", { title: savedNote.title }));
-    setTimeout(() => setJobStatus(""), 3000);
+    const savedNote = await window.desktopSTT.updateNote(processingNote.id, noteData);
+    state.pendingMeetingSourceNoteId = null;
     await loadNotesList(noteSearchInput.value.trim());
+    if (state.currentProcessingNoteId === savedNote.id) {
+      switchView("assistant");
+      state.currentProcessingNoteId = null;
+      state.processingKind = null;
+      state.meetingStartedAt = null;
+      stopMeetingElapsedTimer();
+      await openNoteDetail(savedNote.id);
+    }
   } catch (error) {
-    setJobStatus(t("saveFailed", { message: error.message }), true);
+    if (processingNote?.id) {
+      const failedNote = await window.desktopSTT.updateNote(processingNote.id, {
+        status: "error",
+        statusMessage: error.message,
+      });
+      upsertLibraryNote(failedNote);
+      if (state.currentProcessingNoteId === failedNote.id) showGeneralProgress(failedNote);
+    } else {
+      setJobStatus(t("saveFailed", { message: error.message }), true);
+    }
   } finally {
     state.isWorking = false;
     updateButtons();
@@ -4362,6 +5208,7 @@ async function handleStopRecording() {
     return;
   }
 
+  const recordedDurationMs = state.recordingSeconds * 1000;
   state.isRecording = false;
   updateRecordingMeta();
   setJobStatus(t("processingRecording"));
@@ -4379,6 +5226,7 @@ async function handleStopRecording() {
     await cleanupRecording();
 
     const savedRecording = await window.desktopSTT.saveRecording(wavBuffer);
+    state.lastSourceDurationMs = recordedDurationMs;
     if (state.currentView === "detail") {
       await transcribeAndAskAboutNote(savedRecording.filePath, t("microphoneRecording"));
     } else {
@@ -4606,28 +5454,28 @@ function renderTrashPreview() {
     ${note.structured?.summary ? `
       <div class="note-section">
         <h4>${t("summary")}</h4>
-        <p>${escapeHtml(note.structured.summary)}</p>
+        <div class="note-summary">${renderStructuredSummaryHtml(note.structured.summary)}</div>
       </div>
     ` : ""}
 
     ${note.structured?.keyPoints?.length > 0 ? `
       <div class="note-section">
         <h4>${t("keyPoints")}</h4>
-        <ul>${note.structured.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ul>
+        <ul>${note.structured.keyPoints.map((point) => `<li>${escapeHtml(noteItemText(point))}</li>`).join("")}</ul>
       </div>
     ` : ""}
 
     ${note.structured?.actionItems?.length > 0 ? `
       <div class="note-section">
         <h4>${t("actionItems")}</h4>
-        <ul class="action-items">${note.structured.actionItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        <ul class="action-items">${note.structured.actionItems.map((item) => `<li>${escapeHtml(noteItemText(item))}</li>`).join("")}</ul>
       </div>
     ` : ""}
 
     ${note.transcript ? `
       <div class="note-section transcript-section">
         <h4>${t("originalTranscript")}</h4>
-        <p class="transcript-text">${escapeHtml(note.transcript)}</p>
+        <div class="transcript-text">${renderTimestampedTranscriptHtml(note.transcript, note.transcriptSegments)}</div>
       </div>
     ` : ""}
   `;
@@ -4657,11 +5505,32 @@ async function handlePermanentDeleteTrashNote() {
   if (!window.confirm(t("deleteForeverConfirm"))) return;
 
   try {
-    await window.desktopSTT.permanentlyDeleteNote(state.currentTrashNoteId);
+    const note = state.deletedNotes.find((item) => item.id === state.currentTrashNoteId);
+    const normalizedAudioPath = String(note?.audioPath || "").replaceAll("\\", "/");
+    const normalizedManagedRoot = String(state.runtime.managedDataRoot || "").replaceAll("\\", "/");
+    const isManagedRecording = Boolean(
+      normalizedAudioPath &&
+      normalizedManagedRoot &&
+      normalizedAudioPath.startsWith(`${normalizedManagedRoot}/stt/output/recordings/`)
+    );
+    const deleteManagedAudio = isManagedRecording
+      ? window.confirm(t("deleteManagedRecordingConfirm"))
+      : false;
+    const result = await window.desktopSTT.permanentlyDeleteNote(state.currentTrashNoteId, {
+      deleteManagedAudio,
+    });
     state.currentTrashNoteId = "";
     await loadTrashNotes();
     await loadNotesList(noteSearchInput.value.trim());
-    setTrashStatus(t("noteDeletedForever"), false, 2000);
+    setTrashStatus(
+      result.audio?.deleteError
+        ? t("managedRecordingDeleteFailed", { message: result.audio.deleteError })
+        : result.audio?.shared && deleteManagedAudio
+          ? t("managedRecordingShared")
+          : t("noteDeletedForever"),
+      false,
+      3000
+    );
   } catch (error) {
     setTrashStatus(t("operationFailed", { message: error.message }), true);
   }
@@ -4695,13 +5564,29 @@ function renderNotesList() {
     }
     card.dataset.noteId = note.id;
 
+    const head = document.createElement("div");
+    head.className = "note-card-head";
+
     const title = document.createElement("h3");
     title.className = "note-card-title";
     title.textContent = note.title || "Untitled";
+    head.append(title);
+
+    if (note.status === "transcribing" || note.status === "structuring") {
+      const spinner = document.createElement("span");
+      spinner.className = "note-card-status-spinner";
+      spinner.setAttribute("role", "status");
+      spinner.setAttribute("aria-label", note.statusMessage || t("transcribing"));
+      head.append(spinner);
+    }
 
     const summary = document.createElement("p");
     summary.className = "note-card-summary";
-    summary.textContent = note.structured?.summary || note.transcript?.slice(0, 100) || "";
+    summary.textContent = note.status === "transcribing" || note.status === "structuring"
+      ? note.statusMessage || t("transcribing")
+      : note.status === "error"
+        ? note.statusMessage || t("transcriptionEmpty")
+        : note.structured?.summary || note.transcript?.slice(0, 100) || "";
 
     const footer = document.createElement("div");
     footer.className = "note-card-footer";
@@ -4720,7 +5605,7 @@ function renderNotesList() {
     tags.textContent = (note.tags || []).slice(0, 3).map((t) => `#${t}`).join(" ");
 
     footer.append(date, tags);
-    card.append(title, summary, footer);
+    card.append(head, summary, footer);
     notesListEl.append(card);
 
     card.addEventListener("click", () => openNoteDetail(note.id));
@@ -4728,9 +5613,30 @@ function renderNotesList() {
 }
 
 async function openNoteDetail(noteId) {
+  if (!(await confirmAndLeaveCurrentWork())) return;
   try {
     const note = await window.desktopSTT.getNote(noteId);
+    if (note.status === "transcribing") {
+      showTranscriptionProgress(note);
+      return;
+    }
+    if (note.status === "structuring" || note.status === "reviewing") {
+      showGeneralProgress(note);
+      return;
+    }
+    if (note.status === "error") {
+      if (note.transcript) showGeneralProgress(note);
+      else showTranscriptionProgress(note);
+      return;
+    }
+    if (note.status === "transcribed") {
+      openTranscribedDraft(note);
+      return;
+    }
     state.currentNoteId = noteId;
+    state.currentNote = note;
+    state.meetingEditMode = false;
+    state.meetingEditDirty = false;
     state.noteQaMessages = note.conversations || [];
     renderNoteDetail(note);
     switchView("detail");
@@ -4740,7 +5646,54 @@ async function openNoteDetail(noteId) {
   }
 }
 
+function noteItemText(item) {
+  return typeof item === "string" ? item : item?.text || "";
+}
+
+function escapeAttribute(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function renderNoteEvidence(item) {
+  const evidence = Array.isArray(item?.evidence) ? item.evidence : [];
+  if (evidence.length === 0) return "";
+  return `<div class="note-evidence">${evidence.map((entry) =>
+    escapeHtml(`${formatEvidenceTime(entry)}${t("sourceEvidence", { quote: entry.quote })}`)
+  ).join(" · ")}</div>`;
+}
+
+function renderSourceItems(items) {
+  return (items || []).map((item) => `
+    <li>
+      <span>${escapeHtml(noteItemText(item))}</span>
+      ${renderNoteEvidence(item)}
+      ${item?.possibleDuplicateGroupId ? `<span class="meeting-duplicate-badge">${t("possibleDuplicate")}</span>` : ""}
+    </li>
+  `).join("");
+}
+
+function renderMeetingActionItems(items) {
+  return (items || []).map((item, index) => {
+    const completed = item?.status === "completed";
+    const meta = [item?.assignee, item?.deadlineText || item?.deadlineDate].filter(Boolean).join(" · ");
+    return `<li class="note-action-row${completed ? " completed" : ""}">
+      <input class="note-action-checkbox" data-action-index="${index}" type="checkbox" ${completed ? "checked" : ""} />
+      <div>
+        <div class="note-action-text">${escapeHtml(noteItemText(item))}</div>
+        ${meta ? `<div class="note-action-meta">${escapeHtml(meta)}</div>` : ""}
+        ${renderNoteEvidence(item)}
+        ${item?.possibleDuplicateGroupId ? `<span class="meeting-duplicate-badge">${t("possibleDuplicate")}</span>` : ""}
+      </div>
+    </li>`;
+  }).join("");
+}
+
 function renderNoteDetail(note) {
+  state.currentNote = note;
   const perf = note.performance || {};
   const perfItems = [];
   if (perf.sttDurationMs) perfItems.push(`STT: ${formatMs(perf.sttDurationMs)}`);
@@ -4761,20 +5714,36 @@ function renderNoteDetail(note) {
     ${note.structured ? `
       <div class="note-section">
         <h4>${t("summary")}</h4>
-        <p>${escapeHtml(note.structured.summary)}</p>
+        <div class="note-summary">${renderStructuredSummaryHtml(note.structured.summary)}</div>
       </div>
 
       ${note.structured.keyPoints?.length > 0 ? `
         <div class="note-section">
           <h4>${t("keyPoints")}</h4>
-          <ul>${note.structured.keyPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+          <ul>${renderSourceItems(note.structured.keyPoints)}</ul>
+        </div>
+      ` : ""}
+
+      ${note.templateId === "meeting" && note.structured.decisions?.length > 0 ? `
+        <div class="note-section">
+          <h4>${t("decisions")}</h4>
+          <ul>${renderSourceItems(note.structured.decisions)}</ul>
         </div>
       ` : ""}
 
       ${note.structured.actionItems?.length > 0 ? `
         <div class="note-section">
           <h4>${t("actionItems")}</h4>
-          <ul class="action-items">${note.structured.actionItems.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+          <ul class="action-items">${note.templateId === "meeting"
+            ? renderMeetingActionItems(note.structured.actionItems)
+            : note.structured.actionItems.map((a) => `<li>${escapeHtml(noteItemText(a))}</li>`).join("")}</ul>
+        </div>
+      ` : ""}
+
+      ${note.templateId === "meeting" && note.structured.openQuestions?.length > 0 ? `
+        <div class="note-section">
+          <h4>${t("openQuestions")}</h4>
+          <ul>${renderSourceItems(note.structured.openQuestions)}</ul>
         </div>
       ` : ""}
     ` : ""}
@@ -4782,12 +5751,140 @@ function renderNoteDetail(note) {
     ${note.transcript ? `
       <div class="note-section transcript-section">
         <h4>${t("originalTranscript")}</h4>
-        <p class="transcript-text">${escapeHtml(note.transcript)}</p>
+        <div class="transcript-text">${renderTimestampedTranscriptHtml(note.transcript, note.transcriptSegments)}</div>
       </div>
     ` : ""}
   `;
 
+  noteDetailContent.querySelectorAll(".note-action-checkbox").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => handleActionCompletionToggle(note, checkbox));
+  });
+
   renderNoteQaMessages();
+}
+
+function renderSavedMeetingEdit(note) {
+  const structured = note.structured || {};
+  const sectionConfig = [
+    ["keyPoints", t("keyPoints")],
+    ["decisions", t("decisions")],
+    ["actionItems", t("actionItems")],
+    ["openQuestions", t("openQuestions")],
+  ];
+  noteDetailContent.innerHTML = `
+    <div class="note-meeting-actions">
+      <button id="savedMeetingCancelBtn" class="ghost-btn" type="button">${t("cancel")}</button>
+      <button id="savedMeetingSaveBtn" class="ghost-btn accent-btn" type="button">${t("save")}</button>
+    </div>
+    <form id="savedMeetingEditForm" class="meeting-editor-pane">
+      <label>${t("title")}<input id="savedMeetingTitle" type="text" maxlength="300" value="${escapeAttribute(note.title)}" /></label>
+      <label>${t("summary")}<textarea id="savedMeetingSummary" rows="5">${escapeHtml(structured.summary || "")}</textarea></label>
+      ${sectionConfig.map(([key, label]) => `
+        <section class="meeting-section-editor" data-saved-section="${key}">
+          <div class="meeting-section-head"><h3>${label}</h3></div>
+          ${(structured[key] || []).map((item, index) => `
+            <div class="meeting-list-row${key === "actionItems" ? " action-row" : ""}" data-saved-index="${index}">
+              <input data-saved-field="text" type="text" value="${escapeAttribute(noteItemText(item))}" />
+              ${key === "actionItems" ? `
+                <input data-saved-field="assignee" type="text" placeholder="${t("assignee")}" value="${escapeAttribute(item.assignee || "")}" />
+                <input data-saved-field="deadlineText" type="text" placeholder="${t("deadline")}" value="${escapeAttribute(item.deadlineText || "")}" />
+                <input data-saved-field="deadlineDate" type="date" title="${t("normalizedDate")}" value="${escapeAttribute(item.deadlineDate || "")}" />
+              ` : ""}
+              ${renderNoteEvidence(item)}
+            </div>
+          `).join("")}
+        </section>
+      `).join("")}
+      <label>${t("tags")}<input id="savedMeetingTags" type="text" value="${escapeAttribute((note.tags || []).join(", "))}" /></label>
+      <div class="note-section transcript-section">
+        <h4>${t("originalTranscript")}</h4>
+        <div class="transcript-text">${renderTimestampedTranscriptHtml(note.transcript, note.transcriptSegments)}</div>
+      </div>
+    </form>
+  `;
+  const form = document.querySelector("#savedMeetingEditForm");
+  form.querySelectorAll('[data-saved-field="deadlineText"]').forEach((input) => {
+    input.addEventListener("input", () => {
+      const dateInput = input.closest(".meeting-list-row")?.querySelector('[data-saved-field="deadlineDate"]');
+      if (dateInput) dateInput.value = "";
+    });
+  });
+  form.addEventListener("input", () => { state.meetingEditDirty = true; });
+  document.querySelector("#savedMeetingCancelBtn").addEventListener("click", () => {
+    if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) return;
+    state.meetingEditMode = false;
+    state.meetingEditDirty = false;
+    renderNoteDetail(note);
+    updateButtons();
+  });
+  document.querySelector("#savedMeetingSaveBtn").addEventListener("click", saveMeetingNoteEdits);
+}
+
+function collectSavedMeetingEdit(note) {
+  const structured = {
+    ...note.structured,
+    title: document.querySelector("#savedMeetingTitle").value.trim(),
+    summary: document.querySelector("#savedMeetingSummary").value.trim(),
+    tags: document.querySelector("#savedMeetingTags").value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean),
+  };
+  document.querySelectorAll("[data-saved-section]").forEach((section) => {
+    const key = section.dataset.savedSection;
+    structured[key] = [];
+    section.querySelectorAll("[data-saved-index]").forEach((row) => {
+      const index = Number(row.dataset.savedIndex);
+      const rawOriginal = note.structured[key][index];
+      const original = typeof rawOriginal === "string"
+        ? { text: rawOriginal, evidence: [], status: "pending" }
+        : rawOriginal;
+      const text = row.querySelector('[data-saved-field="text"]').value.trim();
+      if (!text) return;
+      const next = { ...original, text };
+      if (key === "actionItems") {
+        next.assignee = row.querySelector('[data-saved-field="assignee"]').value.trim() || null;
+        const deadlineText = row.querySelector('[data-saved-field="deadlineText"]').value.trim() || null;
+        next.deadlineText = deadlineText;
+        const deadlineDate = row.querySelector('[data-saved-field="deadlineDate"]').value;
+        next.deadlineDate = /^\d{4}-\d{2}-\d{2}$/.test(deadlineDate) ? deadlineDate : null;
+      }
+      structured[key].push(next);
+    });
+  });
+  return structured;
+}
+
+async function saveMeetingNoteEdits() {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
+}
+
+async function handleActionCompletionToggle(note, checkbox) {
+  const index = Number(checkbox.dataset.actionIndex);
+  const action = note.structured.actionItems[index];
+  const previous = action.status === "completed";
+  checkbox.disabled = true;
+  try {
+    const updated = await window.desktopSTT.setActionItemCompletion(note.id, action.id, checkbox.checked);
+    state.currentNote = updated;
+    renderNoteDetail(updated);
+    const undo = document.createElement("button");
+    undo.type = "button";
+    undo.className = "ghost-btn";
+    undo.textContent = t("undo");
+    undo.addEventListener("click", async () => {
+      const reverted = await window.desktopSTT.setActionItemCompletion(note.id, action.id, previous);
+      state.currentNote = reverted;
+      noteJobStatusEl.replaceChildren();
+      renderNoteDetail(reverted);
+    });
+    noteJobStatusEl.replaceChildren(undo);
+  } catch (error) {
+    checkbox.checked = previous;
+    checkbox.disabled = false;
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+async function beginLegacyMeetingConversion(note) {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
 }
 
 function renderNoteQaMessages() {
@@ -4946,8 +6043,11 @@ async function handleDeleteQaMessage(index) {
 
 async function handleDeleteNote() {
   if (!state.currentNoteId) return;
+  if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) return;
 
   try {
+    state.meetingEditDirty = false;
+    state.meetingEditMode = false;
     await window.desktopSTT.moveNoteToTrash(state.currentNoteId);
     state.currentNoteId = null;
     state.noteQaMessages = [];
@@ -5091,6 +6191,56 @@ function createRichTextContentElement(className, text) {
 
 /* ========== Event Listeners ========== */
 
+function hasDraggedFiles(event) {
+  return Array.from(event.dataTransfer?.types || []).includes("Files");
+}
+
+window.addEventListener("dragenter", (event) => {
+  if (!hasDraggedFiles(event)) return;
+  event.preventDefault();
+  fileDragDepth += 1;
+  if (
+    state.currentView === "assistant" &&
+    state.activeTranscriptionNoteIds.size === 0 &&
+    state.runtime.sttReady
+  ) {
+    fileDropOverlay.classList.remove("hidden");
+    fileDropOverlay.setAttribute("aria-hidden", "false");
+  }
+});
+
+window.addEventListener("dragover", (event) => {
+  if (!hasDraggedFiles(event)) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+});
+
+window.addEventListener("dragleave", (event) => {
+  event.preventDefault();
+  fileDragDepth = Math.max(0, fileDragDepth - 1);
+  if (fileDragDepth === 0) {
+    fileDropOverlay.classList.add("hidden");
+    fileDropOverlay.setAttribute("aria-hidden", "true");
+  }
+});
+
+window.addEventListener("drop", async (event) => {
+  if (!hasDraggedFiles(event)) return;
+  event.preventDefault();
+  fileDragDepth = 0;
+  fileDropOverlay.classList.add("hidden");
+  fileDropOverlay.setAttribute("aria-hidden", "true");
+  if (state.currentView !== "assistant" || state.activeTranscriptionNoteIds.size > 0) return;
+
+  const result = await window.dropInput.handleDroppedMedia(event.dataTransfer?.files, {
+    getPathForFile: window.desktopSTT.getPathForFile,
+    startTranscription: startLibraryTranscription,
+  });
+  if (!result.ok) {
+    setTemporaryJobStatus(t("unsupportedDrop"), true, 3000);
+  }
+});
+
 promptInputEl.addEventListener("input", () => {
   state.draft = promptInputEl.value;
   autoResizePrompt();
@@ -5129,6 +6279,43 @@ cleanAllAssetsBtn.addEventListener("click", () => {
 copyBtn.addEventListener("click", handleCopy);
 saveAsNoteBtn.addEventListener("click", handleSaveAsNote);
 sendBtn.addEventListener("click", handleSend);
+noteTemplateSelect.addEventListener("change", () => {
+  state.noteTemplateId = "general";
+  noteTemplateSelect.value = "general";
+});
+meetingReviewBackBtn.addEventListener("click", leaveProcessingOrMeeting);
+meetingReviewSaveBtn.addEventListener("click", commitMeetingReview);
+meetingPauseBtn.addEventListener("click", () => {
+  if (state.processingKind === "transcription") {
+    void deleteCurrentTranscriptionNote();
+  }
+});
+meetingRetryBtn.addEventListener("click", () => {
+  if (state.processingKind === "transcription") {
+    void retryCurrentTranscriptionNote();
+    return;
+  }
+  runMeetingGeneration({ resume: true });
+});
+meetingCancelBtn.addEventListener("click", leaveProcessingOrMeeting);
+meetingReviewForm.addEventListener("input", scheduleMeetingDraftSave);
+meetingTranscriptSearch.addEventListener("input", () => renderMeetingTranscript());
+document.querySelectorAll(".meeting-review-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".meeting-review-tab").forEach((item) => {
+      item.classList.toggle("active", item === tab);
+    });
+    document.querySelectorAll("[data-review-panel]").forEach((panel) => {
+      panel.classList.toggle("mobile-hidden", panel.dataset.reviewPanel !== tab.dataset.reviewPane);
+    });
+  });
+});
+window.desktopSTT.onTranscriptionStatus(handleTranscriptionStatus);
+window.addEventListener("beforeunload", (event) => {
+  if (!state.meetingEditDirty && !state.meetingDraftDirty) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 
 initDropdown(llmModelDropdownEl, "llm", handleLLMModelChange);
 initDropdown(ttsModelDropdownEl, "tts-model", handleTTSModelChange);
@@ -5145,7 +6332,9 @@ noteSearchInput.addEventListener("input", () => {
   loadNotesList(noteSearchInput.value.trim());
 });
 
-backToNotesBtn.addEventListener("click", () => switchView("assistant"));
+backToNotesBtn.addEventListener("click", async () => {
+  if (await confirmAndLeaveCurrentWork()) switchView("assistant");
+});
 deleteNoteBtn.addEventListener("click", handleDeleteNote);
 noteQaSendBtn.addEventListener("click", handleNoteQaSend);
 
@@ -5177,6 +6366,7 @@ noteQaInput.addEventListener("keydown", async (event) => {
 /* ========== Init ========== */
 
 initSidebarState();
+noteTemplateSelect.value = state.noteTemplateId;
 state.settingsCategory = getStoredSettingsCategory();
 renderSettingsCategory();
 initLanguage();

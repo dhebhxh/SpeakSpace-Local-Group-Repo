@@ -294,7 +294,16 @@ async function getStoreInfo() {
   };
 }
 
+<<<<<<< HEAD
 //Export the functions for use in other parts of the application
+=======
+function closeStore() {
+  if (db.open) {
+    db.close();
+  }
+}
+
+>>>>>>> 4ca0cf961d15f0abb2e41008819a29b46d7dfdbd
 module.exports = {
   createNote,
   updateNote,
@@ -309,4 +318,5 @@ module.exports = {
   listTags,
   appendConversation,
   getStoreInfo,
+  closeStore,
 };

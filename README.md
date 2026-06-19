@@ -78,6 +78,17 @@ Frontend-backend communication must strictly rely on the agreed JSON API archite
 Component-Driven Decoupling Design: Communication between the frontend, backend, and local AI atomic engines must strictly adhere to agreed strongly-typed structural contracts (Interface-Driven Design, aligning Rust Structs with TypeScript Interfaces). This guarantees high decoupling among the UI rendering layer, control logic layer, and underlying C++ model bindings (Whisper/Llama.cpp), enabling flexible migration, replacement, or upgrading of local hardware models and underlying embedded databases without modifying the frontend architecture in the future.
 
 
+
+4.4 SQL Security
+SQL Injection Prevention: All database queries and writes must strictly utilize "Parameterized Queries" (including positional parameters ? and named parameters @). Direct string concatenation is strictly prohibited.
+
+
+
+4.5 Performance & Localization
+Purely Local Execution: All database read and write operations are performed directly on the user's local hard drive via better-sqlite3 without relying on any external network connections, thereby guaranteeing the highest level of data privacy and low-latency read performance.
+
+
+
 ### 5. Definition of Done (DoD)
 5.1 Code Quality & Code Review
 The code must successfully compile with zero Compilation Errors and no severe syntax warnings.

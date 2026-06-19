@@ -57,10 +57,7 @@ Leverages Rust's FFI (Foreign Function Interface) or community native bindings (
 Supports native memory passing of streaming strings and audio feature values, linking model inference results to the control plane pipeline with ultra-low latency.
 
 
-3.4 Local Data Persistence (Data Storage - SQLite)
-Utilizes Spring Data JPA to implement data storage for historical conversation records, security logs, and the local RAG knowledge base.
-Utilizes Rust's lightweight asynchronous database framework, SQLx (或 Diesel), to directly connect to the embedded SQLite database.
-Responsible for structured storage and asynchronous secure erasure (Secure Erasure) of historical conversation records, security audit logs, and local knowledge base data.
+3.4 Comprehensive Data Storage and Retrieval Management The system must provide complete note lifecycle and data management capabilities, including: note CRUD operations and soft deletion mechanisms; storage and deserialization of AI-generated structured data (summaries/key points/action items); classification and filtering via tags and folders; advanced keyword search across titles and content; tracking of AI interaction history for individual notes; and real-time output of system status statistics required for the dashboard.
 
 
 

@@ -12,26 +12,54 @@
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/YQ` | `1c7066b` | Move UI handoff into agent docs | Yanqing | 2026-06-16 |
-| `origin/codex/meeting-note-templates` | `77b9620` | Add resilient transcription and note workflows | Yanqing | 2026-06-20 |
+| `origin/codex/meeting-note-templates` | `e7ac17c` | Fix Windows native rebuild invocation | Yanqing | 2026-06-20 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 新增 `origin/codex/meeting-note-templates`：`77b9620`
+- 更新 `origin/codex/meeting-note-templates`：`77b9620` → `e7ac17c`
 
 ### 最近提交
-- `origin/codex/meeting-note-templates` `77b9620`：Add resilient transcription and note workflows（Yanqing，2026-06-20）
-- `origin/codex/meeting-note-templates` `367fd0a`：fix: resolve db-service merge conflict markers（Yanqing，2026-06-19）
-- `origin/codex/meeting-note-templates` `113b428`：db-service comment added & code review done（Jack8ot，2026-06-19）
-- `origin/codex/meeting-note-templates` `6f6915a`：db-service comment added & code review done（Jack8ot，2026-06-19）
-- `origin/codex/meeting-note-templates` `4ca0cf9`：Close SQLite store during local verification（Yanqing，2026-06-18）
+- `origin/codex/meeting-note-templates` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
 
 ### 主要文件变化
-- 暂无可列出的文件 diff。
+- `origin/codex/meeting-note-templates`:
+  - `M  scripts/prepare-native.js`
+  - `M  tests/prepare-native.test.js`
 
 ## 更新记录
+
+### 2026-06-20 00:30 — 自动更新
+
+**分支变化**
+- 更新 `origin/codex/meeting-note-templates`：`77b96209ce586bd52432be3d23e7ee973cdf534e` → `e7ac17c82dd1a66482cb0339e1d95294f4f0a7aa`
+
+**提交摘要**
+- `origin/codex/meeting-note-templates` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
+
+**主要文件变化**
+- `M  scripts/prepare-native.js`
+- `M  tests/prepare-native.test.js`
+
+**说明：** Yanqing 修复了 `codex/meeting-note-templates` 分支中 Windows 平台原生模块编译调用的逻辑，同时更新了对应的单元测试。从 Git 提交信息看，本次为 Windows 兼容性修复，fast-forward 可安全合并。所有远端分支除本次更新外无其他变动，待确认事项保持 7 项不变。
+
+| 类型 | 说明 |
+|---|---|
+| 当前待确认 | 7 项（无新增/解决/过期） |
+| 已解决 | 0 |
+| 过期 | 0 |
+
+| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
+|---|---|---|---|---|---|
+| updated | origin/codex/meeting-note-templates | 77b9620 | e7ac17c | Yanqing | Fix Windows native rebuild invocation |
+
+**变更文件：**
+- `M  scripts/prepare-native.js`
+- `M  tests/prepare-native.test.js`
+
+---
 
 ### 2026-06-20 00:27 — 自动更新
 
@@ -47,6 +75,8 @@
 
 **主要文件变化**
 - 暂无可列出的文件 diff。
+
+---
 
 ### 2026-06-19 18:12 — origin/Jack 合并冲突修复
 
@@ -76,8 +106,6 @@
 
 ---
 
-
-
 ### 2026-06-19 11:49 — origin/feature/dod README 再次更新
 
 **分支变化**
@@ -105,8 +133,6 @@
 - `M  README.md`
 
 ---
-
-
 
 ### 2026-06-19 11:26 — origin/feature/dod README 更新
 
@@ -136,8 +162,6 @@
 
 ---
 
-
-
 ### 2026-06-19 11:23 — origin/feature/dod 更新 README.md
 
 **分支变化**
@@ -165,8 +189,6 @@
 - `M  README.md`
 
 ---
-
-
 
 ### 2026-06-19 09:02 — origin/Jack 代码审查与注释完善
 
@@ -196,8 +218,6 @@
 - `M  src/main/db-service.js`
 
 ---
-
-
 
 ### 2026-06-18 22:00 — origin/Jack SQLite 验证与 LLM 选择修复
 
@@ -231,8 +251,6 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 - `M  src/renderer/styles.css`
 
 ---
-
-
 
 ### 2026-06-18 17:00 — origin/Jack 数据层重构（SQL Feature added）
 
@@ -268,8 +286,6 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 
 ---
 
-
-
 ### 2026-06-18 15:39 — 文档刷新与 dashboard 同步
 
 本次更新无远端分支变化（所有分支 SHA 保持不变）。文档进行了以下调整：
@@ -286,8 +302,6 @@ Yanqing 对 Jack 分支进行了 3 轮修复性提交，聚焦 SQLite 数据层�
 | 过期 | 0 |
 
 ---
-
-
 
 ### 2026-06-18 15:00 — origin/Jack 侧边栏主题切换完善
 
@@ -306,8 +320,6 @@ Yanqing 完善了亮色模式中侧边栏区域的主题切换交互，修改了
 
 ---
 
-
-
 ### 2026-06-18 10:00 — origin/Jack 亮色模式 UI 打磨修复
 
 `origin/Jack` 更新：`e54f1b3` → `ca4a834`（Yanqing）
@@ -325,8 +337,6 @@ Yanqing 对 Jack 分支的亮色模式前端做了打磨修复，修改了 note-
 
 ---
 
-
-
 ### 2026-06-18 01:00 — origin/Jack 前端亮色主题完善
 
 `origin/Jack` 更新：`f499af0` → `e54f1b3`（Jack8ot）
@@ -342,8 +352,6 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 - `M  .gitignore`
 
 ---
-
-
 
 ### 2026-06-17 11:00 — origin/main 里程碑合并
 
@@ -361,7 +369,7 @@ Jack8ot 对前端亮色模式做了进一步完善和 UI 修复，更新了样�
 
 ---
 
-*本文件共保留 13 条更新记录（最近 20 条内）。*
+*本文件共保留 14 条更新记录（最近 20 条内）。*
 
 ## 当前待确认事项
 
@@ -389,31 +397,62 @@ SpeakSpace Local 是一个本地优先的桌面项目。当前总览基于仓库
 
 从仓库结构和 package.json 静态识别到：
 
-- Electron/Node 项目入口：`npm start` / `electron .`
-- 本地 runtime 下载与检查脚本：见下方开发信息
-- 文档与交付材料位于 `docs/`、根目录 README / proposal 等文件
-- 源码主要位于 `src/`
+- Electron/Node 桌面应用，目标是将「本地录音 / 文件导入 / 语音转写 / 本地大模型整理 / 本地语音播报 / 笔记沉淀」串成完整离线工作流
+- 三条本地 AI 能力已统一接入：
+  - **STT**：`whisper.cpp` + `ggml-large-v3-turbo-q5_0.bin`（默认）
+  - **LLM**：`Ollama` + 可切换本地模型，默认 `qwen3:4b-instruct`
+  - **TTS**：`sherpa-onnx-node` + `kokoro-multi-lang-v1_0`
+- 运行时与模型下载、删除、状态检测脚本
+- 项目内统一托管目录 `.speakspace-data/`
+- 笔记保存、结构化整理、对笔记继续问答
+- 本地硬件检测与推理能力提示
+- 中英文界面切换与本地状态持久化
+- GitHub Actions CI：`.github/workflows/verify-local.yml`
+
+### 最近新增/活跃功能（从提交推断）
+
+- `origin/Jack`：SQLite 数据层（统一 db-service.js），亮色模式主题切换，UI 打磨
+- `origin/codex/meeting-note-templates`：弹性的转录与笔记工作流，Windows 原生编译修复
+- `origin/LF-c-patch-1`：亮色模式切换按钮
 
 ## 运行与开发信息（静态识别）
 
 package.json scripts：
 
-- `native:electron`: `node ./scripts/prepare-native.js electron`
-- `native:node`: `node ./scripts/prepare-native.js node`
-- `start`: `npm run native:electron && electron .`
-- `download:runtime`: `node ./scripts/download-runtime.js`
-- `download:tts`: `node ./scripts/download-tts-runtime.js`
-- `download:llm`: `node ./scripts/download-llm-runtime.js`
-- `download:llm:candidates`: `node ./scripts/download-llm-runtime.js --preset candidates`
-- `download:runtime:check`: `node ./scripts/download-runtime.js --check`
-- `download:tts:check`: `node ./scripts/download-tts-runtime.js --check`
-- `download:llm:check`: `node ./scripts/download-llm-runtime.js --check`
-- `cleanup:assets`: `node ./scripts/cleanup-local-assets.js`
-- `verify:local`: `npm run native:node && node ./scripts/verify-local.js`
-- `test`: `npm run native:node && node --test tests/*.test.js`
+- `native:electron`：`node ./scripts/prepare-native.js electron`
+- `native:node`：`node ./scripts/prepare-native.js node`
+- `start`：`npm run native:electron && electron .`
+- `download:runtime`：`node ./scripts/download-runtime.js`
+- `download:tts`：`node ./scripts/download-tts-runtime.js`
+- `download:llm`：`node ./scripts/download-llm-runtime.js`
+- `download:llm:candidates`：`node ./scripts/download-llm-runtime.js --preset candidates`
+- `download:runtime:check`：`node ./scripts/download-runtime.js --check`
+- `download:tts:check`：`node ./scripts/download-tts-runtime.js --check`
+- `download:llm:check`：`node ./scripts/download-llm-runtime.js --check`
+- `cleanup:assets`：`node ./scripts/cleanup-local-assets.js`
+- `verify:local`：`npm run native:node && node ./scripts/verify-local.js`
+- `test`：`npm run native:node && node --test tests/*.test.js`
 
-> 注意：自动任务未运行测试、build 或 dev server；上面只是静态识别到的命令。
+### 依赖（package.json 识别）
 
-- 最后更新：2026-06-20 00:27
+- `dependencies`：`better-sqlite3`、`sherpa-onnx`、`sherpa-onnx-node`
+- `devDependencies`：`electron`
+
+### 项目结构概览
+
+- `src/main/` — 主进程：音频、转录、LLM、TTS、数据层服务
+- `src/preload/` — Electron preload 脚本
+- `src/renderer/` — 渲染进程：HTML/CSS/JS 前端、笔记视图、转写视图
+- `scripts/` — 工具脚本（下载、清理、验证）
+- `tests/` — 单元测试（Node `--test`）
+- `docs/` — 客户会议评估准备文档（中英双语）
+
+### 注意事项
+
+- 自动任务未运行测试、build 或 dev server；以上命令为静态识别，实际执行可能有环境依赖差异。
+- Windows 环境下 `npm.ps1` 可能被 PowerShell 执行策略拦截，建议先在 PowerShell 中检查执行策略或使用 `cmd` 替代。
+- 项目默认使用本地模型，首次运行需要下载相应的 runtime 和模型文件。
+
+- 最后更新：2026-06-20 00:30
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 - 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`

@@ -8,16 +8,39 @@ const projectRoot = path.resolve(__dirname, "..");
 
 const syntaxTargets = [
   "scripts/download-llm-runtime.js",
+  "scripts/prepare-native.js",
   "scripts/verify-local.js",
   "src/main/main.js",
+  "src/main/audio-duration.js",
+  "src/main/audio-retention.js",
   "src/main/db-service.js",
+  "src/main/structured-processor.js",
   "src/main/transcription-service.js",
   "src/preload/preload.js",
+  "src/renderer/drop-input.js",
+  "src/renderer/draft-conversation-context.js",
   "src/renderer/ime-events.js",
+  "src/renderer/note-draft-source.js",
+  "src/renderer/note-library-state.js",
+  "src/renderer/note-summary-view.js",
+  "src/renderer/transcribed-draft-view.js",
+  "src/renderer/transcription-progress-view.js",
   "src/renderer/renderer.js",
+  "src/renderer/transcript-view.js",
 ];
 
-const dynamicRendererIds = new Set(["trashRestoreBtn", "trashPermanentDeleteBtn"]);
+const dynamicRendererIds = new Set([
+  "trashRestoreBtn",
+  "trashPermanentDeleteBtn",
+  "meetingEditBtn",
+  "convertMeetingBtn",
+  "savedMeetingEditForm",
+  "savedMeetingTitle",
+  "savedMeetingSummary",
+  "savedMeetingTags",
+  "savedMeetingCancelBtn",
+  "savedMeetingSaveBtn",
+]);
 const dbServiceModulePath = "../src/main/db-service";
 
 function runNodeCheck(filePath) {

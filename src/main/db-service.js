@@ -52,9 +52,40 @@ db.exec(`
     tags TEXT,
     folder TEXT,
     performance TEXT,
-    conversations TEXT
+    conversations TEXT,
+    templateId TEXT DEFAULT 'general',
+    sourceNoteId TEXT,
+    structuredData TEXT,
+    status TEXT DEFAULT 'ready',
+    statusMessage TEXT,
+    transcriptSegments TEXT
   );
 `);
+
+const requiredNoteColumns = [
+  { name: "templateId", definition: "templateId TEXT DEFAULT 'general'" },
+  { name: "sourceNoteId", definition: "sourceNoteId TEXT" },
+  { name: "structuredData", definition: "structuredData TEXT" },
+  { name: "status", definition: "status TEXT DEFAULT 'ready'" },
+  { name: "statusMessage", definition: "statusMessage TEXT" },
+  { name: "transcriptSegments", definition: "transcriptSegments TEXT" },
+];
+const existingNoteColumns = new Set(
+  db.prepare("PRAGMA table_info(notes)").all().map((column) => column.name)
+);
+const missingNoteColumns = requiredNoteColumns.filter(
+  (column) => !existingNoteColumns.has(column.name)
+);
+let migrationBackupPath = null;
+
+if (missingNoteColumns.length > 0) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  migrationBackupPath = path.join(getStoreDir(), `notes-pre-template-migration-${timestamp}.db`);
+  db.prepare("VACUUM INTO ?").run(migrationBackupPath);
+  for (const column of missingNoteColumns) {
+    db.exec(`ALTER TABLE notes ADD COLUMN ${column.definition}`);
+  }
+}
 
 //Generate a unique ID for a new note
 function generateId() {
@@ -64,13 +95,20 @@ function generateId() {
 //Parse a database row into a note object with structured fields / String -> Array / DB -> Frontend
 function deserializeNote(row) {
   if (!row) return null;
+  const legacyStructured = {
+    summary: row.summary || "",
+    keyPoints: row.keyPoints ? JSON.parse(row.keyPoints) : [],
+    actionItems: row.actionItems ? JSON.parse(row.actionItems) : []
+  };
+  const structured = row.structuredData ? JSON.parse(row.structuredData) : legacyStructured;
   const note = {
     ...row,
-    structured: {
-      summary: row.summary || "",
-      keyPoints: row.keyPoints ? JSON.parse(row.keyPoints) : [],
-      actionItems: row.actionItems ? JSON.parse(row.actionItems) : []
-    },
+    templateId: row.templateId || "general",
+    sourceNoteId: row.sourceNoteId || null,
+    status: row.status || "ready",
+    statusMessage: row.statusMessage || "",
+    transcriptSegments: row.transcriptSegments ? JSON.parse(row.transcriptSegments) : [],
+    structured,
     tags: row.tags ? JSON.parse(row.tags) : [],
     performance: row.performance ? JSON.parse(row.performance) : null,
     conversations: row.conversations ? JSON.parse(row.conversations) : [],
@@ -78,6 +116,7 @@ function deserializeNote(row) {
   delete note.summary;
   delete note.keyPoints;
   delete note.actionItems;
+  delete note.structuredData;
   return note;
 }
 
@@ -101,11 +140,17 @@ async function createNote(noteData) {
     folder: noteData.folder || "default",
     performance: noteData.performance ? JSON.stringify(noteData.performance) : null,
     conversations: noteData.conversations ? JSON.stringify(noteData.conversations) : JSON.stringify([]),
+    templateId: noteData.templateId || "general",
+    sourceNoteId: noteData.sourceNoteId || null,
+    structuredData: JSON.stringify(st),
+    status: noteData.status || "ready",
+    statusMessage: noteData.statusMessage || null,
+    transcriptSegments: JSON.stringify(noteData.transcriptSegments || []),
   };
 
   const insert = db.prepare(`
-    INSERT INTO notes (id, title, createdAt, updatedAt, deletedAt, audioPath, transcript, summary, keyPoints, actionItems, tags, folder, performance, conversations)
-    VALUES (@id, @title, @createdAt, @updatedAt, @deletedAt, @audioPath, @transcript, @summary, @keyPoints, @actionItems, @tags, @folder, @performance, @conversations)
+    INSERT INTO notes (id, title, createdAt, updatedAt, deletedAt, audioPath, transcript, summary, keyPoints, actionItems, tags, folder, performance, conversations, templateId, sourceNoteId, structuredData, status, statusMessage, transcriptSegments)
+    VALUES (@id, @title, @createdAt, @updatedAt, @deletedAt, @audioPath, @transcript, @summary, @keyPoints, @actionItems, @tags, @folder, @performance, @conversations, @templateId, @sourceNoteId, @structuredData, @status, @statusMessage, @transcriptSegments)
   `);
   
   insert.run(note);
@@ -138,7 +183,13 @@ async function updateNote(noteId, updates) {
         tags = @tags,
         folder = @folder,
         performance = @performance,
-        conversations = @conversations
+        conversations = @conversations,
+        templateId = @templateId,
+        sourceNoteId = @sourceNoteId,
+        structuredData = @structuredData,
+        status = @status,
+        statusMessage = @statusMessage,
+        transcriptSegments = @transcriptSegments
     WHERE id = @id
   `);
 
@@ -150,6 +201,12 @@ async function updateNote(noteId, updates) {
     tags: updatedNote.tags ? JSON.stringify(updatedNote.tags) : JSON.stringify([]),
     performance: updatedNote.performance ? JSON.stringify(updatedNote.performance) : null,
     conversations: updatedNote.conversations ? JSON.stringify(updatedNote.conversations) : JSON.stringify([]),
+    templateId: updatedNote.templateId || "general",
+    sourceNoteId: updatedNote.sourceNoteId || null,
+    structuredData: JSON.stringify(st),
+    status: updatedNote.status || "ready",
+    statusMessage: updatedNote.statusMessage || null,
+    transcriptSegments: JSON.stringify(updatedNote.transcriptSegments || []),
   });
 
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
@@ -181,6 +238,11 @@ async function permanentlyDeleteNote(noteId) {
   const del = db.prepare(`DELETE FROM notes WHERE id = ?`);
   del.run(noteId);
   return { success: true };
+}
+
+async function countNotesUsingAudioPath(audioPath) {
+  if (typeof audioPath !== "string" || !audioPath) return 0;
+  return db.prepare("SELECT COUNT(*) AS count FROM notes WHERE audioPath = ?").get(audioPath).count;
 }
 
 //Delete a note by moving it to the trash (soft delete)
@@ -279,6 +341,70 @@ async function appendConversation(noteId, message) {
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
 }
 
+async function setActionItemCompletion(noteId, actionItemId, isCompleted) {
+  if (typeof actionItemId !== "string" || !actionItemId.trim()) {
+    throw new Error("A valid action item id is required.");
+  }
+
+  const note = await getNote(noteId);
+  const actionItems = Array.isArray(note.structured?.actionItems)
+    ? note.structured.actionItems
+    : [];
+  let found = false;
+  const updatedActionItems = actionItems.map((item) => {
+    if (!item || typeof item !== "object" || item.id !== actionItemId) return item;
+    found = true;
+    return {
+      ...item,
+      status: isCompleted ? "completed" : "pending",
+      completedAt: isCompleted ? new Date().toISOString() : null,
+    };
+  });
+
+  if (!found) {
+    const error = new Error(`Action item not found: ${actionItemId}`);
+    error.code = "ACTION_ITEM_NOT_FOUND";
+    throw error;
+  }
+
+  return updateNote(noteId, {
+    structured: { ...note.structured, actionItems: updatedActionItems },
+  });
+}
+
+async function markInterruptedTranscriptions() {
+  const interruptedRows = db
+    .prepare("SELECT * FROM notes WHERE deletedAt IS NULL AND status = ? ORDER BY createdAt ASC")
+    .all("transcribing");
+  if (interruptedRows.length === 0) return [];
+
+  const now = new Date().toISOString();
+  const update = db.prepare(`
+    UPDATE notes
+    SET status = ?,
+        statusMessage = ?,
+        updatedAt = ?
+    WHERE id = ?
+  `);
+
+  const message = "Transcription interrupted because the app was closed.";
+  const transaction = db.transaction((rows) => {
+    for (const row of rows) {
+      update.run("error", message, now, row.id);
+    }
+  });
+  transaction(interruptedRows);
+
+  return interruptedRows.map((row) =>
+    deserializeNote({
+      ...row,
+      status: "error",
+      statusMessage: message,
+      updatedAt: now,
+    })
+  );
+}
+
 //Get store information including counts of active and deleted notes, folders, and tags
 async function getStoreInfo() {
   const activeCount = db.prepare("SELECT COUNT(*) as count FROM notes WHERE deletedAt IS NULL").get().count;
@@ -287,6 +413,7 @@ async function getStoreInfo() {
   return {
     storePath: getStoreDir(),
     dbPath: getDbPath(),
+    migrationBackupPath,
     noteCount: activeCount,
     trashCount: trashCount,
     folders: await listFolders(),
@@ -308,12 +435,15 @@ module.exports = {
   moveNoteToTrash,
   restoreNote,
   permanentlyDeleteNote,
+  countNotesUsingAudioPath,
   getNote,
   listNotes,
   listDeletedNotes,
   listFolders,
   listTags,
   appendConversation,
+  setActionItemCompletion,
+  markInterruptedTranscriptions,
   getStoreInfo,
   closeStore,
 };

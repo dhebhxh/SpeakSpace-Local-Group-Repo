@@ -16,6 +16,8 @@ const {
   getSTTWhisperRoot,
   getSTTWhisperBinDir,
 } = require("./managed-paths");
+const { getMediaDurationMs } = require("./audio-duration");
+const { parseSherpaSegments, parseWhisperSegments } = require("./transcript-segments");
 
 const DEFAULT_MODEL = "ggml-large-v3-turbo-q5_0.bin";
 const DEFAULT_STT_ENGINE = "whisper";
@@ -70,6 +72,18 @@ function resolveCommandPath(commandName) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .find(Boolean) || null;
+}
+
+function createTranscriptionCancelledError() {
+  const error = new Error("Transcription cancelled.");
+  error.code = "TRANSCRIPTION_CANCELLED";
+  return error;
+}
+
+function throwIfAborted(signal) {
+  if (signal?.aborted) {
+    throw createTranscriptionCancelledError();
+  }
 }
 
 function isActualWhisperBinary(candidatePath) {
@@ -468,99 +482,176 @@ async function saveMicrophoneRecording(arrayBuffer) {
   };
 }
 
-async function transcribeAudio(filePath) {
+async function transcribeAudio(filePath, options = {}) {
   if (!filePath) {
     throw new Error("No file selected.");
   }
+  throwIfAborted(options.signal);
 
   const info = getRuntimeInfo();
+  const durationPromise = getMediaDurationMs(filePath);
+  let result;
   if (activeEngine === "parakeet") {
-    return transcribeAudioWithParakeet(filePath, info.parakeet);
+    result = await transcribeAudioWithParakeet(filePath, info.parakeet, options);
+  } else {
+    result = await transcribeAudioWithWhisper(filePath, info.whisper, options);
   }
-
-  return transcribeAudioWithWhisper(filePath, info.whisper);
+  throwIfAborted(options.signal);
+  result.durationMs = await durationPromise;
+  return result;
 }
 
-async function transcribeAudioWithWhisper(filePath, info) {
+async function transcribeAudioWithWhisper(filePath, info, options = {}) {
+  throwIfAborted(options.signal);
   await ensureWhisperRuntime(info);
+  throwIfAborted(options.signal);
 
   const absoluteInputPath = path.resolve(filePath);
   const outputBaseName = `${sanitizeBaseName(absoluteInputPath)}-${Date.now()}`;
   const outputBasePath = path.join(info.outputDir, outputBaseName);
   const outputTextPath = `${outputBasePath}.txt`;
+  const outputJsonPath = `${outputBasePath}.json`;
   const threadCount = Math.max(1, Math.min(os.cpus().length - 1, 8));
+  const wavePath = await prepareWaveInput(
+    absoluteInputPath,
+    outputBasePath,
+    "whisper",
+    options
+  );
+  throwIfAborted(options.signal);
 
   const args = [
     "-m",
     info.modelPath,
     "-f",
-    absoluteInputPath,
+    wavePath,
     "-l",
     "auto",
     "-t",
     String(threadCount),
     "-otxt",
+    "-oj",
     "-of",
     outputBasePath,
   ];
 
-  const result = await new Promise((resolve, reject) => {
-    let stdout = "";
-    let stderr = "";
+  try {
+    return await new Promise((resolve, reject) => {
+      let stdout = "";
+      let stderr = "";
+      let settled = false;
+      let onAbort = null;
 
-    const child = spawn(info.whisperCliPath, args, {
-      cwd: info.runtimeLocation === "portable" ? info.whisperBinDir : getProjectRoot(),
-      windowsHide: process.platform === "win32",
-    });
+      const cleanup = () => {
+        if (onAbort && options.signal) {
+          options.signal.removeEventListener("abort", onAbort);
+        }
+      };
 
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
-    });
+      const finishResolve = (value) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(value);
+      };
 
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
+      const finishReject = (error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
 
-    child.on("error", (error) => {
-      reject(error);
-    });
+      const child = spawn(info.whisperCliPath, args, {
+        cwd: info.runtimeLocation === "portable" ? info.whisperBinDir : getProjectRoot(),
+        windowsHide: process.platform === "win32",
+      });
 
-    child.on("close", async (code) => {
-      if (code !== 0) {
-        reject(
-          new Error(
-            `whisper-cli exited with code ${code}\n${stderr || stdout || ""}`.trim()
-          )
-        );
-        return;
+      onAbort = () => {
+        child.kill();
+        finishReject(createTranscriptionCancelledError());
+      };
+
+      if (options.signal) {
+        if (options.signal.aborted) {
+          onAbort();
+          return;
+        }
+        options.signal.addEventListener("abort", onAbort, { once: true });
       }
 
-      try {
-        let text = "";
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk.toString();
+      });
 
-        try {
-          text = (await fs.readFile(outputTextPath, "utf8")).trim();
-        } catch (_error) {
-          text = stdout.trim();
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
+
+      child.on("error", finishReject);
+
+      child.on("close", async (code) => {
+        if (settled) return;
+        if (options.signal?.aborted) {
+          finishReject(createTranscriptionCancelledError());
+          return;
+        }
+        if (code !== 0) {
+          finishReject(
+            new Error(
+              `whisper-cli exited with code ${code}\n${stderr || stdout || ""}`.trim()
+            )
+          );
+          return;
         }
 
-        resolve({
-          text,
-          stdout,
-          stderr,
-          outputTextPath,
-          outputBasePath,
-          modelPath: info.modelPath,
-          modelName: info.modelName,
-          inputPath: absoluteInputPath,
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
+        try {
+          let text = "";
+          let segments = [];
 
-  return result;
+          try {
+            const json = JSON.parse(await fs.readFile(outputJsonPath, "utf8"));
+            segments = parseWhisperSegments(json);
+          } catch (_error) {
+            segments = [];
+          }
+
+          try {
+            text = (await fs.readFile(outputTextPath, "utf8")).trim();
+          } catch (_error) {
+            text = stdout.trim();
+          }
+
+          if (!text && segments.length > 0) {
+            text = segments.map((segment) => segment.text).join(" ").trim();
+          }
+          if (!text) {
+            finishReject(new Error((stderr || "Transcription result is empty.").trim()));
+            return;
+          }
+
+          throwIfAborted(options.signal);
+          finishResolve({
+            text,
+            segments,
+            stdout,
+            stderr,
+            outputTextPath,
+            outputBasePath,
+            modelPath: info.modelPath,
+            modelName: info.modelName,
+            inputPath: absoluteInputPath,
+          });
+        } catch (error) {
+          finishReject(error);
+        }
+      });
+    });
+  } finally {
+    if (wavePath !== absoluteInputPath) {
+      await fs.rm(wavePath, { force: true });
+    }
+  }
 }
 
 function ensureParakeetNodeModule() {
@@ -616,31 +707,71 @@ async function getParakeetRecognizer(info) {
 }
 
 function runProcess(command, args, options = {}) {
+  const { signal, ...spawnOptions } = options;
+  throwIfAborted(signal);
+
   return new Promise((resolve, reject) => {
     let stderr = "";
+    let settled = false;
+    let onAbort = null;
+
+    const cleanup = () => {
+      if (onAbort && signal) {
+        signal.removeEventListener("abort", onAbort);
+      }
+    };
+
+    const finishResolve = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve();
+    };
+
+    const finishReject = (error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+
     const child = spawn(command, args, {
       stdio: ["ignore", "ignore", "pipe"],
       windowsHide: process.platform === "win32",
-      ...options,
+      ...spawnOptions,
     });
+
+    onAbort = () => {
+      child.kill();
+      finishReject(createTranscriptionCancelledError());
+    };
+
+    if (signal) {
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
 
     child.stderr.on("data", (chunk) => {
       stderr += chunk.toString();
     });
 
-    child.on("error", reject);
+    child.on("error", finishReject);
     child.on("close", (code) => {
       if (code === 0) {
-        resolve();
+        finishResolve();
         return;
       }
 
-      reject(new Error((stderr || `Command failed: ${command} ${args.join(" ")}`).trim()));
+      finishReject(new Error((stderr || `Command failed: ${command} ${args.join(" ")}`).trim()));
     });
   });
 }
 
-async function prepareParakeetWaveInput(absoluteInputPath, outputBasePath) {
+async function prepareWaveInput(absoluteInputPath, outputBasePath, engineName, options = {}) {
+  throwIfAborted(options.signal);
   if (path.extname(absoluteInputPath).toLowerCase() === ".wav") {
     return absoluteInputPath;
   }
@@ -648,26 +779,38 @@ async function prepareParakeetWaveInput(absoluteInputPath, outputBasePath) {
   const ffmpegPath = resolveCommandPath("ffmpeg");
   if (!ffmpegPath) {
     throw new Error(
-      "Parakeet local transcription currently requires WAV input unless ffmpeg is installed for audio conversion."
+      `${engineName || "Local"} transcription requires ffmpeg to convert this file to WAV.`
     );
   }
 
-  const convertedPath = `${outputBasePath}.parakeet.wav`;
-  await runProcess(ffmpegPath, [
-    "-y",
-    "-i",
-    absoluteInputPath,
-    "-ac",
-    "1",
-    "-ar",
-    "16000",
-    convertedPath,
-  ]);
+  const convertedPath = `${outputBasePath}.${engineName || "input"}.wav`;
+  await runProcess(
+    ffmpegPath,
+    [
+      "-y",
+      "-i",
+      absoluteInputPath,
+      "-c:a",
+      "pcm_s16le",
+      "-ac",
+      "1",
+      "-ar",
+      "16000",
+      convertedPath,
+    ],
+    { signal: options.signal }
+  );
   return convertedPath;
 }
 
-async function transcribeAudioWithParakeet(filePath, info) {
+async function prepareParakeetWaveInput(absoluteInputPath, outputBasePath, options = {}) {
+  return prepareWaveInput(absoluteInputPath, outputBasePath, "parakeet", options);
+}
+
+async function transcribeAudioWithParakeet(filePath, info, options = {}) {
+  throwIfAborted(options.signal);
   await ensureParakeetRuntime(info);
+  throwIfAborted(options.signal);
 
   const absoluteInputPath = path.resolve(filePath);
   const outputDir = getSTTOutputDir();
@@ -676,18 +819,23 @@ async function transcribeAudioWithParakeet(filePath, info) {
   const outputTextPath = `${outputBasePath}.txt`;
   await fs.mkdir(outputDir, { recursive: true });
 
-  const wavePath = await prepareParakeetWaveInput(absoluteInputPath, outputBasePath);
+  const wavePath = await prepareParakeetWaveInput(absoluteInputPath, outputBasePath, options);
+  throwIfAborted(options.signal);
   const sherpa = ensureParakeetNodeModule();
   const recognizer = await getParakeetRecognizer(info);
+  throwIfAborted(options.signal);
   const stream = recognizer.createStream();
   const wave = sherpa.readWave(wavePath);
   stream.acceptWaveform(wave);
   const result = await recognizer.decodeAsync(stream);
+  throwIfAborted(options.signal);
   const text = (result.text || "").trim();
+  const segments = parseSherpaSegments(result);
   await fs.writeFile(outputTextPath, text, "utf8");
 
   return {
     text,
+    segments,
     stdout: "",
     stderr: "",
     outputTextPath,

@@ -27,7 +27,6 @@ Expected documentation/evaluation areas:
 - `stt-evaluation/` or equivalent STT benchmark reports.
 - `llm-evaluation/` or equivalent LLM/SLM benchmark reports.
 - `project-proposal.md` and report-planning documents.
-- `docs/agents/speakspace-ui-pr6-handoff-2026-06-15.md` records the latest UI/settings handoff for PR #6, including homepage STT tooltips, Local LLM/Text-to-Speech settings alignment, model-card storage badges, and cross-platform verification notes.
 
 ## Local-First Constraint
 

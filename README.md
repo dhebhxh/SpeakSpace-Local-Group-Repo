@@ -66,9 +66,12 @@
 
 ### 5. 笔记存储与检索
 
-- 支持保存笔记
+- 基于 SQLite 进行本地结构化存储，支持保存笔记
 - 支持按文件夹、标签、关键词过滤
 - 支持在笔记详情页继续追加问答消息
+- 支持完整的回收站机制（软删除、恢复、彻底删除）
+- 支持对 LLM 提取的行动项（Action Items）进行“已完成/未完成”的状态管理
+- 具备转写防呆机制，应用意外关闭时能自动标记并处理中断的转写任务
 
 ### 6. 针对笔记的继续提问
 
@@ -130,7 +133,7 @@
 
 ### 数据与存储
 
-- JSON 文件型笔记存储
+- SQLite 数据库型笔记存储 (基于 better-sqlite3)
 - 项目内统一托管目录
 - Electron `userData` 目录下的笔记数据库
 
@@ -194,14 +197,15 @@ npm.cmd start
 2. npm 展开 `start` 脚本，实际执行 `electron .`
 3. Electron 读取 `package.json` 中的 `main` 字段
 4. 入口来到 `src/main/main.js`
-5. 主进程初始化窗口、权限、IPC
-6. 主窗口加载 `src/renderer/index.html`
-7. `preload.js` 把受控 API 挂到 `window.desktopSTT`
-8. 渲染层 `renderer.js` 开始刷新运行时状态、绑定交互、渲染 UI
+5. 主进程加载 db-service.js，初始化本地 SQLite 数据库并完成表结构同步
+6. 主进程初始化窗口、权限、IPC
+7. 主窗口加载 `src/renderer/index.html`
+8. `preload.js` 把受控 API 挂到 `window.desktopSTT`
+9. 渲染层 `renderer.js` 开始刷新运行时状态、绑定交互、渲染 UI
 
 其中：
 
-- 主进程负责本地文件系统、运行时下载、子进程调用、硬件信息、模型调用
+- 主进程负责本地文件系统、运行时下载、子进程调用、硬件信息、模型调用以及 SQLite 本地数据库的读写与版本迁移
 - 预加载层负责把 IPC 能力以白名单 API 暴露给前端
 - 渲染层负责界面、交互、状态管理、播放控制、笔记视图和设置面板
 
@@ -248,7 +252,7 @@ npm.cmd start
   - 语音合成
 - `tts-worker.js`
   - TTS 子进程工作逻辑
-- `note-store.js`
+- `db-service.js`
   - 笔记增删改查
   - 文件夹 / 标签聚合
   - 问答消息追加
@@ -393,7 +397,7 @@ npm.cmd start
 当前存储实现：
 
 - 笔记目录：`app.getPath("userData")/speakspace-notes`
-- 数据文件：`notes-db.json`
+- 数据文件：`notes.db`
 
 每条笔记包含：
 
@@ -401,13 +405,22 @@ npm.cmd start
 - `title`
 - `createdAt`
 - `updatedAt`
+- `deletedAt`
 - `audioPath`
 - `transcript`
-- `structured`
+- `summary`
+- `keyPoints`
+- `actionItems`
 - `tags`
 - `folder`
 - `performance`
 - `conversations`
+- `templateId`
+- `sourceNoteId`
+- `structuredData`
+- `status`
+- `statusMessage`
+- `transcriptSegments`
 
 这使得应用本体和模型目录可以清理，而笔记数据仍可独立管理。
 
@@ -453,8 +466,8 @@ npm.cmd start
 
 1. 用户在某条笔记详情页发问
 2. 系统把笔记标题、摘要、要点、行动项、转写摘录和近期对话组装成上下文
-3. 再调用本地 `LLM`
-4. 回答追加到笔记对话记录
+3. 调用本地 LLM 生成回答并返回给前端
+4. 前端收到回答后，调用 db-service.js 的追加方法，将“用户的提问”与“LLM 的回答”一并存入 SQLite 数据库中该条笔记的 conversations 字段，完成持久化
 
 ### 6. TTS 播报流
 
@@ -530,7 +543,7 @@ src/
     llm-service.js
     tts-service.js
     tts-worker.js
-    note-store.js
+    db-service.js
     structured-processor.js
   preload/
     preload.js

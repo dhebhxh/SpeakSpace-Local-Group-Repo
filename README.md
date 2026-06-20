@@ -4,13 +4,14 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-20 00:54
+- 最后更新：2026-06-20 15:07
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
+| `origin/Jack` | `f06b9c6` | Update README.md info related to SQL | Jack8ot | 2026-06-20 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/codex/remove-agent-handoff` | `dab0ebb` | Remove obsolete agent handoff | Yanqing | 2026-06-20 |
@@ -20,11 +21,31 @@
 
 ## 最近变化摘要
 
-- 删除 `origin/codex/meeting-note-templates`（`e7ac17c` → 已移除）
-- 该分支此前已通过 PR #8 合入 `origin/Jack`，Jack 分支现为会议笔记模板及其工作流的主承载分支
-- 已解决 1 项待确认事项（LLM 评估结果落地），当前 5 项待确认
+- 更新 `origin/Jack`：`e23164a` → `f06b9c6`（Jack8ot：Update README.md info related to SQL）
+- 本次更新无新增/删除分支，无待确认事项状态变化
+- 当前 5 项待确认事项，1 项已解决事项
 
 ## 更新记录
+
+### 2026-06-20 15:07 — 自动更新
+
+**分支变化**
+- 更新 `origin/Jack`：`e23164a` → `f06b9c6`
+
+**提交摘要**
+- `origin/Jack` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
+
+**文件变化**
+- `M	README.md`
+
+**事项状态变化**
+- 无变化：5 项待确认、1 项已解决、0 项过期
+
+| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
+|---|---|---|---|---|---|
+| updated | origin/Jack | e23164a | f06b9c6 | Jack8ot | Update README.md info related to SQL |
+
+---
 
 ### 2026-06-20 00:54 — 自动更新
 
@@ -186,7 +207,7 @@
 
 ---
 
-*本文件共保留 17 条更新记录（最近 20 条内）。*
+*本文件共保留 18 条更新记录（最近 20 条内）。*
 
 ## 当前待确认事项
 

@@ -4,6 +4,9 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
+- 最后更新：2026-06-20 00:54
+- 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
+
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
@@ -215,70 +218,3 @@
 ## 过期或证据不足事项
 
 - 最近没有过期或证据不足事项。
-
-## 当前项目概览
-
-SpeakSpace Local 是一个本地优先的桌面项目，基于 Electron 构建，目标是将「本地录音 / 文件导入 / 语音转写 / 本地大模型整理 / 本地语音播报 / 笔记沉淀」串成一条完整的离线工作流。当前总览基于仓库文档、提交记录、分支状态和项目结构静态生成；具体功能完成度仍以人工验收为准。
-
-## 当前功能与模块
-
-从仓库结构和 package.json 静态识别到：
-
-- **Electron/Node 桌面应用** — 离线运行，不依赖云端 API
-- **三条本地 AI 能力统一接入：**
-  - **STT**：`whisper.cpp` + `ggml-large-v3-turbo-q5_0.bin`（默认）
-  - **LLM**：`Ollama` + 可切换本地模型，默认 `qwen3:4b-instruct`
-  - **TTS**：`sherpa-onnx-node` + `kokoro-multi-lang-v1_0`
-- 运行时与模型下载、删除、状态检测脚本
-- 项目内统一托管目录 `.speakspace-data/`
-- 笔记保存、结构化整理、对笔记继续问答
-- 本地硬件检测与推理能力提示
-- 中英文界面切换与本地状态持久化
-- 亮色模式主题切换（`origin/LF-c-patch-1`、`origin/Jack` 均有贡献）
-- 软删除回收站工作流
-- GitHub Actions CI：`.github/workflows/verify-local.yml`（macOS + Windows）
-
-### 最近新增/活跃功能（从提交推断）
-
-- `origin/Jack`：SQLite 数据层（统一 db-service.js）、弹性的转录与笔记工作流、Windows 原生编译修复、亮色模式主题切换与 UI 打磨
-- `origin/LF-c-patch-1`：亮色模式切换按钮
-- `origin/codex/meeting-note-templates`：已合并入 Jack 后删除，内容由 Jack 继承
-
-## 运行与开发信息（静态识别）
-
-### package.json scripts
-
-| 命令 | 说明 |
-|---|---|
-| `npm start` | 准备原生模块后启动 Electron |
-| `npm run download:runtime` | 下载 STT runtime（whisper.cpp） |
-| `npm run download:tts` | 下载 TTS runtime（sherpa-onnx） |
-| `npm run download:llm` | 下载 LLM 默认模型 |
-| `npm run download:llm:candidates` | 下载候选 LLM 模型 |
-| `npm run download:runtime:check` | 检查 STT runtime 状态 |
-| `npm run download:tts:check` | 检查 TTS runtime 状态 |
-| `npm run download:llm:check` | 检查 LLM 模型状态 |
-| `npm run cleanup:assets` | 一键清理本地资源 |
-| `npm run verify:local` | 验证本地环境与集成 |
-| `npm test` | 运行单元测试（当前为占位） |
-
-### 依赖（package.json 识别）
-
-- `dependencies`：`sherpa-onnx`、`sherpa-onnx-node`
-- `devDependencies`：`electron`
-
-### 文档与评估材料
-
-| 路径 | 说明 |
-|---|---|
-| `docs/client-meeting-model-evaluation-prep.md` / `.zh.md` | 与客户会议前的模型评估准备（中英双语） |
-| `llm-evaluation/` | LLM 模型评估报告（3 轮） |
-| `stt-evaluation/desktop-stt-model-summary-report.md` | 桌面 STT 模型摘要报告 |
-| `project-proposal.md` | 项目提案（中英双语） |
-| `AGENTS.md` | 开发代理指南 |
-
-> 注意：以上信息全部基于仓库静态文件识别，不表示实际测试/运行结果。
-
-- 最后更新：2026-06-20 00:54
-- 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
-- 仓库：`https://github.com/dhebhxh/SpeakSpace-Local-Group-Repo.git`

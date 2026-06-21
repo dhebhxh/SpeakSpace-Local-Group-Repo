@@ -4,14 +4,14 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-20 15:07
+- 最后更新：2026-06-21 04:03
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
-| `origin/Jack` | `f06b9c6` | Update README.md info related to SQL | Jack8ot | 2026-06-20 |
+| `origin/Jack` | `13075df` | Add files via upload | Fan Lin | 2026-06-21 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/codex/remove-agent-handoff` | `dab0ebb` | Remove obsolete agent handoff | Yanqing | 2026-06-20 |
@@ -21,11 +21,53 @@
 
 ## 最近变化摘要
 
-- 更新 `origin/Jack`：`e23164a` → `f06b9c6`（Jack8ot：Update README.md info related to SQL）
-- 本次更新无新增/删除分支，无待确认事项状态变化
+- 更新 `origin/Jack`：`f06b9c6` → `13075df`（Fan Lin：Add files via upload）—— 大幅更新，含约60个文件变动
+- 本次新增文件：embedding-service.js、agent-orchestrator.js、download-embedding-model.js、agent-design.md 及对应测试
+- 无新增/删除分支，无事项状态变化
 - 当前 5 项待确认事项，1 项已解决事项
 
 ## 更新记录
+
+### 2026-06-21 04:03 — 自动更新
+
+**分支变化**
+- 更新 `origin/Jack`：`f06b9c6` → `13075df`
+
+**提交摘要**
+- `origin/Jack` `13075df`：Add files via upload（Fan Lin，2026-06-21）
+
+**关键文件变化**（fast-forward，约60个文件变动）
+
+新增文件：
+- `A  docs/agent-design.md`
+- `A  src/main/agent-orchestrator.js`
+- `A  src/main/embedding-service.js`
+- `A  scripts/download-embedding-model.js`
+- `A  tests/agent-orchestrator.test.js`
+- `A  tests/embedding-service.test.js`
+
+修改的主要文件：
+- `M  README.md`
+- `M  docs/client-meeting-model-evaluation-prep.md`
+- `M  docs/client-meeting-model-evaluation-prep.zh.md`
+- `M  src/main/llm-service.js`、`main.js`、`structured-processor.js`、`transcription-service.js`、`tts-service.js`、`tts-worker.js`
+- `M  src/main/audio-duration.js`、`audio-retention.js`、`db-service.js`、`managed-paths.js`、`transcript-segments.js`、`transcription-job-manager.js`
+- `M  src/preload/preload.js`
+- `M  src/renderer/` 多个文件（draft-conversation-context.js, drop-input.js, ime-events.js, index.html, note-draft-source.js, note-library-state.js, note-summary-view.js, renderer.js, styles.css, transcribed-draft-view.js, transcript-view.js, transcription-progress-view.js）
+- `M  scripts/` 多个文件（cleanup-local-assets.*, download-llm-runtime.*, download-runtime.*, download-tts-runtime.js, ollama-model-catalog.json, prepare-native.js, verify-local.js）
+- `M  stt-evaluation/desktop-stt-model-summary-report.md`
+- `M  project-proposal.md`
+- `M  package.json`、`package-lock.json`
+- `M  tests/` 多个测试文件
+
+**事项状态变化**
+- 无变化：5 项待确认、1 项已解决、0 项过期
+
+| 类型 | 分支 | 旧 SHA | 新 SHA | 作者 | 最新提交 |
+|---|---|---|---|---|---|
+| updated | origin/Jack | f06b9c6 | 13075df | Fan Lin | Add files via upload |
+
+---
 
 ### 2026-06-20 15:07 — 自动更新
 
@@ -36,7 +78,7 @@
 - `origin/Jack` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
 
 **文件变化**
-- `M	README.md`
+- `M  README.md`
 
 **事项状态变化**
 - 无变化：5 项待确认、1 项已解决、0 项过期
@@ -207,7 +249,7 @@
 
 ---
 
-*本文件共保留 18 条更新记录（最近 20 条内）。*
+*本文件共保留 19 条更新记录（最近 20 条内）。*
 
 ## 当前待确认事项
 

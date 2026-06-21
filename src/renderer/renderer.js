@@ -2,7 +2,7 @@ const APP_LANGUAGE_STORAGE_KEY = "speakspace.uiLanguage";
 const DEFAULT_APP_LANGUAGE = "en";
 const LANGUAGE_OPTIONS = ["en", "zh-CN"];
 const SETTINGS_CATEGORY_STORAGE_KEY = "speakspace.settingsCategory";
-const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storage"];
+const SETTINGS_CATEGORIES = ["general", "stt", "llm", "embedding", "tts"];
 const STT_ENGINE_OPTIONS = ["whisper", "parakeet"];
 const textInputEvents = window.SpeakSpaceIme;
 const THEME_STORAGE_KEY = "speakspace.theme";
@@ -284,6 +284,11 @@ const I18N = {
     languageEnglish: "English",
     languageChinese: "简体中文",
     llmModelLabel: "Model",
+    embeddingTitle: "Embedding",
+    embeddingModelsTitle: "Embedding models",
+    embeddingHelp:
+      "Local embedding model that powers semantic note search. Runs on the same Ollama runtime.",
+    embeddingNotReady: "Model needed",
     ttsStatusChecking: "Checking...",
     sttHelpReady: "STT runtime and default model are ready.",
     sttHelpReadyProject:
@@ -331,6 +336,16 @@ const I18N = {
     deleteSucceeded: "{target} was deleted.",
     deleteFailed: "{target} delete failed: {message}",
     downloadCancelled: "Download cancelled.",
+    downloadsTitle: "Downloads",
+    downloadsActive: "{count} active",
+    downloadPhaseStarting: "Preparing…",
+    downloadPhaseDownloading: "Downloading",
+    downloadPhaseExtracting: "Extracting…",
+    downloadPhaseInstalling: "Installing runtime…",
+    downloadElapsed: "Elapsed",
+    downloadEta: "ETA",
+    downloadCalculating: "Calculating…",
+    downloadsHandleTooltip: "Downloads in progress",
     runtimeNeeded: "Runtime not detected — click to download",
     runtimeReady: "Runtime is ready",
     setupStepRuntime: "Step 1: Download Runtime",
@@ -609,6 +624,10 @@ const I18N = {
     languageEnglish: "English",
     languageChinese: "简体中文",
     llmModelLabel: "模型",
+    embeddingTitle: "向量模型",
+    embeddingModelsTitle: "向量模型",
+    embeddingHelp: "驱动笔记语义检索的本地向量模型，运行在同一个 Ollama 运行时上。",
+    embeddingNotReady: "模型未下载",
     ttsStatusChecking: "检查中...",
     sttHelpReady: "STT 运行时和默认模型已就绪。",
     sttHelpReadyProject:
@@ -656,6 +675,16 @@ const I18N = {
     deleteSucceeded: "{target} 已删除。",
     deleteFailed: "{target} 删除失败: {message}",
     downloadCancelled: "下载已取消。",
+    downloadsTitle: "下载任务",
+    downloadsActive: "{count} 个进行中",
+    downloadPhaseStarting: "准备中…",
+    downloadPhaseDownloading: "下载中",
+    downloadPhaseExtracting: "解压中…",
+    downloadPhaseInstalling: "安装运行时…",
+    downloadElapsed: "已用",
+    downloadEta: "预计剩余",
+    downloadCalculating: "计算中…",
+    downloadsHandleTooltip: "下载进行中",
     runtimeNeeded: "未检测到运行时 — 点击下载",
     runtimeReady: "运行时已就绪",
     setupStepRuntime: "第一步：下载运行时",
@@ -704,6 +733,8 @@ const state = {
     llmModelName: "",
     sttModels: [],
     llmModels: [],
+    embeddingModels: [],
+    embeddingModelName: "",
   },
   tts: {
     available: false,
@@ -744,15 +775,14 @@ const state = {
   isWorking: false,
   isRecording: false,
   recordingSeconds: 0,
-  runtimeDownloadTarget: "",
+  downloads: new Map(),
   runtimeDeleteTarget: "",
   sttEngineView: "whisper",
   assetCleanupInProgress: false,
-  modelDownloadTarget: "",
-  modelDownloadKind: "",
   modelDeleteTarget: "",
   modelDeleteKind: "",
   settingsCategory: "general",
+  agentMode: false,
   notes: [],
   deletedNotes: [],
   currentNoteId: null,
@@ -766,6 +796,10 @@ const sttStatusDotEl = document.querySelector("#sttStatusDot");
 const llmStatusDotEl = document.querySelector("#llmStatusDot");
 const sttStatusDotPanelEl = document.querySelector("#sttStatusDotPanel");
 const llmStatusDotPanelEl = document.querySelector("#llmStatusDotPanel");
+const embeddingStatusDotEl = document.querySelector("#embeddingStatusDot");
+const embeddingStatusDotPanelEl = document.querySelector("#embeddingStatusDotPanel");
+const embeddingOllamaEngineStatusEl = document.querySelector("#embeddingOllamaEngineStatus");
+const embeddingEngineDetailBadgeEl = document.querySelector("#embeddingEngineDetailBadge");
 const sttStatusTextEl = document.querySelector("#sttStatusText");
 const llmStatusTextEl = document.querySelector("#llmStatusText");
 const ttsStatusDotPanelEl = document.querySelector("#ttsStatusDotPanel");
@@ -893,6 +927,7 @@ const llmModelStorageTitleEl = document.querySelector("#llmModelStorageTitle");
 const llmModelStorageTextEl = document.querySelector("#llmModelStorageText");
 const llmModelsBadgeEl = document.querySelector("#llmModelsBadge");
 const llmModelCardsEl = document.querySelector("#llmModelCards");
+const embeddingModelCardsEl = document.querySelector("#embeddingModelCards");
 const llmEngineSettingsEl = document.querySelector(".llm-engine-settings");
 const ttsEngineListTitleEl = document.querySelector("#ttsEngineListTitle");
 const ttsKokoroEngineStatusEl = document.querySelector("#ttsKokoroEngineStatus");
@@ -1049,6 +1084,7 @@ function setInlineButtonLabel(button, label) {
 
 function applyLanguageUI() {
   document.documentElement.lang = state.uiLanguage === "zh-CN" ? "zh-CN" : "en";
+  applyAgentLanguageUI();
   fileDropTitle.textContent = t("dropMediaToTranscribe");
 
   document.querySelector("#newSessionLabel").textContent = t("newSession");
@@ -1113,7 +1149,7 @@ function applyLanguageUI() {
   noteQaPickFileBtn.setAttribute("aria-label", t("importAudio"));
   noteQaRecordToggleBtn.title = t("record");
   noteQaRecordToggleBtn.setAttribute("aria-label", t("record"));
-  promptInputEl.placeholder = t("promptPlaceholder");
+  promptInputEl.placeholder = state.agentMode ? t("agentInputPlaceholder") : t("promptPlaceholder");
   sendBtn.setAttribute("aria-label", t("send"));
   backToNotesBtn.textContent = t("backToAssistant");
   deleteNoteBtn.textContent = t("moveToTrash");
@@ -1126,9 +1162,8 @@ function applyLanguageUI() {
   document.querySelector("#settingsNavGeneral").textContent = t("settingsGeneral");
   document.querySelector("#settingsNavStt").textContent = t("sttTitle");
   document.querySelector("#settingsNavLlm").textContent = t("llmTitle");
+  document.querySelector("#settingsNavEmbedding").textContent = t("embeddingTitle");
   document.querySelector("#settingsNavTts").textContent = t("ttsTitle");
-  document.querySelector("#settingsNavHardware").textContent = t("hardwareTitle");
-  document.querySelector("#settingsNavStorage").textContent = t("settingsStorage");
   document.querySelector("#trashKicker").textContent = t("trashKicker");
   document.querySelector("#trashTitle").textContent = t("trash");
   document.querySelector("#trashListTitle").textContent = t("deletedNotes");
@@ -1139,6 +1174,14 @@ function applyLanguageUI() {
   document.querySelector("#sttGroupTitle").textContent = t("sttTitle");
   document.querySelector("#llmGroupTitle").textContent = t("llmTitle");
   document.querySelector("#llmModelLabel").textContent = t("llmModelsTitle");
+  const embeddingGroupTitleEl = document.querySelector("#embeddingGroupTitle");
+  if (embeddingGroupTitleEl) embeddingGroupTitleEl.textContent = t("embeddingTitle");
+  const embeddingModelLabelEl = document.querySelector("#embeddingModelLabel");
+  if (embeddingModelLabelEl) embeddingModelLabelEl.textContent = t("embeddingModelsTitle");
+  const embeddingHelpTextEl = document.querySelector("#embeddingHelpText");
+  if (embeddingHelpTextEl) embeddingHelpTextEl.textContent = t("embeddingHelp");
+  const embeddingEngineListTitleEl = document.querySelector("#embeddingEngineListTitle");
+  if (embeddingEngineListTitleEl) embeddingEngineListTitleEl.textContent = t("sttEngineListTitle");
   updateRuntimeDownloadButtons();
   document.querySelector("#ttsGroupTitle").textContent = t("ttsTitle");
   document.querySelector("#ttsAutoplayTitle").textContent = t("ttsAutoplayTitle");
@@ -1148,6 +1191,11 @@ function applyLanguageUI() {
   document.querySelector("#ttsVoiceLabel").textContent = t("ttsVoiceLabel");
   document.querySelector("#hardwarePanelTitle").textContent = t("hardwareTitle");
   document.querySelector("#storageGroupTitle").textContent = t("settingsStorage");
+  const downloadDockTitleEl = document.querySelector("#downloadDockTitle");
+  if (downloadDockTitleEl) downloadDockTitleEl.textContent = t("downloadsTitle");
+  const downloadDockHandleEl = document.querySelector("#downloadDockHandle");
+  if (downloadDockHandleEl) downloadDockHandleEl.setAttribute("aria-label", t("downloadsHandleTooltip"));
+  renderDownloadDock();
   document.querySelector("#managedDataTitle").textContent = t("managedDataDirectory");
   document.querySelector("#cleanAssetsTitle").textContent = t("cleanAssetsTitle");
   document.querySelector("#cleanAssetsHelpText").textContent = t("cleanAssetsHelp");
@@ -1327,7 +1375,14 @@ function closeSettings() {
   settingsOverlay.classList.add("hidden");
 }
 
-newSessionBtn.addEventListener("click", startNewSession);
+newSessionBtn.addEventListener("click", () => {
+  // In agent mode, "New Session" starts a fresh agent conversation instead.
+  if (state.agentMode) {
+    agentResetConversation();
+    return;
+  }
+  startNewSession();
+});
 trashOpenBtn.addEventListener("click", () => {
   openTrashOverlay();
 });
@@ -1352,6 +1407,7 @@ sttParakeetModelCardsEl?.addEventListener("click", handleParakeetModelCardClick)
 sttParakeetModelCardsEl?.addEventListener("keydown", handleParakeetModelCardKeydown);
 llmModelCardsEl?.addEventListener("click", handleLLMModelCardClick);
 llmModelCardsEl?.addEventListener("keydown", handleLLMModelCardKeydown);
+embeddingModelCardsEl?.addEventListener("click", handleEmbeddingModelCardClick);
 ttsModelCardsEl?.addEventListener("click", handleTTSModelCardClick);
 ttsModelCardsEl?.addEventListener("keydown", handleTTSModelCardKeydown);
 [sidebarToggleBtn, sidebarToggleBtnDetail, sidebarCollapseBtn].forEach((button) => {
@@ -1498,10 +1554,15 @@ function setEngineStatus(kind, status, text) {
   const dots =
     kind === "stt"
       ? [sttStatusDotEl, sttStatusDotPanelEl]
+      : kind === "embedding"
+      ? [embeddingStatusDotEl, embeddingStatusDotPanelEl]
       : [llmStatusDotEl, llmStatusDotPanelEl];
   dots.forEach((dot) => {
     if (dot) dot.className = `status-dot ${status}`;
   });
+
+  // Embedding has no per-engine status text element; only the dots update.
+  if (kind === "embedding") return;
 
   const textEl = kind === "stt" ? sttStatusTextEl : llmStatusTextEl;
   if (textEl) {
@@ -1551,6 +1612,12 @@ function applyLLMRuntime(runtime = {}) {
   state.runtime.llmModelDir = runtime.modelDir || "";
   state.runtime.llmModelName = runtime.modelName || "";
   state.runtime.llmModels = Array.isArray(runtime.installedModels) ? runtime.installedModels : [];
+  // The embedding model is an Ollama model too, so derive its install state from
+  // the same installed-models list (tag-normalized) rather than a separate probe.
+  state.runtime.embeddingModels = Object.keys(EMBEDDING_MODEL_META).filter((name) =>
+    isOllamaModelInstalled(state.runtime.llmModels, name)
+  );
+  state.runtime.embeddingModelName = state.runtime.embeddingModels[0] || "";
 }
 
 function applyLocalTTSRuntime(runtime = {}) {
@@ -1891,6 +1958,30 @@ function renderLLMModelCards() {
   renderModelCards(llmModelCardsEl, "llm", state.runtime.llmModelName);
 }
 
+function renderEmbeddingModelCards() {
+  renderModelCards(embeddingModelCardsEl, "embedding", state.runtime.embeddingModelName, {
+    showMetrics: false,
+  });
+}
+
+// The embedding tab's readiness is driven by whether the MODEL is installed, not
+// just whether the Ollama runtime exists — otherwise it would say "Active" while
+// semantic search is actually unavailable.
+function renderEmbeddingEnginePanel() {
+  const modelInstalled = (state.runtime.embeddingModels || []).length > 0;
+  const statusText = modelInstalled ? t("sttEngineActive") : t("embeddingNotReady");
+  if (embeddingOllamaEngineStatusEl) {
+    embeddingOllamaEngineStatusEl.textContent = statusText;
+    embeddingOllamaEngineStatusEl.classList.toggle("warning", !modelInstalled);
+  }
+  if (embeddingEngineDetailBadgeEl) {
+    embeddingEngineDetailBadgeEl.textContent = statusText;
+    embeddingEngineDetailBadgeEl.classList.toggle("warning", !modelInstalled);
+  }
+  setEngineStatus("embedding", modelInstalled ? "ready" : "pending");
+  renderEmbeddingModelCards();
+}
+
 function renderTTSModelCards() {
   renderModelCards(ttsModelCardsEl, "tts-model", state.tts.localModelName || "kokoro-multi-lang-v1_0", {
     showMetrics: false,
@@ -1951,6 +2042,7 @@ function renderLLMEnginePanel() {
   }
 
   renderLLMModelCards();
+  renderEmbeddingEnginePanel();
 }
 
 function renderTTSEnginePanel() {
@@ -2197,6 +2289,30 @@ function handleLLMModelCardClick(event) {
   void handleLLMModelChange(card.dataset.value);
 }
 
+// Embedding cards only support download/delete — there is no "activate" because
+// semantic search always uses the single configured embedding model.
+function handleEmbeddingModelCardClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const downloadBtn = target.closest(".dropdown-item-download");
+  if (downloadBtn) {
+    event.stopPropagation();
+    if (downloadBtn.dataset.action === "cancel") {
+      handleCancelModelDownload();
+    } else {
+      void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
+    }
+    return;
+  }
+
+  const deleteBtn = target.closest(".dropdown-item-delete");
+  if (deleteBtn && !deleteBtn.disabled) {
+    event.stopPropagation();
+    void handleModelDelete(deleteBtn.dataset.kind, deleteBtn.dataset.value);
+  }
+}
+
 function handleLLMModelCardKeydown(event) {
   if (event.key !== "Enter" && event.key !== " ") return;
   const target = event.target instanceof Element ? event.target : null;
@@ -2299,13 +2415,30 @@ function updateRuntimeHelpTexts() {
   renderTTSEnginePanel();
 }
 
+/* ========== Concurrent download tracking ========== */
+
+function runtimeDownloadId(kind) {
+  return `runtime:${kind}`;
+}
+
+function modelDownloadId(kind, modelName) {
+  return `model:${kind}:${modelName}`;
+}
+
+function isRuntimeDownloading(kind) {
+  return state.downloads.has(runtimeDownloadId(kind));
+}
+
+function isModelDownloading(kind, modelName) {
+  return state.downloads.has(modelDownloadId(kind, modelName));
+}
+
+function hasActiveDownloads() {
+  return state.downloads.size > 0;
+}
+
 function updateRuntimeDownloadButtons() {
-  const isBusy =
-    Boolean(state.assetCleanupInProgress) ||
-    Boolean(state.runtimeDownloadTarget) ||
-    Boolean(state.runtimeDeleteTarget) ||
-    Boolean(state.modelDownloadTarget) ||
-    Boolean(state.modelDeleteTarget);
+  const cleanupBusy = Boolean(state.assetCleanupInProgress);
 
   const sttNeedsRuntime = !state.runtime.sttWhisperCliExists;
   const sttCanDeleteRuntime = state.runtime.sttRuntimeLocation === "portable";
@@ -2315,8 +2448,8 @@ function updateRuntimeDownloadButtons() {
   const ttsCanDeleteRuntime = Boolean(state.tts.available || state.tts.localAvailable);
 
   if (sttDownloadBtn) {
-    sttDownloadBtn.disabled = isBusy;
-    const isSttDownloading = state.runtimeDownloadTarget === "stt";
+    const isSttDownloading = isRuntimeDownloading("stt");
+    sttDownloadBtn.disabled = cleanupBusy || isSttDownloading || state.runtimeDeleteTarget === "stt";
     sttDownloadBtn.innerHTML = isSttDownloading
       ? `<span class="btn-spinner"></span> ${t("downloading")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg> ${t("downloadStt")}`;
@@ -2326,8 +2459,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (sttDeleteBtn) {
-    sttDeleteBtn.disabled = isBusy;
     const isSttDeleting = state.runtimeDeleteTarget === "stt";
+    sttDeleteBtn.disabled = cleanupBusy || isRuntimeDownloading("stt") || isSttDeleting;
     sttDeleteBtn.innerHTML = isSttDeleting
       ? `<span class="btn-spinner"></span> ${t("deleting")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteSttRuntime")}`;
@@ -2343,8 +2476,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (llmDownloadBtn) {
-    llmDownloadBtn.disabled = isBusy;
-    const isLlmDownloading = state.runtimeDownloadTarget === "llm";
+    const isLlmDownloading = isRuntimeDownloading("llm");
+    llmDownloadBtn.disabled = cleanupBusy || isLlmDownloading || state.runtimeDeleteTarget === "llm";
     llmDownloadBtn.innerHTML = isLlmDownloading
       ? `<span class="btn-spinner"></span> ${t("downloading")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg> ${t("downloadLlm")}`;
@@ -2354,8 +2487,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (llmDeleteBtn) {
-    llmDeleteBtn.disabled = isBusy;
     const isLlmDeleting = state.runtimeDeleteTarget === "llm";
+    llmDeleteBtn.disabled = cleanupBusy || isRuntimeDownloading("llm") || isLlmDeleting;
     llmDeleteBtn.innerHTML = isLlmDeleting
       ? `<span class="btn-spinner"></span> ${t("deleting")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteLlmRuntime")}`;
@@ -2371,8 +2504,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (ttsDownloadBtn) {
-    ttsDownloadBtn.disabled = isBusy;
-    const isTtsDownloading = state.runtimeDownloadTarget === "tts";
+    const isTtsDownloading = isRuntimeDownloading("tts");
+    ttsDownloadBtn.disabled = cleanupBusy || isTtsDownloading || state.runtimeDeleteTarget === "tts";
     ttsDownloadBtn.innerHTML = isTtsDownloading
       ? `<span class="btn-spinner"></span> ${t("downloading")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg> ${t("downloadTts")}`;
@@ -2382,8 +2515,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (ttsDeleteBtn) {
-    ttsDeleteBtn.disabled = isBusy;
     const isTtsDeleting = state.runtimeDeleteTarget === "tts";
+    ttsDeleteBtn.disabled = cleanupBusy || isRuntimeDownloading("tts") || isTtsDeleting;
     ttsDeleteBtn.innerHTML = isTtsDeleting
       ? `<span class="btn-spinner"></span> ${t("deleting")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteTtsRuntime")}`;
@@ -2399,7 +2532,13 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (cleanAllAssetsBtn) {
-    cleanAllAssetsBtn.disabled = isBusy || state.isWorking || state.isRecording;
+    cleanAllAssetsBtn.disabled =
+      cleanupBusy ||
+      hasActiveDownloads() ||
+      Boolean(state.runtimeDeleteTarget) ||
+      Boolean(state.modelDeleteTarget) ||
+      state.isWorking ||
+      state.isRecording;
     cleanAllAssetsBtn.innerHTML = state.assetCleanupInProgress
       ? `<span class="btn-spinner"></span> ${t("cleaningAssets")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("cleanAllAssets")}`;
@@ -2876,6 +3015,27 @@ const PARAKEET_MODEL_META = {
   },
 };
 
+// Ollama reports tagless pulls as "<name>:latest" (e.g. `ollama pull bge-m3`
+// appears in /api/tags as "bge-m3:latest"). Normalize so a catalog name like
+// "bge-m3" still matches the installed "bge-m3:latest".
+function isOllamaModelInstalled(installedList, name) {
+  const withTag = (value) => {
+    const text = String(value || "");
+    return text.includes(":") ? text : `${text}:latest`;
+  };
+  const target = withTag(name);
+  return (installedList || []).some((installed) => withTag(installed) === target);
+}
+
+const EMBEDDING_MODEL_META = {
+  "bge-m3": {
+    label: "BGE-M3 (multilingual)",
+    sizeMB: 1200,
+    desc: "Multilingual embedding model with strong Chinese support, for semantic note search",
+    recommended: true,
+  },
+};
+
 const LLM_MODEL_META = {
   "qwen3:4b-instruct": {
     label: "Qwen3 4B Instruct",
@@ -3023,6 +3183,8 @@ function getModelMeta(modelName, kind) {
       ? PARAKEET_MODEL_META
       : kind === "llm"
       ? LLM_MODEL_META
+      : kind === "embedding"
+      ? EMBEDDING_MODEL_META
       : TTS_SPEAKER_META;
   return catalog[modelName] || {
     label: String(modelName || "").replace(/\.bin$/, "").replace(/[-_]/g, " "),
@@ -3043,6 +3205,9 @@ function getInstalledModelsByKind(kind) {
   if (kind === "llm") {
     return state.runtime.llmModels || [];
   }
+  if (kind === "embedding") {
+    return state.runtime.embeddingModels || [];
+  }
   if (kind === "tts-model") {
     return state.tts.localAvailable && state.tts.localModelName ? [state.tts.localModelName] : [];
   }
@@ -3059,6 +3224,10 @@ function canDeleteInstalledModel(kind) {
   }
 
   if (kind === "llm") {
+    return state.runtime.llmRuntimeLocation === "portable";
+  }
+
+  if (kind === "embedding") {
     return state.runtime.llmRuntimeLocation === "portable";
   }
 
@@ -3082,6 +3251,10 @@ function getAllOptionsForKind(kind) {
     return [...new Set([...Object.keys(LLM_MODEL_META), ...state.runtime.llmModels, state.runtime.llmModelName].filter(Boolean))];
   }
 
+  if (kind === "embedding") {
+    return [...new Set([...Object.keys(EMBEDDING_MODEL_META), ...state.runtime.embeddingModels].filter(Boolean))];
+  }
+
   if (kind === "tts-model") {
     return [...new Set([...Object.keys(TTS_MODEL_META), state.tts.localModelName].filter(Boolean))];
   }
@@ -3101,7 +3274,7 @@ function createRatingDots(value, maxDots, colorClass) {
 }
 
 function getModelActionButtonsHTML(kind, name, isInstalled, isActive) {
-  const isDownloading = state.modelDownloadKind === kind && state.modelDownloadTarget === name;
+  const isDownloading = isModelDownloading(kind, name);
   const isDeleting = state.modelDeleteKind === kind && state.modelDeleteTarget === name;
   const canDelete = isInstalled && canDeleteInstalledModel(kind);
 
@@ -3235,7 +3408,7 @@ function initDropdown(dropdownEl, kind, onChange) {
     if (downloadBtn) {
       e.stopPropagation();
       if (downloadBtn.dataset.action === "cancel") {
-        handleCancelModelDownload();
+        handleCancelModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
       } else {
         void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
       }
@@ -3277,7 +3450,229 @@ function populateDropdown(dropdownEl, options, activeValue, kind) {
   renderDropdownMenu(dropdownEl, options, activeValue, kind);
 }
 
-let modelDownloadAbortController = null;
+function beginDownload(id, meta) {
+  const entry = {
+    id,
+    type: meta.type,
+    kind: meta.kind,
+    modelName: meta.modelName || null,
+    label: meta.label,
+    phase: "starting",
+    receivedBytes: 0,
+    totalBytes: null,
+    percent: null,
+    indeterminate: true,
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+    abortController: new AbortController(),
+    error: null,
+  };
+  state.downloads.set(id, entry);
+  renderDownloadDock();
+  return entry;
+}
+
+function endDownload(id) {
+  state.downloads.delete(id);
+  renderDownloadDock();
+}
+
+function handleDownloadProgress(payload) {
+  if (!payload || !payload.id) return;
+  const entry = state.downloads.get(payload.id);
+  if (!entry) return;
+
+  if (payload.phase) entry.phase = payload.phase;
+  if (typeof payload.receivedBytes === "number") entry.receivedBytes = payload.receivedBytes;
+  if (typeof payload.totalBytes === "number" && payload.totalBytes > 0) {
+    entry.totalBytes = payload.totalBytes;
+  }
+  if (typeof payload.percent === "number") entry.percent = payload.percent;
+
+  if (payload.indeterminate === true) {
+    entry.indeterminate = true;
+  } else if (typeof payload.percent === "number" || (entry.totalBytes && entry.receivedBytes >= 0)) {
+    entry.indeterminate = false;
+  }
+
+  entry.updatedAt = Date.now();
+  renderDownloadDock();
+}
+
+/* ========== Floating download dock ========== */
+
+function formatBytesShort(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let i = 0;
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024;
+    i += 1;
+  }
+  const rounded = value < 10 && i > 0 ? value.toFixed(1) : Math.round(value);
+  return `${rounded} ${units[i]}`;
+}
+
+function formatClock(totalSeconds) {
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "--:--";
+  const s = Math.floor(totalSeconds);
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = s % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getDownloadPhaseLabel(entry) {
+  switch (entry.phase) {
+    case "extracting":
+      return t("downloadPhaseExtracting");
+    case "installing":
+      return t("downloadPhaseInstalling");
+    case "starting":
+      return t("downloadPhaseStarting");
+    default:
+      return t("downloadPhaseDownloading");
+  }
+}
+
+function computeDownloadView(entry, now) {
+  const elapsedSec = Math.max(0, (now - entry.startedAt) / 1000);
+  let fraction = null;
+  if (!entry.indeterminate) {
+    if (entry.totalBytes && entry.totalBytes > 0) {
+      fraction = Math.min(1, entry.receivedBytes / entry.totalBytes);
+    } else if (typeof entry.percent === "number") {
+      fraction = Math.min(1, entry.percent / 100);
+    }
+  }
+  let etaSec = null;
+  if (fraction != null && fraction > 0.01 && fraction < 1) {
+    etaSec = (elapsedSec * (1 - fraction)) / fraction;
+  }
+  return { elapsedSec, fraction, etaSec };
+}
+
+let downloadDockTicker = null;
+
+function ensureDownloadDockTicker() {
+  if (state.downloads.size > 0 && !downloadDockTicker) {
+    downloadDockTicker = setInterval(renderDownloadDock, 1000);
+  } else if (state.downloads.size === 0 && downloadDockTicker) {
+    clearInterval(downloadDockTicker);
+    downloadDockTicker = null;
+  }
+}
+
+function renderDownloadDock() {
+  const dock = document.getElementById("downloadDock");
+  if (!dock) return;
+  const list = document.getElementById("downloadDockList");
+  const countEl = document.getElementById("downloadDockCount");
+  const handleCountEl = document.getElementById("downloadDockHandleCount");
+  const ringEl = document.getElementById("downloadDockRing");
+
+  ensureDownloadDockTicker();
+
+  const entries = [...state.downloads.values()];
+  if (entries.length === 0) {
+    dock.classList.add("hidden");
+    dock.classList.remove("pinned");
+    if (list) list.innerHTML = "";
+    return;
+  }
+
+  dock.classList.remove("hidden");
+  const now = Date.now();
+
+  if (handleCountEl) handleCountEl.textContent = String(entries.length);
+  if (countEl) countEl.textContent = t("downloadsActive", { count: entries.length });
+
+  let fractionSum = 0;
+  let determinateCount = 0;
+
+  const rows = entries.map((entry) => {
+    const { elapsedSec, fraction, etaSec } = computeDownloadView(entry, now);
+    const isIndeterminate = entry.indeterminate || fraction == null;
+    if (!isIndeterminate) {
+      fractionSum += fraction;
+      determinateCount += 1;
+    }
+
+    const pct = fraction != null ? Math.round(fraction * 100) : null;
+    const bar = isIndeterminate
+      ? `<span class="download-item-bar-indeterminate"></span>`
+      : `<span class="download-item-bar-fill" style="width:${(fraction * 100).toFixed(1)}%"></span>`;
+
+    const sizeText = entry.totalBytes
+      ? `${formatBytesShort(entry.receivedBytes)} / ${formatBytesShort(entry.totalBytes)}`
+      : pct != null
+      ? `${pct}%`
+      : "";
+    const phaseText = `${getDownloadPhaseLabel(entry)}${sizeText ? ` · ${sizeText}` : ""}`;
+    const etaText = isIndeterminate || etaSec == null ? t("downloadCalculating") : formatClock(etaSec);
+
+    return `
+      <div class="download-item">
+        <div class="download-item-top">
+          <span class="download-item-name" title="${escapeHtml(entry.label)}">${escapeHtml(entry.label)}</span>
+          <span class="download-item-pct">${isIndeterminate || pct == null ? "" : `${pct}%`}</span>
+        </div>
+        <div class="download-item-bar ${isIndeterminate ? "indeterminate" : ""}">${bar}</div>
+        <div class="download-item-phase">${escapeHtml(phaseText)}</div>
+        <div class="download-item-times">
+          <span><span class="download-time-label">${t("downloadElapsed")}</span> ${formatClock(elapsedSec)}</span>
+          <span><span class="download-time-label">${t("downloadEta")}</span> ${etaText}</span>
+        </div>
+      </div>`;
+  });
+
+  if (list) list.innerHTML = rows.join("");
+
+  if (ringEl) {
+    const aggregate = determinateCount > 0 ? fractionSum / determinateCount : 0;
+    if (determinateCount === 0) {
+      ringEl.removeAttribute("style");
+      ringEl.classList.add("indeterminate");
+    } else {
+      ringEl.classList.remove("indeterminate");
+      ringEl.style.setProperty("--ring-fraction", String(Math.round(aggregate * 100)));
+    }
+  }
+}
+
+function initDownloadDock() {
+  const dock = document.getElementById("downloadDock");
+  const handle = document.getElementById("downloadDockHandle");
+
+  if (handle) {
+    handle.addEventListener("click", () => {
+      dock?.classList.toggle("pinned");
+    });
+  }
+
+  if (dock) {
+    // mouseenter/mouseleave treat the (absolutely positioned) panel descendant as
+    // part of the dock, so moving from the handle onto the panel keeps it open.
+    // The short close delay tolerates the small gap between handle and panel.
+    let closeTimer = null;
+    dock.addEventListener("mouseenter", () => {
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+      dock.classList.add("open");
+    });
+    dock.addEventListener("mouseleave", () => {
+      closeTimer = setTimeout(() => dock.classList.remove("open"), 200);
+    });
+  }
+
+  renderDownloadDock();
+}
 
 function refreshDropdownForKind(kind) {
   if (kind === "stt") {
@@ -3287,6 +3682,8 @@ function refreshDropdownForKind(kind) {
   } else if (kind === "llm") {
     renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
     renderLLMModelCards();
+  } else if (kind === "embedding") {
+    renderEmbeddingModelCards();
   } else if (kind === "tts-model") {
     renderDropdownMenu(ttsModelDropdownEl, getAllOptionsForKind("tts-model"), state.tts.localModelName, "tts-model");
     renderTTSModelCards();
@@ -3295,19 +3692,19 @@ function refreshDropdownForKind(kind) {
 
 async function handleModelDownload(kind, modelName) {
   if (!kind || !modelName) return;
-  if (state.modelDownloadTarget || state.modelDeleteTarget || state.runtimeDeleteTarget) return;
+  if (isModelDownloading(kind, modelName)) return;
+  if (state.modelDeleteKind === kind && state.modelDeleteTarget === modelName) return;
 
   const targetLabel = getModelMeta(modelName, kind).label;
-  state.modelDownloadTarget = modelName;
-  state.modelDownloadKind = kind;
-  modelDownloadAbortController = new AbortController();
+  const id = modelDownloadId(kind, modelName);
+  const entry = beginDownload(id, { type: "model", kind, modelName, label: targetLabel });
   refreshDropdownForKind(kind);
   updateRuntimeDownloadButtons();
   setJobStatus(t("downloadingTarget", { target: targetLabel }));
 
   try {
-    await window.desktopSTT.downloadModel(kind, modelName);
-    if (modelDownloadAbortController?.signal.aborted) return;
+    await window.desktopSTT.downloadModel(kind, modelName, id);
+    if (entry.abortController.signal.aborted) return;
     await refreshRuntime();
     if (kind === "stt") {
       await handleSTTModelChange(modelName);
@@ -3320,15 +3717,13 @@ async function handleModelDownload(kind, modelName) {
     }
     setJobStatus(t("downloadSucceeded", { target: targetLabel }));
   } catch (error) {
-    if (modelDownloadAbortController?.signal.aborted) {
+    if (entry.abortController.signal.aborted) {
       setJobStatus(t("downloadCancelled"));
     } else {
       setJobStatus(t("downloadFailed", { target: targetLabel, message: error.message }), true);
     }
   } finally {
-    state.modelDownloadTarget = "";
-    state.modelDownloadKind = "";
-    modelDownloadAbortController = null;
+    endDownload(id);
     refreshDropdownForKind(kind);
     updateRuntimeDownloadButtons();
   }
@@ -3336,7 +3731,8 @@ async function handleModelDownload(kind, modelName) {
 
 async function handleModelDelete(kind, modelName) {
   if (!kind || !modelName) return;
-  if (state.modelDownloadTarget || state.modelDeleteTarget || state.runtimeDownloadTarget || state.runtimeDeleteTarget) return;
+  if (isModelDownloading(kind, modelName)) return;
+  if (state.modelDeleteTarget || state.runtimeDeleteTarget) return;
 
   const targetLabel = getModelMeta(modelName, kind).label;
   state.modelDeleteTarget = modelName;
@@ -3363,9 +3759,10 @@ async function handleModelDelete(kind, modelName) {
   }
 }
 
-function handleCancelModelDownload() {
-  if (modelDownloadAbortController) {
-    modelDownloadAbortController.abort();
+function handleCancelModelDownload(kind, modelName) {
+  const entry = state.downloads.get(modelDownloadId(kind, modelName));
+  if (entry?.abortController) {
+    entry.abortController.abort();
   }
 }
 
@@ -4014,6 +4411,7 @@ async function loadHardwareInfo() {
 async function refreshRuntime() {
   setEngineStatus("stt", "pending");
   setEngineStatus("llm", "pending");
+  setEngineStatus("embedding", "pending");
   setDropdownDisabled(llmModelDropdownEl, true);
   setDropdownDisabled(ttsModelDropdownEl, true);
   setDropdownDisabled(ttsSpeakerDropdownEl, true);
@@ -4117,6 +4515,7 @@ async function refreshRuntime() {
     applyLocalTTSRuntime({ runtimeReady: false });
     setEngineStatus("stt", "error");
     setEngineStatus("llm", "error");
+    setEngineStatus("embedding", "error");
     setJobStatus(t("checkFailed", { message: error.message }), true);
   }
 
@@ -4128,9 +4527,8 @@ async function refreshRuntime() {
 async function handleCleanAllAssets() {
   if (
     state.assetCleanupInProgress ||
-    state.runtimeDownloadTarget ||
+    hasActiveDownloads() ||
     state.runtimeDeleteTarget ||
-    state.modelDownloadTarget ||
     state.modelDeleteTarget
   ) {
     return;
@@ -4164,31 +4562,31 @@ async function handleCleanAllAssets() {
 }
 
 async function handleRuntimeDownload(target) {
-  if (!target || state.runtimeDownloadTarget || state.runtimeDeleteTarget || state.modelDeleteTarget) {
-    return;
-  }
+  if (!target || state.assetCleanupInProgress) return;
+  if (isRuntimeDownloading(target) || state.runtimeDeleteTarget === target) return;
 
   const targetLabel =
     target === "stt" ? t("sttTitle") : target === "llm" ? t("llmTitle") : t("ttsTitle");
 
-  state.runtimeDownloadTarget = target;
+  const id = runtimeDownloadId(target);
+  beginDownload(id, { type: "runtime", kind: target, label: targetLabel });
   updateRuntimeDownloadButtons();
   setJobStatus(t("downloadingTarget", { target: targetLabel }));
 
   try {
-    await window.desktopSTT.downloadRuntime(target);
+    await window.desktopSTT.downloadRuntime(target, id);
     await refreshRuntime();
     setJobStatus(t("downloadSucceeded", { target: targetLabel }));
   } catch (error) {
     setJobStatus(t("downloadFailed", { target: targetLabel, message: error.message }), true);
   } finally {
-    state.runtimeDownloadTarget = "";
+    endDownload(id);
     updateRuntimeDownloadButtons();
   }
 }
 
 async function handleRuntimeDelete(target) {
-  if (!target || state.runtimeDownloadTarget || state.runtimeDeleteTarget || state.modelDownloadTarget || state.modelDeleteTarget) {
+  if (!target || hasActiveDownloads() || state.runtimeDeleteTarget || state.modelDeleteTarget) {
     return;
   }
 
@@ -4620,6 +5018,10 @@ async function handlePickFile() {
 }
 
 async function handleSend() {
+  if (state.agentMode) {
+    await runAgentInstruction();
+    return;
+  }
   if (state.pendingMeetingSourceNoteId) {
     return;
   }
@@ -6265,8 +6667,10 @@ promptInputEl.addEventListener("keydown", async (event) => {
   }
 });
 
-pickFileBtn.addEventListener("click", handlePickFile);
-recordToggleBtn.addEventListener("click", handleRecordToggle);
+pickFileBtn.addEventListener("click", () => (state.agentMode ? agentImportAudio() : handlePickFile()));
+recordToggleBtn.addEventListener("click", () =>
+  state.agentMode ? agentToggleRecording() : handleRecordToggle()
+);
 noteQaPickFileBtn.addEventListener("click", handlePickFile);
 noteQaRecordToggleBtn.addEventListener("click", handleRecordToggle);
 refreshRuntimeBtn.addEventListener("click", () => {
@@ -6380,3 +6784,657 @@ loadNotesList();
 updateSelectedFileMeta();
 updateRecordingMeta();
 updateButtons();
+initDownloadDock();
+window.desktopSTT.onDownloadProgress(handleDownloadProgress);
+
+/* ========== Local Agent (tool-calling orchestrator UI) ========== */
+
+Object.assign(I18N.en, {
+  agentNavLabel: "Agent",
+  agentKicker: "Local Agent",
+  agentTitle: "Agent",
+  agentSubtitle: "The local model plans and calls local tools to fulfill your request.",
+  agentInputPlaceholder: "Describe a task for the agent…",
+  agentEmptyTitle: "Agent mode",
+  agentEmptyDesc:
+    "Describe a task — the agent plans it and calls local tools to get it done: transcribe audio, structure notes, search and read your saved notes, and read text aloud. Each step appears below.",
+  agentRunning: "Running…",
+  agentThinking: "Thinking…",
+  agentToolCall: "Calling tool",
+  agentToolResult: "Result",
+  agentToolError: "Tool error",
+  agentFinal: "Final answer",
+  agentReplay: "Replay",
+  agentPlay: "Play",
+  agentPause: "Pause",
+  agentResume: "Resume",
+  agentStop: "Stop",
+  agentNewChat: "New chat",
+  agentRecording: "● Recording…",
+  agentTranscribing: "Transcribing…",
+  agentVoiceFailed: "Voice input failed",
+  agentSttNotReady: "Speech-to-Text is not ready (set it up in Settings).",
+  agentRunError: "Agent run failed",
+  agentLlmNotReady: "Local LLM is not ready. Open settings and download/start a model first.",
+  agentMetaDone: "Done · {steps} step(s) · {ms} ms · {model}",
+  agentMetaStopped: "Stopped at step limit · {steps} step(s) · {model}",
+});
+
+Object.assign(I18N["zh-CN"], {
+  agentNavLabel: "智能体",
+  agentKicker: "本地智能体",
+  agentTitle: "智能体",
+  agentSubtitle: "本地模型自己规划并调用本地工具来完成你的请求。",
+  agentInputPlaceholder: "描述一个任务，交给智能体…",
+  agentEmptyTitle: "智能体模式",
+  agentEmptyDesc:
+    "描述一个任务，智能体会自己规划并调用本地工具来完成：转写音频、整理结构化笔记、搜索与阅读你的笔记、朗读文字。每一步都会显示在下面。",
+  agentRunning: "运行中…",
+  agentThinking: "思考中…",
+  agentToolCall: "调用工具",
+  agentToolResult: "结果",
+  agentToolError: "工具出错",
+  agentFinal: "最终答复",
+  agentReplay: "重播",
+  agentPlay: "播放",
+  agentPause: "暂停",
+  agentResume: "继续",
+  agentStop: "停止",
+  agentNewChat: "新对话",
+  agentRecording: "● 录音中…",
+  agentTranscribing: "转写中…",
+  agentVoiceFailed: "语音输入失败",
+  agentSttNotReady: "语音转文字未就绪(请先在设置中配置)。",
+  agentRunError: "智能体运行失败",
+  agentLlmNotReady: "本地大模型未就绪，请先在设置里下载/启动模型。",
+  agentMetaDone: "完成 · {steps} 步 · {ms} ms · {model}",
+  agentMetaStopped: "已达步数上限 · {steps} 步 · {model}",
+});
+
+const agentOverlay = document.querySelector("#agentOverlay");
+const agentCloseBtn = document.querySelector("#agentCloseBtn");
+const agentClearBtn = document.querySelector("#agentClearBtn");
+// Agent renders inline in the main conversation area (#agentTrace), not a modal.
+const agentTraceList = document.querySelector("#agentTrace");
+const composerAgentToggle = document.querySelector("#composerAgentToggle");
+const agentInput = document.querySelector("#agentInput");
+const agentRunBtn = document.querySelector("#agentRunBtn");
+const agentRunStatus = document.querySelector("#agentRunStatus");
+const agentPickFileBtn = document.querySelector("#agentPickFileBtn");
+const agentRecordBtn = document.querySelector("#agentRecordBtn");
+const agentRecordingMeta = document.querySelector("#agentRecordingMeta");
+
+// Mutable agent-run state. Declared with var so it is safely hoisted: applyLanguageUI()
+// can run during init (before this block executes) and call applyAgentLanguageUI().
+var agentRunActive = false;
+var agentPendingToolCard = null;
+var agentThinkingEl = null;
+// Live streaming final-answer card (built from answer_delta steps).
+var agentLiveFinalEl = null;
+var agentLiveFinalText = "";
+// Condensed conversation memory (user + final-answer turns) passed back into the
+// agent so follow-ups like "read the previous answer again" have context.
+var agentHistory = [];
+const AGENT_HISTORY_MAX = 12; // keep the last ~6 turns to stay within the small model's context
+
+function applyAgentLanguageUI() {
+  const setText = (selector, value) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  };
+  setText("#agentKicker", t("agentKicker"));
+  setText("#agentTitle", t("agentTitle"));
+  setText("#agentSubtitle", t("agentSubtitle"));
+  const input = document.querySelector("#agentInput");
+  if (input) input.placeholder = t("agentInputPlaceholder");
+  setText("#agentClearBtn", t("agentNewChat"));
+  const pickBtn = document.querySelector("#agentPickFileBtn");
+  if (pickBtn) {
+    pickBtn.title = t("importAudio");
+    pickBtn.setAttribute("aria-label", t("importAudio"));
+  }
+  const recBtn = document.querySelector("#agentRecordBtn");
+  if (recBtn) {
+    recBtn.title = t("record");
+    recBtn.setAttribute("aria-label", t("record"));
+  }
+  // Look these up locally rather than via the module-scoped consts: applyLanguageUI()
+  // runs during init (line ~6776) BEFORE the agent block's `const composerAgentToggle`
+  // / `const agentTraceList` are initialized, so referencing those consts here would
+  // throw a TDZ ReferenceError and abort the rest of init (particles, runtime, notes…).
+  const composerToggle = document.querySelector("#composerAgentToggle");
+  if (composerToggle) {
+    composerToggle.title = t("agentNavLabel");
+    composerToggle.setAttribute("aria-label", t("agentNavLabel"));
+  }
+  const traceList = document.querySelector("#agentTrace");
+  if (traceList && !agentRunActive && traceList.querySelector(".agent-empty")) {
+    traceList.innerHTML = agentEmptyStateHtml();
+  }
+}
+
+// Hero shown in the agent trace before any task runs: mirrors the chat empty-state
+// styling (orbs + gradient title) and briefly describes what the local agent can do.
+function agentEmptyStateHtml() {
+  return `
+    <div class="agent-empty">
+      <div class="chat-empty-inner">
+        <div class="chat-empty-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+        <h3>${escapeHtml(t("agentEmptyTitle"))}</h3>
+        <p>${escapeHtml(t("agentEmptyDesc"))}</p>
+      </div>
+    </div>`;
+}
+
+function agentShowEmptyState() {
+  if (agentTraceList) {
+    agentTraceList.innerHTML = agentEmptyStateHtml();
+  }
+  agentPendingToolCard = null;
+  agentThinkingEl = null;
+  agentLiveFinalEl = null;
+  agentLiveFinalText = "";
+}
+
+// Remove the empty-state placeholder while keeping any existing conversation cards.
+function agentClearEmptyState() {
+  if (agentTraceList && agentTraceList.querySelector(".agent-empty")) {
+    agentTraceList.innerHTML = "";
+  }
+}
+
+// True once the trace shows real conversation content (not just the hint).
+function agentHasConversation() {
+  return Boolean(agentTraceList && agentTraceList.querySelector(".agent-step-card"));
+}
+
+// Start a fresh conversation: clear memory and the trace.
+function agentResetConversation() {
+  if (agentRunActive) return;
+  agentHistory = [];
+  agentShowEmptyState();
+  setJobStatus("");
+}
+
+// Switch the main view between chat and agent mode (shared composer, one window).
+function setAgentMode(on) {
+  state.agentMode = Boolean(on);
+  if (chatListEl) chatListEl.classList.toggle("hidden", state.agentMode);
+  if (agentTraceList) agentTraceList.classList.toggle("hidden", !state.agentMode);
+  if (composerAgentToggle) {
+    composerAgentToggle.classList.toggle("active", state.agentMode);
+    composerAgentToggle.setAttribute("aria-pressed", state.agentMode ? "true" : "false");
+  }
+  if (promptInputEl) {
+    promptInputEl.placeholder = state.agentMode ? t("agentInputPlaceholder") : t("promptPlaceholder");
+  }
+  // Preserve an in-progress or prior conversation; only show the hint when empty.
+  if (state.agentMode && !agentRunActive && !agentHasConversation()) agentShowEmptyState();
+  if (promptInputEl) window.requestAnimationFrame(() => promptInputEl.focus());
+}
+
+function toggleAgentMode() {
+  setAgentMode(!state.agentMode);
+}
+
+function agentAppendCard(variant, innerHTML) {
+  const card = document.createElement("div");
+  card.className = `agent-step-card ${variant}`;
+  card.innerHTML = innerHTML;
+  agentTraceList.append(card);
+  agentTraceList.scrollTop = agentTraceList.scrollHeight;
+  return card;
+}
+
+function agentShowThinking() {
+  agentHideThinking();
+  const el = document.createElement("div");
+  el.className = "agent-thinking";
+  el.innerHTML =
+    `<span class="agent-dot"></span><span class="agent-dot"></span><span class="agent-dot"></span>` +
+    `<span class="agent-thinking-text">${escapeHtml(t("agentThinking"))}</span>`;
+  agentTraceList.append(el);
+  agentTraceList.scrollTop = agentTraceList.scrollHeight;
+  agentThinkingEl = el;
+}
+
+function agentHideThinking() {
+  if (agentThinkingEl) {
+    agentThinkingEl.remove();
+    agentThinkingEl = null;
+  }
+}
+
+function agentToolIcon(tool) {
+  if (tool === "transcribe_audio") return "🎙";
+  if (tool === "structure_note") return "🗂";
+  if (tool === "speak") return "🔊";
+  if (tool === "search_notes") return "🔎";
+  if (tool === "read_note") return "📄";
+  return "🛠";
+}
+
+function agentFormatArgs(args) {
+  try {
+    const text = JSON.stringify(args == null ? {} : args, null, 2);
+    return text === "{}" ? "" : text;
+  } catch (_error) {
+    return "";
+  }
+}
+
+function agentFinalCardHTML(finalText) {
+  return (
+    `<div class="agent-step-head">` +
+    `<span class="agent-tool-icon">✦</span>` +
+    `<span class="agent-step-label">${escapeHtml(t("agentFinal"))}</span>` +
+    `</div><div class="agent-final-text rich-text">${renderRichTextToHtml(finalText || "")}</div>`
+  );
+}
+
+// Drop a streamed final card (the streamed text turned out to precede a tool call).
+function agentDiscardLiveFinal() {
+  if (agentLiveFinalEl) {
+    agentLiveFinalEl.remove();
+    agentLiveFinalEl = null;
+    agentLiveFinalText = "";
+  }
+}
+
+// Play / pause / resume / stop controls for a synthesized speech result.
+function agentAttachSpeakControls(card, audio) {
+  const controls = document.createElement("div");
+  controls.className = "agent-audio-controls";
+  const playBtn = document.createElement("button");
+  playBtn.type = "button";
+  playBtn.className = "ghost-btn agent-audio-btn";
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "ghost-btn agent-audio-btn";
+
+  let mode = "idle"; // idle | playing | paused
+  const apply = () => {
+    playBtn.textContent =
+      mode === "playing"
+        ? `⏸ ${t("agentPause")}`
+        : mode === "paused"
+        ? `▶ ${t("agentResume")}`
+        : `▶ ${t("agentPlay")}`;
+    stopBtn.textContent = `■ ${t("agentStop")}`;
+    stopBtn.disabled = mode === "idle";
+  };
+  const start = () => {
+    mode = "playing";
+    apply();
+    playLocalTTSAudio(audio.samples, audio.sampleRate)
+      .then(() => {
+        mode = "idle";
+        apply();
+      })
+      .catch(() => {
+        mode = "idle";
+        apply();
+      });
+  };
+
+  playBtn.addEventListener("click", async () => {
+    const ctx = ensurePlaybackAudioContext();
+    if (mode === "idle") {
+      start();
+    } else if (mode === "playing") {
+      try {
+        await ctx.suspend();
+      } catch (_error) {
+        /* ignore */
+      }
+      mode = "paused";
+      apply();
+    } else {
+      try {
+        await ctx.resume();
+      } catch (_error) {
+        /* ignore */
+      }
+      mode = "playing";
+      apply();
+    }
+  });
+
+  stopBtn.addEventListener("click", () => {
+    const ctx = ensurePlaybackAudioContext();
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    stopLocalTTSPlayback();
+    mode = "idle";
+    apply();
+  });
+
+  apply();
+  controls.append(playBtn, stopBtn);
+  card.append(controls);
+  // Autoplay the delivery once it lands.
+  start();
+}
+
+function renderAgentStep(step) {
+  if (!agentRunActive || !step || !agentTraceList) return;
+
+  if (step.type === "answer_delta") {
+    agentHideThinking();
+    if (!agentLiveFinalEl) {
+      agentLiveFinalEl = agentAppendCard("is-final", agentFinalCardHTML(""));
+      agentLiveFinalText = "";
+    }
+    agentLiveFinalText += String(step.text || "");
+    const textEl = agentLiveFinalEl.querySelector(".agent-final-text");
+    if (textEl) textEl.innerHTML = renderRichTextToHtml(agentLiveFinalText);
+    agentTraceList.scrollTop = agentTraceList.scrollHeight;
+    return;
+  }
+
+  if (step.type === "tool_call") {
+    agentHideThinking();
+    // Any streamed text before a tool call was reasoning, not the answer — drop it.
+    agentDiscardLiveFinal();
+    const argsText = agentFormatArgs(step.args);
+    const argsBlock = argsText ? `<pre class="agent-args">${escapeHtml(argsText)}</pre>` : "";
+    agentPendingToolCard = agentAppendCard(
+      "is-tool is-running is-collapsible",
+      `<div class="agent-step-head">` +
+        `<span class="agent-tool-icon">${agentToolIcon(step.tool)}</span>` +
+        `<span class="agent-step-label">${escapeHtml(t("agentToolCall"))}: <b>${escapeHtml(step.tool || "")}</b></span>` +
+        `<span class="agent-spinner"></span>` +
+        `<span class="agent-collapse-chevron" aria-hidden="true">▾</span>` +
+        `</div><div class="agent-collapse-body">${argsBlock}</div>`
+    );
+    return;
+  }
+
+  if (step.type === "tool_result") {
+    const ok = step.ok !== false;
+    const label = ok ? t("agentToolResult") : t("agentToolError");
+    const resultText = ok ? step.result || "" : step.error || step.result || "";
+    const bodyHtml =
+      `<div class="agent-step-head">` +
+      `<span class="agent-tool-icon">${agentToolIcon(step.tool)}</span>` +
+      `<span class="agent-step-label">${escapeHtml(label)}: <b>${escapeHtml(step.tool || "")}</b></span>` +
+      `<span class="agent-collapse-chevron" aria-hidden="true">▾</span>` +
+      `</div><div class="agent-collapse-body"><div class="agent-step-result">${escapeHtml(String(resultText))}</div></div>`;
+
+    let card = agentPendingToolCard;
+    agentPendingToolCard = null;
+    if (card) {
+      card.className = `agent-step-card is-tool is-collapsible ${ok ? "is-ok" : "is-error"}`;
+      card.innerHTML = bodyHtml;
+    } else {
+      card = agentAppendCard(`is-tool is-collapsible ${ok ? "is-ok" : "is-error"}`, bodyHtml);
+    }
+
+    if (ok && step.tool === "speak" && step.data && step.data.audio) {
+      agentAttachSpeakControls(card, step.data.audio);
+    }
+
+    // Verbose results: shown expanded, then auto-collapse after a few seconds.
+    if (step.tool === "search_notes" || step.tool === "read_note") {
+      window.setTimeout(() => card.classList.add("collapsed"), 4000);
+    }
+
+    agentShowThinking();
+  }
+}
+
+function agentRenderFinal(result) {
+  agentHideThinking();
+  agentPendingToolCard = null;
+  const finalText = (result && result.finalText) || "";
+  if (agentLiveFinalEl) {
+    // Finalize the streamed card with the complete, fully-rendered text.
+    const textEl = agentLiveFinalEl.querySelector(".agent-final-text");
+    if (textEl) textEl.innerHTML = renderRichTextToHtml(finalText);
+    agentLiveFinalEl = null;
+    agentLiveFinalText = "";
+    agentTraceList.scrollTop = agentTraceList.scrollHeight;
+    return;
+  }
+  agentAppendCard("is-final", agentFinalCardHTML(finalText));
+}
+
+function setAgentRunningUI(isRunning) {
+  agentRunActive = isRunning;
+  if (promptInputEl) promptInputEl.disabled = isRunning;
+  if (sendBtn) sendBtn.disabled = isRunning;
+}
+
+// Run one agent turn from the shared main composer, rendering inline into #agentTrace.
+async function runAgentInstruction() {
+  if (agentRunActive || !promptInputEl) return;
+  const instruction = String(promptInputEl.value || "").trim();
+  if (!instruction) return;
+
+  if (!state.runtime.llmReady) {
+    agentClearEmptyState();
+    agentAppendCard("is-error", `<div class="agent-step-result">${escapeHtml(t("agentLlmNotReady"))}</div>`);
+    return;
+  }
+
+  // Keep prior turns on screen; just drop the empty-state hint and append.
+  agentClearEmptyState();
+  agentPendingToolCard = null;
+  agentThinkingEl = null;
+  agentLiveFinalEl = null;
+  agentLiveFinalText = "";
+  state.draft = "";
+  promptInputEl.value = "";
+  autoResizePrompt();
+  agentAppendCard("is-user", `<div class="agent-user-text">${escapeHtml(instruction)}</div>`);
+  setAgentRunningUI(true);
+  setJobStatus(t("agentRunning"));
+  agentShowThinking();
+
+  const startedAt = Date.now();
+  try {
+    const result = await window.desktopSTT.runAgent(instruction, { history: agentHistory });
+    agentRenderFinal(result);
+    // Remember this turn (condensed) so later questions have context.
+    agentHistory.push({ role: "user", content: instruction });
+    agentHistory.push({ role: "assistant", content: (result && result.finalText) || "" });
+    if (agentHistory.length > AGENT_HISTORY_MAX) {
+      agentHistory = agentHistory.slice(-AGENT_HISTORY_MAX);
+    }
+    const model = (result && result.modelName) || "";
+    const steps = (result && result.stepCount) || 0;
+    const ms = (result && result.agentDurationMs) || Date.now() - startedAt;
+    setJobStatus(
+      result && result.completed === false
+        ? t("agentMetaStopped", { steps, model })
+        : t("agentMetaDone", { steps, ms, model })
+    );
+  } catch (error) {
+    agentHideThinking();
+    agentDiscardLiveFinal();
+    agentAppendCard(
+      "is-error",
+      `<div class="agent-step-head"><span class="agent-step-label">${escapeHtml(t("agentRunError"))}</span></div>` +
+        `<div class="agent-step-result">${escapeHtml((error && error.message) || String(error))}</div>`
+    );
+    setJobStatus("");
+  } finally {
+    setAgentRunningUI(false);
+    updateButtons();
+    if (promptInputEl) promptInputEl.focus();
+  }
+}
+
+// Agent voice input — a self-contained recorder that reuses the existing
+// save/transcribe IPC but its own state, so it never touches the main composer.
+var agentRec = {
+  recording: false,
+  stream: null,
+  ctx: null,
+  source: null,
+  processor: null,
+  buffers: [],
+  sampleRate: 0,
+  timerId: null,
+  seconds: 0,
+};
+
+async function agentCleanupRecording() {
+  if (agentRec.timerId) {
+    window.clearInterval(agentRec.timerId);
+    agentRec.timerId = null;
+  }
+  if (agentRec.processor) {
+    agentRec.processor.disconnect();
+    agentRec.processor.onaudioprocess = null;
+    agentRec.processor = null;
+  }
+  if (agentRec.source) {
+    agentRec.source.disconnect();
+    agentRec.source = null;
+  }
+  if (agentRec.stream) {
+    agentRec.stream.getTracks().forEach((track) => track.stop());
+    agentRec.stream = null;
+  }
+  if (agentRec.ctx) {
+    await agentRec.ctx.close();
+    agentRec.ctx = null;
+  }
+}
+
+function agentSetRecordingUI(on) {
+  if (recordToggleBtn) recordToggleBtn.classList.toggle("recording", on);
+  if (recordingMetaEl) {
+    recordingMetaEl.classList.toggle("hidden", !on);
+    recordingMetaEl.classList.remove("error");
+    if (on) recordingMetaEl.textContent = `${t("agentRecording")} 0:00`;
+  }
+}
+
+function agentFillInputFromTranscript(text) {
+  const clean = String(text || "").trim();
+  if (!clean || !promptInputEl) return;
+  const existing = promptInputEl.value.trim();
+  promptInputEl.value = existing ? `${existing} ${clean}` : clean;
+  state.draft = promptInputEl.value;
+  autoResizePrompt();
+  promptInputEl.focus();
+}
+
+function agentVoiceBusy() {
+  return agentRunActive || agentRec.recording;
+}
+
+async function agentStartRecording() {
+  if (agentVoiceBusy()) return;
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("agentSttNotReady"), true);
+    return;
+  }
+  try {
+    agentRec.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      video: false,
+    });
+    agentRec.ctx = new AudioContext();
+    agentRec.sampleRate = agentRec.ctx.sampleRate;
+    agentRec.buffers = [];
+    agentRec.source = agentRec.ctx.createMediaStreamSource(agentRec.stream);
+    agentRec.processor = agentRec.ctx.createScriptProcessor(4096, 1, 1);
+    agentRec.processor.onaudioprocess = (event) => {
+      if (agentRec.recording) {
+        agentRec.buffers.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+      }
+    };
+    agentRec.source.connect(agentRec.processor);
+    agentRec.processor.connect(agentRec.ctx.destination);
+    agentRec.recording = true;
+    agentRec.seconds = 0;
+    agentSetRecordingUI(true);
+    agentRec.timerId = window.setInterval(() => {
+      agentRec.seconds += 1;
+      const minutes = Math.floor(agentRec.seconds / 60);
+      const seconds = String(agentRec.seconds % 60).padStart(2, "0");
+      if (recordingMetaEl) recordingMetaEl.textContent = `${t("agentRecording")} ${minutes}:${seconds}`;
+    }, 1000);
+  } catch (_error) {
+    await agentCleanupRecording();
+    agentRec.recording = false;
+    agentSetRecordingUI(false);
+    setJobStatus(t("agentVoiceFailed"), true);
+  }
+}
+
+async function agentStopRecording() {
+  if (!agentRec.recording) return;
+  agentRec.recording = false;
+  agentSetRecordingUI(false);
+  const samples = mergeFloat32Arrays(agentRec.buffers);
+  const sampleRate = agentRec.sampleRate;
+  agentRec.buffers = [];
+  await agentCleanupRecording();
+  if (!samples.length) return;
+  setJobStatus(t("agentTranscribing"));
+  try {
+    const wavBuffer = encodeWav(samples, sampleRate);
+    const saved = await window.desktopSTT.saveRecording(wavBuffer);
+    const result = await window.desktopSTT.transcribeAudio(saved.filePath);
+    agentFillInputFromTranscript(result && result.text);
+    setJobStatus("");
+  } catch (_error) {
+    setJobStatus(t("agentVoiceFailed"), true);
+  }
+}
+
+async function agentToggleRecording() {
+  if (agentRec.recording) {
+    await agentStopRecording();
+  } else {
+    await agentStartRecording();
+  }
+}
+
+async function agentImportAudio() {
+  if (agentVoiceBusy()) return;
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("agentSttNotReady"), true);
+    return;
+  }
+  let filePath = null;
+  try {
+    filePath = await window.desktopSTT.pickAudioFile();
+  } catch (_error) {
+    filePath = null;
+  }
+  if (!filePath) return;
+  setJobStatus(t("agentTranscribing"));
+  try {
+    const result = await window.desktopSTT.transcribeAudio(filePath);
+    agentFillInputFromTranscript(result && result.text);
+    setJobStatus("");
+  } catch (_error) {
+    setJobStatus(t("agentVoiceFailed"), true);
+  }
+}
+
+// Collapse/expand a tool card when its header is clicked (cards start expanded).
+if (agentTraceList) {
+  agentTraceList.addEventListener("click", (event) => {
+    const head =
+      event.target instanceof Element
+        ? event.target.closest(".agent-step-card.is-collapsible .agent-step-head")
+        : null;
+    if (!head) return;
+    const card = head.closest(".agent-step-card");
+    if (card) card.classList.toggle("collapsed");
+  });
+}
+
+// The composer toggle switches the shared main view between chat and agent mode
+// (no separate overlay window).
+if (composerAgentToggle) composerAgentToggle.addEventListener("click", toggleAgentMode);
+if (agentClearBtn) agentClearBtn.addEventListener("click", agentResetConversation);
+if (window.desktopSTT && typeof window.desktopSTT.onAgentStep === "function") {
+  window.desktopSTT.onAgentStep(renderAgentStep);
+}
+applyAgentLanguageUI();

@@ -19,6 +19,52 @@
 
 ---
 
+## 更新日志
+
+### 2026-06-21 凌晨 3:46 · linfan
+
+本次由 **linfan** 更新，主要包含三块改动：
+
+#### 1. 设置页面整合：General / 硬件设备 / 存储 三页合一
+
+- 原本的 `General`（通用）、`Devices & Hardware`（硬件设备）、`Storage`（存储）是三个相互独立的设置子页面
+- 现在把硬件设备页和存储页**统一收编进 `General` 页面**，由 General 页面集中展示与控制，进入 General 即可一并查看硬件信息、托管目录与一键清理
+- 设置侧边导航因此更精简，不再为硬件、存储单独各占一栏
+- 同时设置区新增了独立的 `Embedding` 子页面，用于向量检索模型（见第 3 点）
+
+#### 2. 模型下载：修复串行限制，支持并行下载 + 进度显示
+
+- 修复了原先的下载 Bug：之前多个模型只能**一个接一个串行下载**，不同模型之间无法同时进行
+- 现在不同模型之间**支持并行下载**，互不阻塞
+- 新增下载进度显示（Download Dock 下载坞），用户可以实时看到每个模型各自的下载进度
+
+#### 3. 新增向量检索（Embedding 语义检索）与本地智能体（Agent）
+
+这是本次改动最大的一块，给应用补上了「语义检索」和「会自己调用工具的智能体」两项能力。
+
+**向量检索 / 语义搜索**
+
+- 新增本地 Embedding 模型 `bge-m3`（多语言，中文支持良好），**复用已有的 Ollama 服务**，不引入新的运行时
+- 笔记会在本地计算语义向量，向量作为索引与笔记一起存储在 SQLite（`notes` 表新增 `embedding` / `embeddingModel` 字段），SQLite 仍是数据的唯一事实来源
+- 检索时**先做关键词精确匹配，匹配不到再回退到向量余弦相似度排序**，让检索结果更准确——尤其是换种说法、跨中英文表达时也能召回相关笔记
+- 可通过 `npm run download:embedding` 单独拉取该模型，且**不会改动聊天默认模型**（仍为 `qwen3:4b-instruct`）
+
+**本地智能体 Agent**
+
+- 新增 `src/main/agent-orchestrator.js`：一个**有边界的「工具调用」智能体**，不再是写死的固定流水线
+- 工作方式：本地模型自己「思考 → 每次只调用一个本地工具 → 读取结果 → 决定下一步」，最多 6 步，任务完成后直接给出简短的最终答复
+- 接入的本地工具共 5 个：
+  - `transcribe_audio` —— 转写本地音频 / 视频文件
+  - `structure_note` —— 把文本整理成结构化笔记
+  - `search_notes` —— 搜索本地笔记（关键词 + 上面的向量语义检索）
+  - `read_note` —— 按 id 读取某条笔记的完整内容
+  - `speak` —— 用本地 TTS 把文本朗读出来
+- 智能体会把每一步（思考、调用了哪个工具、工具结果、最终答复）**实时流式展示在对话区**，整个过程透明可见
+- 目的 / 作用：让用户用一句自然语言描述任务（例如「把这段录音整理成纪要并读出来」「找一下我之前关于 X 的笔记并总结一下」），智能体就能**自动规划**并把转写 / 结构化 / 检索 / 朗读这些本地能力**自动串起来**完成，全程本地离线
+- 入口：在输入框左下角的**机器人图标**可切换进入 / 退出 Agent 模式
+
+---
+
 ## 项目定位
 
 这个项目不是一个纯聊天壳子，而是一个面向“本地会议记录 / 访谈整理 / 语音笔记 / 离线辅助问答”的桌面端原型。核心思路是：
@@ -66,12 +112,9 @@
 
 ### 5. 笔记存储与检索
 
-- 基于 SQLite 进行本地结构化存储，支持保存笔记
+- 支持保存笔记
 - 支持按文件夹、标签、关键词过滤
 - 支持在笔记详情页继续追加问答消息
-- 支持完整的回收站机制（软删除、恢复、彻底删除）
-- 支持对 LLM 提取的行动项（Action Items）进行“已完成/未完成”的状态管理
-- 具备转写防呆机制，应用意外关闭时能自动标记并处理中断的转写任务
 
 ### 6. 针对笔记的继续提问
 
@@ -133,7 +176,7 @@
 
 ### 数据与存储
 
-- SQLite 数据库型笔记存储 (基于 better-sqlite3)
+- `SQLite` 笔记数据库（`better-sqlite3`），含用于向量检索的笔记 Embedding 字段
 - 项目内统一托管目录
 - Electron `userData` 目录下的笔记数据库
 
@@ -197,15 +240,14 @@ npm.cmd start
 2. npm 展开 `start` 脚本，实际执行 `electron .`
 3. Electron 读取 `package.json` 中的 `main` 字段
 4. 入口来到 `src/main/main.js`
-5. 主进程加载 db-service.js，初始化本地 SQLite 数据库并完成表结构同步
-6. 主进程初始化窗口、权限、IPC
-7. 主窗口加载 `src/renderer/index.html`
-8. `preload.js` 把受控 API 挂到 `window.desktopSTT`
-9. 渲染层 `renderer.js` 开始刷新运行时状态、绑定交互、渲染 UI
+5. 主进程初始化窗口、权限、IPC
+6. 主窗口加载 `src/renderer/index.html`
+7. `preload.js` 把受控 API 挂到 `window.desktopSTT`
+8. 渲染层 `renderer.js` 开始刷新运行时状态、绑定交互、渲染 UI
 
 其中：
 
-- 主进程负责本地文件系统、运行时下载、子进程调用、硬件信息、模型调用以及 SQLite 本地数据库的读写与版本迁移
+- 主进程负责本地文件系统、运行时下载、子进程调用、硬件信息、模型调用
 - 预加载层负责把 IPC 能力以白名单 API 暴露给前端
 - 渲染层负责界面、交互、状态管理、播放控制、笔记视图和设置面板
 
@@ -253,9 +295,15 @@ npm.cmd start
 - `tts-worker.js`
   - TTS 子进程工作逻辑
 - `db-service.js`
-  - 笔记增删改查
-  - 文件夹 / 标签聚合
-  - 问答消息追加
+  - 基于 `SQLite`（`better-sqlite3`）的笔记存储
+  - 笔记增删改查、文件夹 / 标签聚合、问答消息追加
+  - 笔记向量（Embedding）索引的读写
+- `embedding-service.js`
+  - 本地语义向量计算（`bge-m3`，复用 Ollama 服务）
+  - 余弦相似度排序，支撑笔记的向量检索
+- `agent-orchestrator.js`
+  - 本地智能体的工具调用循环（思考 → 调用工具 → 读取结果 → 决定下一步）
+  - 编排 transcribe / structure / search / read / speak 等本地工具
 - `structured-processor.js`
   - 结构化笔记整理
   - 针对笔记问答
@@ -394,33 +442,20 @@ npm.cmd start
 
 与 `.speakspace-data/` 不同，笔记本身不保存在项目目录里，而是保存在 Electron `userData` 目录下。
 
-当前存储实现：
+当前存储实现（由 `src/main/db-service.js` 负责）：
 
 - 笔记目录：`app.getPath("userData")/speakspace-notes`
-- 数据文件：`notes.db`
+- 数据文件：`notes.db`（`SQLite`，通过 `better-sqlite3` 读写；早期的 `notes-db.json` 已迁移到该数据库）
+- 表结构升级采用「`CREATE TABLE IF NOT EXISTS` + 按列增量迁移」，首次启动自动建库建表，迁移前会自动备份
 
-每条笔记包含：
+`notes` 表每条笔记主要包含：
 
-- `id`
-- `title`
-- `createdAt`
-- `updatedAt`
-- `deletedAt`
-- `audioPath`
-- `transcript`
-- `summary`
-- `keyPoints`
-- `actionItems`
-- `tags`
-- `folder`
-- `performance`
-- `conversations`
-- `templateId`
-- `sourceNoteId`
-- `structuredData`
-- `status`
-- `statusMessage`
-- `transcriptSegments`
+- `id` / `title` / `createdAt` / `updatedAt` / `deletedAt`
+- `audioPath` / `transcript` / `transcriptSegments`
+- `summary` / `keyPoints` / `actionItems` / `structuredData`
+- `tags` / `folder` / `templateId` / `sourceNoteId`
+- `status` / `statusMessage` / `performance` / `conversations`
+- `embedding` / `embeddingModel`（用于本地向量检索的语义向量及其模型）
 
 这使得应用本体和模型目录可以清理，而笔记数据仍可独立管理。
 
@@ -466,8 +501,8 @@ npm.cmd start
 
 1. 用户在某条笔记详情页发问
 2. 系统把笔记标题、摘要、要点、行动项、转写摘录和近期对话组装成上下文
-3. 调用本地 LLM 生成回答并返回给前端
-4. 前端收到回答后，调用 db-service.js 的追加方法，将“用户的提问”与“LLM 的回答”一并存入 SQLite 数据库中该条笔记的 conversations 字段，完成持久化
+3. 再调用本地 `LLM`
+4. 回答追加到笔记对话记录
 
 ### 6. TTS 播报流
 
@@ -521,14 +556,15 @@ npm.cmd start
 
 ### 设置面板
 
-- `STT / LLM / TTS` 状态查看
+- 子页面：`General`、`STT`、`LLM`、`Embedding`、`TTS`（硬件信息、存储与清理已统一并入 `General`）
+- `STT / LLM / TTS / Embedding` 状态查看
 - runtime 下载 / 删除
-- 模型下载 / 删除
+- 模型下载 / 删除（支持多个模型并行下载，并显示各自下载进度）
 - TTS 模型和音色切换
 - 自动播报开关
 - 界面语言切换
-- 硬件信息展示
-- `Clean All Local Assets`
+- 硬件信息展示（位于 `General` 页）
+- 托管目录与 `Clean All Local Assets`（位于 `General` 页）
 
 ---
 
@@ -544,6 +580,8 @@ src/
     tts-service.js
     tts-worker.js
     db-service.js
+    embedding-service.js
+    agent-orchestrator.js
     structured-processor.js
   preload/
     preload.js
@@ -556,6 +594,7 @@ scripts/
   download-runtime.js
   download-tts-runtime.js
   download-llm-runtime.js
+  download-embedding-model.js
   cleanup-local-assets.js
   cleanup-local-assets.ps1
   cleanup-local-assets.sh

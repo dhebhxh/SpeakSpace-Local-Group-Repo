@@ -12,6 +12,9 @@ const {
 } = require("./managed-paths");
 
 const DEFAULT_LLM_MODEL = "qwen3:4b-instruct";
+// Embedding model for semantic note search. Keep in sync with
+// scripts/ollama-model-catalog.json and embedding-service.DEFAULT_EMBEDDING_MODEL.
+const EMBEDDING_MODEL = "bge-m3";
 let activeLLMModel = null;
 const OLLAMA_PORT = 11434;
 const OLLAMA_HOST = "127.0.0.1";
@@ -257,7 +260,28 @@ async function extractPortableArchive(archivePath, destinationDir, archiveKind) 
   });
 }
 
-async function installPortableOllamaRuntime() {
+// Serialize portable-runtime installs: the LLM runtime download and an LLM model
+// download can both request an install concurrently, and two parallel extractions
+// to the same directory would corrupt each other. Share one in-flight install.
+let portableRuntimeInstallPromise = null;
+
+function installPortableOllamaRuntime() {
+  if (portableRuntimeInstallPromise) {
+    return portableRuntimeInstallPromise;
+  }
+
+  portableRuntimeInstallPromise = (async () => {
+    try {
+      return await installPortableOllamaRuntimeImpl();
+    } finally {
+      portableRuntimeInstallPromise = null;
+    }
+  })();
+
+  return portableRuntimeInstallPromise;
+}
+
+async function installPortableOllamaRuntimeImpl() {
   const info = getRuntimePaths();
   const spec = getPortableArchiveSpec();
 
@@ -539,7 +563,29 @@ async function ensureLLMServer() {
   };
 }
 
+function parseOllamaProgress(text) {
+  const units = { b: 1, kb: 1024, mb: 1024 ** 2, gb: 1024 ** 3, tb: 1024 ** 4 };
+  const sizeMatch = text.match(
+    /([\d.]+)\s*(B|KB|MB|GB|TB)\s*\/\s*([\d.]+)\s*(B|KB|MB|GB|TB)/i
+  );
+  if (sizeMatch) {
+    const receivedBytes = parseFloat(sizeMatch[1]) * units[sizeMatch[2].toLowerCase()];
+    const totalBytes = parseFloat(sizeMatch[3]) * units[sizeMatch[4].toLowerCase()];
+    if (totalBytes > 0) {
+      return { receivedBytes, totalBytes };
+    }
+  }
+
+  const pctMatch = text.match(/(\d{1,3})\s*%/);
+  if (pctMatch) {
+    return { percent: Math.min(100, Number(pctMatch[1])) };
+  }
+
+  return null;
+}
+
 async function pullLLMModels(modelNames = [], options = {}) {
+  const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
   const uniqueModelNames = [...new Set(modelNames.filter(Boolean))];
   if (uniqueModelNames.length === 0) {
     throw new Error("No Ollama model was specified for download.");
@@ -547,6 +593,9 @@ async function pullLLMModels(modelNames = [], options = {}) {
 
   let info = getRuntimePaths();
   if (!info.ollamaExists || info.runtimeLocation !== "portable") {
+    if (onProgress) {
+      onProgress({ phase: "installing", indeterminate: true });
+    }
     await installPortableOllamaRuntime();
     info = getRuntimePaths();
   }
@@ -555,13 +604,29 @@ async function pullLLMModels(modelNames = [], options = {}) {
   await startOllamaServer(info);
 
   for (const modelName of uniqueModelNames) {
+    if (onProgress) {
+      onProgress({ phase: "downloading", indeterminate: true });
+    }
     await new Promise((resolve, reject) => {
       const child = spawn(info.ollamaPath, ["pull", modelName], {
         env: getOllamaEnv(info),
         cwd: info.ollamaBinDir && isPathCommand(info.ollamaPath) ? info.ollamaBinDir : undefined,
         windowsHide: process.platform === "win32",
-        stdio: "ignore",
+        stdio: onProgress ? ["ignore", "pipe", "pipe"] : "ignore",
       });
+
+      if (onProgress && child.stdout) {
+        const handleChunk = (chunk) => {
+          const segments = chunk.toString().split(/[\r\n]+/);
+          const lastSegment = segments[segments.length - 1] || segments[segments.length - 2] || "";
+          const parsed = parseOllamaProgress(lastSegment);
+          if (parsed) {
+            onProgress({ phase: "downloading", ...parsed });
+          }
+        };
+        child.stdout.on("data", handleChunk);
+        if (child.stderr) child.stderr.on("data", handleChunk);
+      }
 
       child.on("error", reject);
       child.on("close", (code) => {
@@ -588,11 +653,14 @@ async function pullLLMModels(modelNames = [], options = {}) {
   return getLLMRuntimeInfo();
 }
 
-async function downloadLLMRuntime() {
+async function downloadLLMRuntime(onProgress) {
   let info = getRuntimePaths();
   let installedPortableAsset = "";
 
   if (info.runtimeLocation !== "portable") {
+    if (onProgress) {
+      onProgress({ phase: "installing", indeterminate: true });
+    }
     const portableInfo = await installPortableOllamaRuntime();
     installedPortableAsset = portableInfo.installedPortableAsset || "";
     info = getRuntimePaths();
@@ -601,10 +669,11 @@ async function downloadLLMRuntime() {
   return pullLLMModels([DEFAULT_LLM_MODEL], {
     defaultModel: DEFAULT_LLM_MODEL,
     installedPortableAsset,
+    onProgress,
   });
 }
 
-async function downloadLLMModel(modelName) {
+async function downloadLLMModel(modelName, onProgress) {
   const cleanModelName = String(modelName || "").trim();
   if (!cleanModelName) {
     throw new Error("No Ollama model was selected.");
@@ -612,7 +681,28 @@ async function downloadLLMModel(modelName) {
 
   return pullLLMModels([cleanModelName], {
     defaultModel: cleanModelName,
+    onProgress,
   });
+}
+
+// Pull the embedding model WITHOUT changing the active chat model. We preserve
+// whatever chat model is currently default so enabling semantic search never
+// disrupts chat (unlike downloadLLMModel, which sets the pulled model active).
+async function downloadEmbeddingModel(onProgress) {
+  let installed = [];
+  try {
+    installed = await listInstalledModelsFromApi();
+  } catch (_error) {
+    installed = [];
+  }
+  const keep =
+    activeLLMModel && installed.includes(activeLLMModel)
+      ? activeLLMModel
+      : installed.includes(DEFAULT_LLM_MODEL)
+      ? DEFAULT_LLM_MODEL
+      : installed[0] || DEFAULT_LLM_MODEL;
+  const toPull = installed.includes(keep) ? [keep, EMBEDDING_MODEL] : [EMBEDDING_MODEL];
+  return pullLLMModels(toPull, { defaultModel: keep, onProgress });
 }
 
 async function deleteLLMModel(modelName) {
@@ -766,6 +856,133 @@ async function generateLocalReply(messages, options) {
   return defaultLocalReplyGenerator(messages, options);
 }
 
+// Like createLocalReplyGenerator, but tool-aware: it forwards an optional
+// `tools` array to Ollama and returns the FULL assistant message (including
+// `tool_calls`) instead of only the trimmed content. Tool-call responses can
+// have empty content, so this must not throw on an empty `content`.
+function createLocalChat({
+  ensureServer = ensureLLMServer,
+  fetchImpl = fetch,
+  listModels = listInstalledModelsFromApi,
+} = {}) {
+  return async function chat(messages, options = {}) {
+    if (!Array.isArray(messages) || messages.length === 0) {
+      throw new Error("No chat messages provided.");
+    }
+
+    const info = await ensureServer();
+    let modelName = options.modelName || info.modelName;
+    const installedModels = await listModels();
+    if (!options.modelName) {
+      modelName = chooseAvailableLLMModel(modelName, installedModels);
+      activeLLMModel = modelName;
+    }
+    if (!installedModels.includes(modelName)) {
+      throw new Error(
+        `Ollama model ${modelName} is not installed.\nRun: npm run download:llm`
+      );
+    }
+
+    const wantStream = typeof options.onToken === "function";
+    const body = {
+      model: modelName,
+      messages,
+      stream: wantStream,
+      options: {
+        temperature:
+          typeof options.temperature === "number" ? options.temperature : 0.3,
+      },
+    };
+    if (Array.isArray(options.tools) && options.tools.length > 0) {
+      body.tools = options.tools;
+    }
+
+    const response = await fetchImpl(`${info.serverUrl}/api/chat`, {
+      method: "POST",
+      signal: options.signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Ollama request failed: ${errorText}`);
+    }
+
+    if (!wantStream) {
+      const data = await response.json();
+      return {
+        message: data?.message || {},
+        modelName,
+        runtimeName: "Ollama",
+      };
+    }
+
+    // Streaming: Ollama returns newline-delimited JSON objects. Emit each content
+    // delta via onToken while accumulating the full message + any tool calls.
+    let content = "";
+    let toolCalls = [];
+    let buffer = "";
+    const handleLine = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      let json;
+      try {
+        json = JSON.parse(trimmed);
+      } catch (_error) {
+        return;
+      }
+      const message = json.message || {};
+      if (typeof message.content === "string" && message.content) {
+        content += message.content;
+        try {
+          options.onToken(message.content);
+        } catch (_error) {
+          // a failing UI listener must not break streaming
+        }
+      }
+      if (Array.isArray(message.tool_calls) && message.tool_calls.length > 0) {
+        toolCalls = toolCalls.concat(message.tool_calls);
+      }
+    };
+
+    try {
+      for await (const chunk of response.body) {
+        buffer += typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
+        let index;
+        while ((index = buffer.indexOf("\n")) >= 0) {
+          handleLine(buffer.slice(0, index));
+          buffer = buffer.slice(index + 1);
+        }
+      }
+      if (buffer) handleLine(buffer);
+    } catch (streamError) {
+      // If nothing streamed through, surface the error; otherwise use what we got.
+      if (!content && toolCalls.length === 0) {
+        throw streamError;
+      }
+    }
+
+    const streamedMessage = { role: "assistant", content };
+    if (toolCalls.length > 0) {
+      streamedMessage.tool_calls = toolCalls;
+    }
+    return {
+      message: streamedMessage,
+      modelName,
+      runtimeName: "Ollama",
+    };
+  };
+}
+
+const defaultLocalChat = createLocalChat();
+
+async function generateLocalChat(messages, options) {
+  return defaultLocalChat(messages, options);
+}
+
 function killProcessTree(pid) {
   try {
     if (process.platform === "win32") {
@@ -824,11 +1041,17 @@ async function stopLLMServerForCleanup() {
 module.exports = {
   chooseAvailableLLMModel,
   createLocalReplyGenerator,
+  createLocalChat,
+  generateLocalChat,
   deleteLLMModel,
   deleteLLMRuntime,
   downloadLLMModel,
   downloadLLMRuntime,
+  downloadEmbeddingModel,
+  pullLLMModels,
+  EMBEDDING_MODEL,
   generateLocalReply,
+  ensureLLMServer,
   getLLMRuntimeInfo,
   setActiveLLMModel,
   stopLLMServer,

@@ -4,13 +4,14 @@ const path = require("path");
 const os = require("os");
 const { execFile, spawn } = require("child_process");
 const { pipeline } = require("stream/promises");
-const { Readable } = require("stream");
+const { Readable, Transform } = require("stream");
 const { app, BrowserWindow, dialog, ipcMain, Menu, session } = require("electron");
 const {
   deleteLLMModel,
   deleteLLMRuntime,
   downloadLLMModel,
   downloadLLMRuntime,
+  downloadEmbeddingModel,
   generateLocalReply,
   getLLMRuntimeInfo,
   setActiveLLMModel,
@@ -53,6 +54,7 @@ const {
   markInterruptedTranscriptions,
 } = require("./db-service");
 const { generateStructuredNote, askAboutNote } = require("./structured-processor");
+const { runAgent } = require("./agent-orchestrator");
 const { createTranscriptionJobManager } = require("./transcription-job-manager");
 const { getManagedRecordingDisposition } = require("./audio-retention");
 const { getMediaDurationMs } = require("./audio-duration");
@@ -94,6 +96,71 @@ function execFileText(file, args, options = {}) {
   });
 }
 
+/* ========== Download progress reporting ========== */
+
+const downloadProgressLastEmit = new Map();
+
+function reportDownloadProgress(id, data = {}) {
+  if (!id || !mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+
+  const now = Date.now();
+  const isMilestone =
+    Boolean(data.phase) ||
+    data.indeterminate === true ||
+    (Number(data.totalBytes) > 0 && Number(data.receivedBytes) >= Number(data.totalBytes));
+
+  if (!isMilestone) {
+    const last = downloadProgressLastEmit.get(id) || 0;
+    if (now - last < 150) {
+      return;
+    }
+  }
+
+  downloadProgressLastEmit.set(id, now);
+  mainWindow.webContents.send("download:progress", { id, ...data });
+}
+
+function makeProgressReporter(id) {
+  return (data) => reportDownloadProgress(id, data || {});
+}
+
+// Some downloads touch the same underlying files (e.g. the TTS runtime and the
+// TTS voice model both fetch/extract the same Kokoro archive). Concurrent runs
+// would race on the same temp/cache files, so we deduplicate by resource key:
+// a second request for an in-flight resource awaits the same execution.
+const inFlightDownloads = new Map();
+
+function runExclusiveDownload(resourceKey, task) {
+  const existing = inFlightDownloads.get(resourceKey);
+  if (existing) {
+    return existing;
+  }
+
+  const promise = (async () => {
+    try {
+      return await task();
+    } finally {
+      inFlightDownloads.delete(resourceKey);
+    }
+  })();
+
+  inFlightDownloads.set(resourceKey, promise);
+  return promise;
+}
+
+function downloadResourceKey(kind, modelName) {
+  // TTS runtime and TTS voice model resolve to the same Kokoro archive.
+  if (kind === "tts" || kind === "tts-model") {
+    return "tts:kokoro-archive";
+  }
+  if (modelName) {
+    return `model:${kind}:${modelName}`;
+  }
+  return `runtime:${kind}`;
+}
+
 const WHISPER_MODEL_BASE_URL =
   "https://huggingface.co/ggerganov/whisper.cpp/resolve/main";
 
@@ -111,12 +178,16 @@ function getDownloadScriptPath(kind) {
   throw new Error(`Unsupported runtime download target: ${kind}`);
 }
 
-function runDownloadScript(kind) {
+function runDownloadScript(kind, onProgress) {
   const scriptPath = getDownloadScriptPath(kind);
 
   return new Promise((resolve, reject) => {
     let stdout = "";
     let stderr = "";
+
+    if (onProgress) {
+      onProgress({ phase: "installing", indeterminate: true });
+    }
 
     const child = spawn(getNodeExecutable(), [scriptPath], {
       cwd: getProjectRoot(),
@@ -124,12 +195,25 @@ function runDownloadScript(kind) {
       windowsHide: process.platform === "win32",
     });
 
+    const handleOutput = (text) => {
+      if (!onProgress) return;
+      const match = String(text).match(/(\d{1,3})\s*%/);
+      if (match) {
+        const percent = Math.min(100, Number(match[1]));
+        onProgress({ phase: "downloading", percent });
+      }
+    };
+
     child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
+      const text = chunk.toString();
+      stdout += text;
+      handleOutput(text);
     });
 
     child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
+      const text = chunk.toString();
+      stderr += text;
+      handleOutput(text);
     });
 
     child.on("error", (error) => {
@@ -152,7 +236,20 @@ function runDownloadScript(kind) {
   });
 }
 
-async function downloadFile(url, destinationPath) {
+function createProgressCounterStream(onProgress, totalBytes) {
+  let received = 0;
+  return new Transform({
+    transform(chunk, _enc, callback) {
+      received += chunk.length;
+      if (onProgress) {
+        onProgress({ phase: "downloading", receivedBytes: received, totalBytes });
+      }
+      callback(null, chunk);
+    },
+  });
+}
+
+async function downloadFile(url, destinationPath, onProgress) {
   const response = await fetch(url, {
     headers: {
       "User-Agent": "SpeakSpace-Desktop-Downloader",
@@ -164,12 +261,17 @@ async function downloadFile(url, destinationPath) {
     throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
   }
 
+  const totalBytes = Number(response.headers.get("content-length")) || null;
   const tempPath = `${destinationPath}.tmp`;
-  await pipeline(Readable.fromWeb(response.body), fs.createWriteStream(tempPath));
+  await pipeline(
+    Readable.fromWeb(response.body),
+    createProgressCounterStream(onProgress, totalBytes),
+    fs.createWriteStream(tempPath)
+  );
   await fsPromises.rename(tempPath, destinationPath);
 }
 
-async function downloadSttModel(modelName) {
+async function downloadSttModel(modelName, onProgress) {
   const modelsDir = getSTTModelsDir();
   const targetPath = path.join(modelsDir, modelName);
   const url = `${WHISPER_MODEL_BASE_URL}/${modelName}`;
@@ -184,7 +286,7 @@ async function downloadSttModel(modelName) {
     };
   }
 
-  await downloadFile(url, targetPath);
+  await downloadFile(url, targetPath, onProgress);
 
   return {
     ok: true,
@@ -224,25 +326,29 @@ async function cleanAllManagedAssets() {
   };
 }
 
-async function downloadSpecificModel(kind, modelName) {
+async function downloadSpecificModel(kind, modelName, onProgress) {
   if (!modelName) {
     throw new Error("Model name is required.");
   }
 
   if (kind === "stt") {
-    return downloadSttModel(modelName);
+    return downloadSttModel(modelName, onProgress);
   }
 
   if (kind === "parakeet") {
-    return downloadParakeetModel(modelName);
+    return downloadParakeetModel(modelName, onProgress);
   }
 
   if (kind === "llm") {
-    return downloadLLMModel(modelName);
+    return downloadLLMModel(modelName, onProgress);
+  }
+
+  if (kind === "embedding") {
+    return downloadEmbeddingModel(onProgress);
   }
 
   if (kind === "tts-model") {
-    return downloadTTSRuntime();
+    return downloadTTSRuntime(onProgress);
   }
 
   throw new Error(`Unsupported model download target: ${kind}`);
@@ -670,20 +776,34 @@ ipcMain.handle("runtime:get-info", async () => {
   };
 });
 
-ipcMain.handle("runtime:download", async (_event, kind) => {
-  if (kind === "llm") {
-    return downloadLLMRuntime();
-  }
+ipcMain.handle("runtime:download", async (_event, kind, downloadId) => {
+  const onProgress = makeProgressReporter(downloadId);
+  try {
+    return await runExclusiveDownload(downloadResourceKey(kind), () => {
+      if (kind === "llm") {
+        return downloadLLMRuntime(onProgress);
+      }
 
-  if (kind === "tts") {
-    return downloadTTSRuntime();
-  }
+      if (kind === "tts") {
+        return downloadTTSRuntime(onProgress);
+      }
 
-  return runDownloadScript(kind);
+      return runDownloadScript(kind, onProgress);
+    });
+  } finally {
+    downloadProgressLastEmit.delete(downloadId);
+  }
 });
 
-ipcMain.handle("runtime:download-model", async (_event, kind, modelName) => {
-  return downloadSpecificModel(kind, modelName);
+ipcMain.handle("runtime:download-model", async (_event, kind, modelName, downloadId) => {
+  const onProgress = makeProgressReporter(downloadId);
+  try {
+    return await runExclusiveDownload(downloadResourceKey(kind, modelName), () =>
+      downloadSpecificModel(kind, modelName, onProgress)
+    );
+  } finally {
+    downloadProgressLastEmit.delete(downloadId);
+  }
 });
 
 ipcMain.handle("runtime:delete", async (_event, kind) => {
@@ -712,6 +832,10 @@ ipcMain.handle("runtime:delete-model", async (_event, kind, modelName) => {
   }
 
   if (kind === "llm") {
+    return deleteLLMModel(modelName);
+  }
+
+  if (kind === "embedding") {
     return deleteLLMModel(modelName);
   }
 
@@ -862,6 +986,21 @@ ipcMain.handle("process:structured", async (_event, transcript) => {
 ipcMain.handle("note:ask", async (_event, noteId, question) => {
   const note = await getNote(noteId);
   return askAboutNote(note, question);
+});
+
+ipcMain.handle("agent:run", async (event, instruction, options = {}) => {
+  const startTime = Date.now();
+  const result = await runAgent(instruction, {
+    context: options.context,
+    history: options.history,
+    onStep: (step) => {
+      if (!event.sender.isDestroyed()) {
+        event.sender.send("agent:step", step);
+      }
+    },
+  });
+  result.agentDurationMs = Date.now() - startTime;
+  return result;
 });
 
 function detectGPU() {

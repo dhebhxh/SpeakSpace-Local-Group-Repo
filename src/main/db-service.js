@@ -69,6 +69,8 @@ const requiredNoteColumns = [
   { name: "status", definition: "status TEXT DEFAULT 'ready'" },
   { name: "statusMessage", definition: "statusMessage TEXT" },
   { name: "transcriptSegments", definition: "transcriptSegments TEXT" },
+  { name: "embedding", definition: "embedding TEXT" },
+  { name: "embeddingModel", definition: "embeddingModel TEXT" },
 ];
 const existingNoteColumns = new Set(
   db.prepare("PRAGMA table_info(notes)").all().map((column) => column.name)
@@ -189,7 +191,9 @@ async function updateNote(noteId, updates) {
         structuredData = @structuredData,
         status = @status,
         statusMessage = @statusMessage,
-        transcriptSegments = @transcriptSegments
+        transcriptSegments = @transcriptSegments,
+        embedding = NULL,
+        embeddingModel = NULL
     WHERE id = @id
   `);
 
@@ -421,6 +425,47 @@ async function getStoreInfo() {
   };
 }
 
+//Store a semantic embedding vector for a note (used by local vector search)
+async function setNoteEmbedding(noteId, embedding, model) {
+  const json = Array.isArray(embedding) ? JSON.stringify(embedding) : null;
+  db.prepare("UPDATE notes SET embedding = ?, embeddingModel = ? WHERE id = ?").run(
+    json,
+    json ? model || null : null,
+    noteId
+  );
+}
+
+//List active notes that still need an embedding for the given model
+//(never embedded, edited since, or embedded with a different model).
+async function listNotesNeedingEmbedding(model) {
+  return db
+    .prepare(
+      `SELECT id, title, summary, transcript FROM notes
+       WHERE deletedAt IS NULL AND (embedding IS NULL OR embeddingModel IS NOT ?)`
+    )
+    .all(model || null);
+}
+
+//List active notes that already have an embedding for the given model,
+//with the parsed vector plus light metadata for ranking.
+async function listNoteEmbeddings(model) {
+  const rows = db
+    .prepare(
+      `SELECT id, title, summary, tags, embedding FROM notes
+       WHERE deletedAt IS NULL AND embedding IS NOT NULL AND embeddingModel IS ?`
+    )
+    .all(model || null);
+  return rows
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      summary: row.summary || "",
+      tags: row.tags ? JSON.parse(row.tags) : [],
+      embedding: row.embedding ? JSON.parse(row.embedding) : null,
+    }))
+    .filter((row) => Array.isArray(row.embedding));
+}
+
 //Export the functions for use in other parts of the application
 function closeStore() {
   if (db.open) {
@@ -444,6 +489,9 @@ module.exports = {
   appendConversation,
   setActionItemCompletion,
   markInterruptedTranscriptions,
+  setNoteEmbedding,
+  listNotesNeedingEmbedding,
+  listNoteEmbeddings,
   getStoreInfo,
   closeStore,
 };

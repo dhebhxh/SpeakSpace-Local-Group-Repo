@@ -1713,6 +1713,13 @@ body.sidebar-collapsed .main-panel::before {
   animation: recording-pulse 1.5s ease infinite;
 }
 
+/* Composer mode toggle (chat <-> agent) — highlighted when agent mode is active */
+.composer-mode-toggle.active {
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-color: var(--accent);
+}
+
 .send-btn {
   background: linear-gradient(135deg, var(--accent), #8b5cf6);
   color: white;
@@ -2967,6 +2974,14 @@ body.sidebar-collapsed .main-panel::before {
   border: 1px solid var(--border);
 }
 
+.hardware-panel-spaced {
+  margin-top: 28px;
+}
+
+.settings-group-head-spaced {
+  margin-top: 28px;
+}
+
 .hardware-panel-head {
   display: flex;
   align-items: center;
@@ -3724,4 +3739,656 @@ body.sidebar-collapsed .main-panel::before {
     grid-column: 1 !important;
     grid-row: auto !important;
   }
+}
+
+/* ========== Floating download dock ========== */
+
+.download-dock {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 1500;
+}
+
+.download-dock.hidden {
+  display: none;
+}
+
+.download-dock-handle {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 48px;
+  padding: 16px 0;
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 16px 0 0 16px;
+  background: var(--glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.4);
+  transform: translateX(42%);
+  transition: transform 0.32s cubic-bezier(0.34, 1.45, 0.64, 1), background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.download-dock.open .download-dock-handle,
+.download-dock.pinned .download-dock-handle {
+  transform: translateX(0);
+  background: var(--surface-2);
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.download-dock-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.download-dock-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) calc(var(--ring-fraction, 0) * 1%),
+    var(--surface-4) 0
+  );
+}
+
+.download-dock-ring.indeterminate::before {
+  background: conic-gradient(from 0deg, transparent, var(--accent), var(--secondary), transparent);
+  animation: spin 1s linear infinite;
+}
+
+.download-dock-ring::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--surface-1);
+}
+
+.download-dock-handle-icon {
+  position: relative;
+  z-index: 1;
+  color: var(--accent-hover);
+}
+
+.download-dock-handle-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.download-dock-panel {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px;
+  margin-right: 10px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-1);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(16px, -50%) scale(0.97);
+  transform-origin: right center;
+  transition: opacity 0.24s ease, transform 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.download-dock.open .download-dock-panel,
+.download-dock.pinned .download-dock-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%) scale(1);
+}
+
+.download-dock-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.download-dock-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.download-dock-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.download-dock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.download-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.download-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.download-item-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.download-item-pct {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-hover);
+}
+
+.download-item-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-4);
+  overflow: hidden;
+}
+
+.download-item-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+  transition: width 0.3s ease;
+}
+
+.download-item-bar.indeterminate .download-item-bar-indeterminate {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: download-indeterminate 1.15s ease-in-out infinite;
+}
+
+@keyframes download-indeterminate {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.download-item-phase {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.download-item-times {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.download-time-label {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-right: 2px;
+}
+
+/* ========== Local Agent panel ========== */
+.agent-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 5, 8, 0.55);
+  backdrop-filter: blur(6px);
+  animation: fade-in-up 0.2s ease;
+}
+
+.agent-panel {
+  width: 100%;
+  max-width: 760px;
+  height: min(720px, calc(100vh - 48px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.agent-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agent-header h2 {
+  margin: 2px 0 0;
+  font-size: 20px;
+}
+
+.agent-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.agent-clear-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+
+.agent-subtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 52ch;
+}
+
+.agent-body {
+  overflow-y: auto;
+  padding: 18px 24px;
+}
+
+.agent-trace {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-empty {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 32px 20px 60px;
+  text-align: center;
+}
+
+.agent-empty h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--accent-hover), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.agent-empty p {
+  margin: 0;
+  max-width: 440px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.agent-step-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  padding: 12px 14px;
+  border-left: 3px solid var(--surface-4);
+}
+
+.agent-step-card.is-user {
+  background: var(--surface-3);
+  border-left-color: var(--accent);
+}
+
+.agent-step-card.is-running {
+  border-left-color: var(--accent-hover);
+}
+
+.agent-step-card.is-ok {
+  border-left-color: var(--green);
+}
+
+.agent-step-card.is-error {
+  border-left-color: var(--rose);
+}
+
+.agent-step-card.is-final {
+  border-left-color: var(--accent);
+  background: var(--surface-3);
+}
+
+.agent-step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.agent-tool-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.agent-step-label b {
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+
+.agent-args,
+.agent-step-result,
+.agent-final-text,
+.agent-user-text {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-args {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  overflow-x: auto;
+}
+
+.agent-step-result {
+  color: var(--text-secondary);
+}
+
+.agent-final-text {
+  font-size: 13.5px;
+}
+
+.agent-play-btn {
+  margin-top: 10px;
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+.agent-thinking {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.agent-thinking-text {
+  margin-left: 4px;
+}
+
+.agent-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--accent-hover);
+  animation: agent-blink 1.2s infinite ease-in-out both;
+}
+
+.agent-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.agent-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.agent-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-left: auto;
+  border: 2px solid var(--surface-4);
+  border-top-color: var(--accent-hover);
+  border-radius: var(--radius-full);
+  animation: agent-spin 0.8s linear infinite;
+}
+
+@keyframes agent-blink {
+  0%, 80%, 100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes agent-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.agent-composer {
+  border-top: 1px solid var(--border);
+  padding: 14px 20px 18px;
+  background: var(--surface-1);
+}
+
+.agent-run-status {
+  min-height: 16px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-run-status.is-running {
+  color: var(--accent-hover);
+}
+
+.agent-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.agent-input {
+  flex: 1;
+  resize: none;
+  min-height: 44px;
+  max-height: 160px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.agent-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.agent-input:disabled {
+  opacity: 0.6;
+}
+
+.agent-run-btn {
+  flex: 0 0 auto;
+}
+
+/* Composer toolbar (import audio / record) — mirrors the main chat input */
+.agent-composer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 16px;
+  margin-bottom: 8px;
+}
+
+.agent-composer-meta .agent-run-status {
+  margin-bottom: 0;
+}
+
+.agent-toolbar {
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+
+.agent-toolbar .icon-btn.recording {
+  color: var(--rose);
+}
+
+.agent-composer-meta .meta-chip.error {
+  color: var(--rose);
+}
+
+/* User vs assistant distinction: user prompts are right-aligned accent bubbles,
+   the agent's answers/steps stay left-aligned. */
+.agent-step-card.is-user {
+  align-self: flex-end;
+  max-width: 85%;
+  background: var(--surface-3);
+  border: 1px solid var(--accent);
+  border-left: 1px solid var(--accent);
+}
+
+.agent-step-card.is-final {
+  align-self: flex-start;
+  max-width: 92%;
+}
+
+/* Collapsible tool cards (start expanded; click the header to toggle) */
+.agent-step-card.is-collapsible > .agent-step-head {
+  cursor: pointer;
+  user-select: none;
+}
+
+.agent-collapse-chevron {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+
+.agent-step-card.is-running .agent-collapse-chevron {
+  margin-left: 6px;
+}
+
+.agent-step-card.collapsed .agent-collapse-chevron {
+  transform: rotate(-90deg);
+}
+
+.agent-step-card.collapsed .agent-collapse-body {
+  display: none;
+}
+
+/* Audio playback controls (play / pause / stop) on a speech result */
+.agent-audio-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.agent-audio-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+/* Final answer rendered as rich text (markdown), not preformatted plain text */
+.agent-final-text.rich-text {
+  white-space: normal;
+}
+
+.agent-final-text.rich-text p {
+  margin: 0 0 8px;
+}
+
+.agent-final-text.rich-text ul,
+.agent-final-text.rich-text ol {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+}
+
+.agent-final-text.rich-text code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+
+/* Themed scrollbar for the agent trace, matching the app's chat list */
+.agent-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agent-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agent-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.agent-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
 }

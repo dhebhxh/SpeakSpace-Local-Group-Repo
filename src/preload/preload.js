@@ -5,8 +5,14 @@ contextBridge.exposeInMainWorld("desktopSTT", {
   getPathForFile: (file) => webUtils.getPathForFile(file),
   getAudioDuration: (filePath) => ipcRenderer.invoke("audio:get-duration", filePath),
   getRuntimeInfo: () => ipcRenderer.invoke("runtime:get-info"),
-  downloadRuntime: (kind) => ipcRenderer.invoke("runtime:download", kind),
-  downloadModel: (kind, modelName) => ipcRenderer.invoke("runtime:download-model", kind, modelName),
+  downloadRuntime: (kind, downloadId) => ipcRenderer.invoke("runtime:download", kind, downloadId),
+  downloadModel: (kind, modelName, downloadId) =>
+    ipcRenderer.invoke("runtime:download-model", kind, modelName, downloadId),
+  onDownloadProgress: (listener) => {
+    const wrapped = (_event, payload) => listener(payload);
+    ipcRenderer.on("download:progress", wrapped);
+    return () => ipcRenderer.removeListener("download:progress", wrapped);
+  },
   deleteRuntime: (kind) => ipcRenderer.invoke("runtime:delete", kind),
   deleteModel: (kind, modelName) => ipcRenderer.invoke("runtime:delete-model", kind, modelName),
   cleanAllAssets: () => ipcRenderer.invoke("assets:clean-all"),
@@ -29,6 +35,13 @@ contextBridge.exposeInMainWorld("desktopSTT", {
 
   processStructured: (transcript) => ipcRenderer.invoke("process:structured", transcript),
   askAboutNote: (noteId, question) => ipcRenderer.invoke("note:ask", noteId, question),
+
+  runAgent: (instruction, options) => ipcRenderer.invoke("agent:run", instruction, options),
+  onAgentStep: (listener) => {
+    const wrapped = (_event, step) => listener(step);
+    ipcRenderer.on("agent:step", wrapped);
+    return () => ipcRenderer.removeListener("agent:step", wrapped);
+  },
 
   createNote: (noteData) => ipcRenderer.invoke("note:create", noteData),
   updateNote: (noteId, updates) => ipcRenderer.invoke("note:update", noteId, updates),

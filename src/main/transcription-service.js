@@ -4,7 +4,7 @@ const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const { pipeline } = require("stream/promises");
-const { Readable } = require("stream");
+const { Readable, Transform } = require("stream");
 const {
   getProjectRoot,
   getSTTCacheDir,
@@ -849,7 +849,7 @@ async function transcribeAudioWithParakeet(filePath, info, options = {}) {
   };
 }
 
-async function downloadFile(url, destinationPath) {
+async function downloadFile(url, destinationPath, onProgress) {
   const response = await fetch(url, {
     headers: {
       "User-Agent": "SpeakSpace-Parakeet-Setup",
@@ -861,8 +861,20 @@ async function downloadFile(url, destinationPath) {
     throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
   }
 
+  const totalBytes = Number(response.headers.get("content-length")) || null;
+  let received = 0;
+  const counter = new Transform({
+    transform(chunk, _enc, callback) {
+      received += chunk.length;
+      if (onProgress) {
+        onProgress({ phase: "downloading", receivedBytes: received, totalBytes });
+      }
+      callback(null, chunk);
+    },
+  });
+
   const tempPath = `${destinationPath}.tmp`;
-  await pipeline(Readable.fromWeb(response.body), fsSync.createWriteStream(tempPath));
+  await pipeline(Readable.fromWeb(response.body), counter, fsSync.createWriteStream(tempPath));
   await fs.rename(tempPath, destinationPath);
 }
 
@@ -890,7 +902,7 @@ function findParakeetExtractedDir(rootDir) {
   return null;
 }
 
-async function downloadParakeetModel(modelName) {
+async function downloadParakeetModel(modelName, onProgress) {
   const meta = PARAKEET_MODEL_CATALOG[modelName];
   if (!meta) {
     throw new Error(`Unknown Parakeet model: ${modelName}`);
@@ -917,9 +929,12 @@ async function downloadParakeetModel(modelName) {
   await fs.mkdir(extractDir, { recursive: true });
 
   if (!fsSync.existsSync(archivePath)) {
-    await downloadFile(meta.archiveUrl, archivePath);
+    await downloadFile(meta.archiveUrl, archivePath, onProgress);
   }
 
+  if (onProgress) {
+    onProgress({ phase: "extracting", indeterminate: true });
+  }
   await runProcess("tar", ["-xf", archivePath, "-C", extractDir]);
 
   const extractedModelDir = findParakeetExtractedDir(extractDir);

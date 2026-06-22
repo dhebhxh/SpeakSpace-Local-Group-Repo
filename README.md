@@ -4,7 +4,7 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-22 12:50
+- 最后更新：2026-06-22 12:56
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
@@ -14,32 +14,34 @@
 | `origin/Jack` | `d9539bf` | [verified] fix: persist agent notes and reset sessions | Yanqing | 2026-06-22 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
-| `origin/codex/remove-agent-handoff` | `dab0ebb` | Remove obsolete agent handoff | Yanqing | 2026-06-20 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
-| `origin/fix/agent-mode-session-notes` | `d9539bf` | [verified] fix: persist agent notes and reset sessions | Yanqing | 2026-06-22 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 新增 `origin/fix/agent-mode-session-notes`：`d9539bf`
-- 更新 `origin/Jack`：`13075df` → `d9539bf`
+- 删除 `origin/codex/remove-agent-handoff`：原 `dab0ebb`
+- 删除 `origin/fix/agent-mode-session-notes`：原 `d9539bf`
 
 ### 最近提交
-- `origin/fix/agent-mode-session-notes` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
-- `origin/fix/agent-mode-session-notes` `13075df`：Add files via upload（Fan Lin，2026-06-21）
-- `origin/fix/agent-mode-session-notes` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
-- `origin/fix/agent-mode-session-notes` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
-- `origin/Jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+- 本次没有可列出的新增提交，可能是文档缺失修复或分支删除。
 
 ### 主要文件变化
-- `origin/Jack`: `M	README.md`
-- `origin/Jack`: `A	src/renderer/agent-conversation-state.js`
-- `origin/Jack`: `M	src/renderer/index.html`
-- `origin/Jack`: `M	src/renderer/renderer.js`
-- `origin/Jack`: `A	tests/agent-conversation-state.test.js`
+- 暂无可列出的文件 diff。
 
 ## 更新记录
+
+### 2026-06-22 12:56 — 自动更新
+
+**分支变化**
+- 删除 `origin/codex/remove-agent-handoff`：原 `dab0ebb`
+- 删除 `origin/fix/agent-mode-session-notes`：原 `d9539bf`
+
+**提交摘要**
+- 本次没有可列出的新增提交，可能是文档缺失修复或分支删除。
+
+**主要文件变化**
+- 暂无可列出的文件 diff。
 
 ### 2026-06-22 12:50 — 自动更新
 
@@ -274,15 +276,6 @@
 - 变更文件：`M  src/renderer/styles.css`、`M  .gitignore`
 
 ---
-
-### 2026-06-17 11:00 — origin/main 里程碑合并
-
-- 更新 `origin/main`：`305e03b` → `18a5655`（Wenlei Miao：Merge pull request #7 from dhebhxh/YQ）
-- 通过 PR #7（from YQ）和 PR #6（from LF-c-patch-1）合并，main 分支现为项目最完整的集成分支
-
----
-
-*本文件共保留 19 条更新记录（最近 20 条内）。*
 
 ## 当前待确认事项
 

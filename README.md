@@ -21,6 +21,13 @@
 
 ## 更新日志
 
+### 2026-06-22 · Agent Mode note / session fixes
+
+- `Agent Mode` 完成回答后，现在可以复用现有 `Save as Note` 流程转写为结构化笔记，并显示在左侧笔记栏。
+- `New Session` 会同步清理 Agent 对话状态，避免从普通模式重新进入 Agent Mode 时带回旧对话。
+- 从 Agent 对话保存后的笔记详情 / 处理页面点击 `New Session`，会直接跳回新的空对话界面，不再停留在刚生成的笔记页。
+- 新增 `src/renderer/agent-conversation-state.js` 与 `tests/agent-conversation-state.test.js`，覆盖 Agent 对话可保存内容和 session reset 行为。
+
 ### 2026-06-21 凌晨 3:46 · linfan
 
 本次由 **linfan** 更新，主要包含三块改动：
@@ -204,13 +211,13 @@ npm.cmd start
 
 ```bash
 > speakspace-local-desktop@1.0.0 start
-> electron .
+> npm run native:electron && electron .
 ```
 
 这表示：
 
 - `npm start` 或 `npm.cmd start` 最终都会执行 `package.json` 里的 `start` 脚本
-- 当前项目的 `start` 脚本实际内容是 `electron .`
+- 当前项目的 `start` 脚本会先执行 `npm run native:electron`，确保 `better-sqlite3` 等 native 依赖适配当前 Electron 版本，然后再执行 `electron .`
 - `electron .` 会读取当前目录下 `package.json` 的 `main` 字段，并从 `src/main/main.js` 启动整个桌面应用
 
 如果你只想先检查本地是否准备好，可以运行：
@@ -666,6 +673,18 @@ npm run download:llm:check
 npm run cleanup:assets
 ```
 
+运行自动化测试：
+
+```bash
+npm test
+```
+
+运行本地验证脚本：
+
+```bash
+npm run verify:local
+```
+
 只拉某个 LLM 模型：
 
 ```bash
@@ -682,7 +701,7 @@ node ./scripts/download-llm-runtime.js --preset candidates --default-model phi4-
 
 当前 `package.json` 中几个最常用脚本的实际展开如下：
 
-- `npm start` -> `electron .`
+- `npm start` -> `npm run native:electron && electron .`
 - `npm run download:runtime` -> `node ./scripts/download-runtime.js`
 - `npm run download:tts` -> `node ./scripts/download-tts-runtime.js`
 - `npm run download:llm` -> `node ./scripts/download-llm-runtime.js`
@@ -691,6 +710,8 @@ node ./scripts/download-llm-runtime.js --preset candidates --default-model phi4-
 - `npm run download:tts:check` -> `node ./scripts/download-tts-runtime.js --check`
 - `npm run download:llm:check` -> `node ./scripts/download-llm-runtime.js --check`
 - `npm run cleanup:assets` -> `node ./scripts/cleanup-local-assets.js`
+- `npm run verify:local` -> `npm run native:node && node ./scripts/verify-local.js`
+- `npm test` -> `npm run native:node && node --test tests/*.test.js`
 
 ---
 

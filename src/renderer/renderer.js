@@ -783,6 +783,8 @@ const state = {
   modelDeleteKind: "",
   settingsCategory: "general",
   agentMode: false,
+  agentConversation: { turns: [], noteText: "" },
+  agentLastPerformance: null,
   notes: [],
   deletedNotes: [],
   currentNoteId: null,
@@ -1334,6 +1336,7 @@ async function startNewSession() {
   state.selectedFile = "";
   state.currentProcessingNoteId = null;
   state.processingKind = null;
+  agentResetConversation();
   renderMessages();
   updateSelectedFileMeta();
   setJobStatus("");
@@ -1376,8 +1379,14 @@ function closeSettings() {
 }
 
 newSessionBtn.addEventListener("click", () => {
-  // In agent mode, "New Session" starts a fresh agent conversation instead.
-  if (state.agentMode) {
+  // In the active assistant Agent view, New Session just starts a fresh agent chat.
+  // From detail/progress views, it must navigate back to the assistant view too.
+  if (
+    window.agentConversationState.shouldResetOnlyAgentForNewSession({
+      agentMode: state.agentMode,
+      currentView: state.currentView,
+    })
+  ) {
     agentResetConversation();
     return;
   }
@@ -3870,7 +3879,7 @@ function updateButtons() {
   saveAsNoteBtn.disabled =
     state.isWorking ||
     !state.runtime.llmReady ||
-    (!state.lastTranscript && !state.lastAssistantText);
+    !hasSaveableNoteContent();
   saveAsNoteBtn.title = !state.runtime.llmReady ? t("llmNotReady") : "";
   updateMainComposerSttTooltips();
   updateRuntimeDownloadButtons();
@@ -5443,8 +5452,55 @@ async function commitMeetingReview() {
   setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
 }
 
+function getAgentSaveSource() {
+  const agentState = state.agentConversation || { turns: [], noteText: "" };
+  if (!window.agentConversationState.hasSaveableAgentConversation(agentState)) {
+    return null;
+  }
+  const text =
+    agentState.noteText ||
+    window.agentConversationState.formatAgentConversationForNote(agentState.turns);
+  if (!text.trim()) return null;
+  return {
+    text,
+    title: text.slice(0, 80) || "Agent Mode Conversation",
+    audioPath: null,
+    draftTranscript: text,
+    finalTranscript: text,
+    transcriptSegments: [],
+    performance: state.agentLastPerformance || {},
+    updateExistingNoteId: null,
+  };
+}
+
+function getSaveableNoteSource() {
+  if (state.agentMode) {
+    return getAgentSaveSource();
+  }
+
+  const text = state.lastTranscript || state.lastAssistantText;
+  if (!text) return null;
+  return {
+    text,
+    title: state.lastAudioPath
+      ? state.lastAudioPath.replaceAll("\\", "/").split("/").pop()
+      : text.slice(0, 80) || "Untitled Note",
+    audioPath: state.lastAudioPath || null,
+    draftTranscript: state.lastTranscript || text,
+    finalTranscript: state.lastTranscript || "",
+    transcriptSegments: state.lastTranscriptSegments,
+    performance: state.lastPerformance || {},
+    updateExistingNoteId: state.pendingMeetingSourceNoteId,
+  };
+}
+
+function hasSaveableNoteContent() {
+  return Boolean(getSaveableNoteSource());
+}
+
 async function handleSaveAsNote() {
-  if (!state.lastTranscript && !state.lastAssistantText) {
+  const saveSource = getSaveableNoteSource();
+  if (!saveSource) {
     return;
   }
 
@@ -5453,14 +5509,12 @@ async function handleSaveAsNote() {
   let processingNote = null;
 
   try {
-    const textToProcess = state.lastTranscript || state.lastAssistantText;
+    const textToProcess = saveSource.text;
     const draftData = {
-      title: state.lastAudioPath
-        ? state.lastAudioPath.replaceAll("\\", "/").split("/").pop()
-        : textToProcess.slice(0, 80) || "Untitled Note",
-      audioPath: state.lastAudioPath || null,
-      transcript: state.lastTranscript || textToProcess,
-      transcriptSegments: state.lastTranscriptSegments,
+      title: saveSource.title,
+      audioPath: saveSource.audioPath,
+      transcript: saveSource.draftTranscript,
+      transcriptSegments: saveSource.transcriptSegments,
       structured: {},
       tags: [],
       folder: "default",
@@ -5469,8 +5523,8 @@ async function handleSaveAsNote() {
       statusMessage: t("generatingNote"),
       conversations: [],
     };
-    processingNote = state.pendingMeetingSourceNoteId
-      ? await window.desktopSTT.updateNote(state.pendingMeetingSourceNoteId, draftData)
+    processingNote = saveSource.updateExistingNoteId
+      ? await window.desktopSTT.updateNote(saveSource.updateExistingNoteId, draftData)
       : await window.desktopSTT.createNote(draftData);
     upsertLibraryNote(processingNote);
     showGeneralProgress(processingNote);
@@ -5479,9 +5533,9 @@ async function handleSaveAsNote() {
 
     const noteData = {
       title: result.structured.title,
-      audioPath: state.lastAudioPath || null,
-      transcript: state.lastTranscript || "",
-      transcriptSegments: state.lastTranscriptSegments,
+      audioPath: saveSource.audioPath,
+      transcript: saveSource.finalTranscript,
+      transcriptSegments: saveSource.transcriptSegments,
       structured: result.structured,
       tags: result.structured.tags || [],
       folder: "default",
@@ -5489,7 +5543,7 @@ async function handleSaveAsNote() {
       status: "ready",
       statusMessage: "",
       performance: {
-        ...state.lastPerformance,
+        ...saveSource.performance,
         structuringDurationMs: result.llmDurationMs,
         structuringModel: result.modelName,
       },
@@ -5497,7 +5551,9 @@ async function handleSaveAsNote() {
     };
 
     const savedNote = await window.desktopSTT.updateNote(processingNote.id, noteData);
-    state.pendingMeetingSourceNoteId = null;
+    if (saveSource.updateExistingNoteId) {
+      state.pendingMeetingSourceNoteId = null;
+    }
     await loadNotesList(noteSearchInput.value.trim());
     if (state.currentProcessingNoteId === savedNote.id) {
       switchView("assistant");
@@ -6952,8 +7008,11 @@ function agentHasConversation() {
 function agentResetConversation() {
   if (agentRunActive) return;
   agentHistory = [];
+  state.agentConversation = window.agentConversationState.resetAgentConversationState();
+  state.agentLastPerformance = null;
   agentShowEmptyState();
   setJobStatus("");
+  updateButtons();
 }
 
 // Switch the main view between chat and agent mode (shared composer, one window).
@@ -6970,6 +7029,7 @@ function setAgentMode(on) {
   }
   // Preserve an in-progress or prior conversation; only show the hint when empty.
   if (state.agentMode && !agentRunActive && !agentHasConversation()) agentShowEmptyState();
+  updateButtons();
   if (promptInputEl) window.requestAnimationFrame(() => promptInputEl.focus());
 }
 
@@ -7204,6 +7264,18 @@ function setAgentRunningUI(isRunning) {
   if (sendBtn) sendBtn.disabled = isRunning;
 }
 
+function rememberAgentConversationForNote(instruction, result) {
+  state.agentConversation = window.agentConversationState.appendAgentConversationTurn(
+    state.agentConversation,
+    { instruction, result }
+  );
+  state.agentLastPerformance = {
+    agentDurationMs: (result && result.agentDurationMs) || null,
+    agentModel: (result && result.modelName) || "",
+    agentStepCount: (result && result.stepCount) || 0,
+  };
+}
+
 // Run one agent turn from the shared main composer, rendering inline into #agentTrace.
 async function runAgentInstruction() {
   if (agentRunActive || !promptInputEl) return;
@@ -7234,6 +7306,7 @@ async function runAgentInstruction() {
   try {
     const result = await window.desktopSTT.runAgent(instruction, { history: agentHistory });
     agentRenderFinal(result);
+    rememberAgentConversationForNote(instruction, result);
     // Remember this turn (condensed) so later questions have context.
     agentHistory.push({ role: "user", content: instruction });
     agentHistory.push({ role: "assistant", content: (result && result.finalText) || "" });

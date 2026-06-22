@@ -4,29 +4,62 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-21 04:03
+- 最后更新：2026-06-22 12:50
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
-| `origin/Jack` | `13075df` | Add files via upload | Fan Lin | 2026-06-21 |
+| `origin/Jack` | `d9539bf` | [verified] fix: persist agent notes and reset sessions | Yanqing | 2026-06-22 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/codex/remove-agent-handoff` | `dab0ebb` | Remove obsolete agent handoff | Yanqing | 2026-06-20 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
+| `origin/fix/agent-mode-session-notes` | `d9539bf` | [verified] fix: persist agent notes and reset sessions | Yanqing | 2026-06-22 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 更新 `origin/Jack`：`f06b9c6` → `13075df`（Fan Lin：Add files via upload）—— 大幅更新，含约60个文件变动
-- 本次新增文件：embedding-service.js、agent-orchestrator.js、download-embedding-model.js、agent-design.md 及对应测试
-- 无新增/删除分支，无事项状态变化
-- 当前 5 项待确认事项，1 项已解决事项
+- 新增 `origin/fix/agent-mode-session-notes`：`d9539bf`
+- 更新 `origin/Jack`：`13075df` → `d9539bf`
+
+### 最近提交
+- `origin/fix/agent-mode-session-notes` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+- `origin/fix/agent-mode-session-notes` `13075df`：Add files via upload（Fan Lin，2026-06-21）
+- `origin/fix/agent-mode-session-notes` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
+- `origin/fix/agent-mode-session-notes` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
+- `origin/Jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+
+### 主要文件变化
+- `origin/Jack`: `M	README.md`
+- `origin/Jack`: `A	src/renderer/agent-conversation-state.js`
+- `origin/Jack`: `M	src/renderer/index.html`
+- `origin/Jack`: `M	src/renderer/renderer.js`
+- `origin/Jack`: `A	tests/agent-conversation-state.test.js`
 
 ## 更新记录
+
+### 2026-06-22 12:50 — 自动更新
+
+**分支变化**
+- 新增 `origin/fix/agent-mode-session-notes`：`d9539bf`
+- 更新 `origin/Jack`：`13075df` → `d9539bf`
+
+**提交摘要**
+- `origin/fix/agent-mode-session-notes` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+- `origin/fix/agent-mode-session-notes` `13075df`：Add files via upload（Fan Lin，2026-06-21）
+- `origin/fix/agent-mode-session-notes` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
+- `origin/fix/agent-mode-session-notes` `e7ac17c`：Fix Windows native rebuild invocation（Yanqing，2026-06-20）
+- `origin/Jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+
+**主要文件变化**
+- `origin/Jack`: `M	README.md`
+- `origin/Jack`: `A	src/renderer/agent-conversation-state.js`
+- `origin/Jack`: `M	src/renderer/index.html`
+- `origin/Jack`: `M	src/renderer/renderer.js`
+- `origin/Jack`: `A	tests/agent-conversation-state.test.js`
 
 ### 2026-06-21 04:03 — 自动更新
 
@@ -253,30 +286,15 @@
 
 ## 当前待确认事项
 
-以下事项由脚本基于静态事实裁决生成，文档仅按脚本提供的状态进行呈现。
-
-- [SPK-SQLITE-VS-JSON-存储方案] **SQLite vs JSON 存储方案** — `origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。
-  - 证据：当前静态上下文仍出现相关证据：json, origin/jack, origin/main
-
-- [SPK-ORIGIN-JACK-合并计划] **`origin/Jack` 合并计划** — 该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。
-  - 证据：当前静态上下文仍出现相关证据：main, origin/jack
-
-- [SPK-多语言支持范围] **多语言支持范围** — 客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。
-  - 证据：当前静态上下文仍出现相关证据：readme, 切换
-
-- [SPK-WINDOWS-兼容性验证] **Windows 兼容性验证** — GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。
-  - 证据：当前静态上下文仍出现相关证据：github, npm.ps1, powershell, verify-local.yml, windows, 工作流, 拦截, 确认
-
-- [SPK-TTS-V2-时间线] **TTS V2 时间线** — README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。
-  - 证据：当前静态上下文仍出现相关证据：readme, tts, 功能
+- [SPK-SQLITE-VS-JSON-存储方案] **SQLite vs JSON 存储方案** — `origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。；证据：当前静态上下文仍出现相关证据：json, notes, origin/jack, origin/main, sqlite
+- [SPK-ORIGIN-JACK-合并计划] **`origin/Jack` 合并计划** — 该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。；证据：当前静态上下文仍出现相关证据：main, origin/jack, sqlite
+- [SPK-多语言支持范围] **多语言支持范围** — 客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。；证据：当前静态上下文仍出现相关证据：readme, 切换
+- [SPK-WINDOWS-兼容性验证] **Windows 兼容性验证** — GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。；证据：当前静态上下文仍出现相关证据：github, verify-local.yml, windows, 工作流, 确认
+- [SPK-TTS-V2-时间线] **TTS V2 时间线** — README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。；证据：当前静态上下文仍出现相关证据：readme, tts, 功能
 
 ## 已解决或已变化事项
 
-以下事项由脚本确认状态变更，文档仅如实呈现。
-
-- [SPK-LLM-评估结果落地] **LLM 评估结果落地** — `origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。
-  - 解决时间：2026-06-20 00:54
-  - 原因：提到的远端分支已不存在：origin/YQ
+- [SPK-LLM-评估结果落地] **LLM 评估结果落地** — `origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。；证据：当前静态上下文仍出现相关证据：llm, main, qwen3:4b-instruct
 
 ## 过期或证据不足事项
 

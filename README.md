@@ -21,6 +21,15 @@
 
 ## 更新日志
 
+### 2026-06-26 · Ask AI prompt-only grounding test branch
+
+- `Ask AI` 现在通过 prompt 约束只基于当前笔记 / 转写内容回答，不再使用额外的代码层 evidence / relation / target validator 强制 fallback。
+- `Recent Q&A` 只作为对话上下文，不作为事实来源；如果当前笔记 / 转写中没有足够信息，prompt 会要求模型用用户语言说明缺少相关信息。
+- 为避免内部验证文本泄漏，代码会清理模型输出中的 `Answer:` / `Evidence:` 标签和 inline `Evidence:` 片段，但不会根据 `Evidence: NONE` 强行替换回答。
+- `Transcript Excerpt` 默认截取长度从 `2200` 字符提高到 `8000` 字符，便于中等长度会议、课堂或语音笔记的后续问答。
+- 该改动当前位于测试分支 `fix/note-qa-grounded-ai-jack`，用于团队测试反馈，暂未合并进 `Jack` 分支。
+- 面向小组报告和测试同步的简短说明见 `docs/note-qa-grounding-test-brief.md`。
+
 ### 2026-06-22 · Agent Mode note / session fixes
 
 - `Agent Mode` 完成回答后，现在可以复用现有 `Save as Note` 流程转写为结构化笔记，并显示在左侧笔记栏。
@@ -127,7 +136,9 @@
 
 - 用户可以在单条笔记下继续追问
 - 应用会把笔记摘要、要点、行动项、转写摘录和近期问答一起组装给本地 `LLM`
-- 回答仍然走本地模型
+- `Ask AI` 采用 prompt-only grounding：prompt 明确要求模型只基于当前笔记 / 转写回答，不使用外部知识；近期问答只作为上下文，不作为事实来源
+- 为了让中等长度语音笔记有更多原文可参考，转写摘录默认最多传入 `8000` 字符
+- 回答仍然走本地模型，代码只清理内部 `Answer:` / `Evidence:` 标签，不再用额外规则强制替换模型回答
 
 ### 7. 本地 TTS 播报
 

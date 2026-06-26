@@ -1,6 +1,6 @@
 const { generateLocalReply } = require("./llm-service");
 
-const NOTE_QA_MAX_TRANSCRIPT_CHARS = 2200;
+const NOTE_QA_MAX_TRANSCRIPT_CHARS = 8000;
 const NOTE_QA_MAX_RECENT_MESSAGES = 6;
 
 const NOTE_TEMPLATE_IDS = Object.freeze({
@@ -161,7 +161,28 @@ function createStructuredProcessor({
     };
   }
 
-  return { generateStructuredNote };
+  async function askAboutNoteWithProcessor(note, question) {
+    if (!question || !question.trim()) {
+      throw new Error("No question provided.");
+    }
+
+    const messages = buildNoteQAMessages(note, question);
+
+    const startTime = Date.now();
+    const result = await generateReply(messages);
+    const llmDurationMs = Date.now() - startTime;
+
+    return {
+      answer: parseNoteQAResponse(result.content),
+      llmDurationMs,
+      modelName: result.modelName,
+    };
+  }
+
+  return {
+    generateStructuredNote,
+    askAboutNote: askAboutNoteWithProcessor,
+  };
 }
 
 const defaultStructuredProcessor = createStructuredProcessor();
@@ -170,9 +191,30 @@ async function generateStructuredNote(transcript, options) {
   return defaultStructuredProcessor.generateStructuredNote(transcript, options);
 }
 
-const NOTE_QA_SYSTEM = `You are a helpful assistant. The user has a saved note with the following content. Answer their questions about it concisely and accurately. Use the same language as the user's question.
+function parseNoteQAResponse(content) {
+  const normalized = String(content || "").trim();
+  const answerMatch = normalized.match(/^\s*Answer\s*:\s*([\s\S]*?)(?:\n\s*Evidence\s*:|$)/i);
 
---- NOTE CONTENT ---
+  if (answerMatch) {
+    return stripInlineEvidenceFragment(answerMatch[1]);
+  }
+
+  return stripInlineEvidenceFragment(
+    normalized
+      .replace(/(?:^|\n)\s*Evidence\s*:\s*[\s\S]*$/i, "")
+      .replace(/^\s*Answer\s*:\s*/i, "")
+  );
+}
+
+function stripInlineEvidenceFragment(value) {
+  return String(value || "")
+    .replace(/\s*\bEvidence\s*:\s*[\s\S]*$/i, "")
+    .trim();
+}
+
+const NOTE_QA_SYSTEM = `You are a helpful assistant answering questions about the user's current saved note. Answer using only the current note/transcript content below as the factual source. Use the same language as the user's question.
+
+--- CURRENT NOTE / TRANSCRIPT CONTENT ---
 Title: {title}
 Summary: {summary}
 Key Points:
@@ -185,15 +227,21 @@ Open Questions:
 {openQuestions}
 Transcript Excerpt:
 {transcript}
-Recent Q&A:
+---
+
+--- RECENT Q&A ---
 {history}
 ---
 
 Rules:
+- Treat the current note/transcript content as the factual source for answers.
 - Answer from user-confirmed structured content first; this confirmed structured content is authoritative.
 - Use the transcript as supporting evidence. If it conflicts with confirmed structured content, state the conflict instead of silently choosing one.
+- Recent Q&A is conversation context only and must not be treated as note evidence or a source of truth for factual answers.
+- Do not use external or world knowledge. If the current note/transcript content does not contain enough information, say that the note does not contain the relevant information in the user's language.
+- Reason naturally from the current note/transcript content: you may infer, translate, summarize, and correct false premises when supported by that content.
 - Keep the answer concise but useful.
-- If the note does not contain enough information, say that directly instead of inventing details.`;
+- Return only the user-facing answer. Do not include Evidence labels or internal validation text.`;
 
 function clipText(text, maxChars) {
   const cleanText = String(text || "").trim().replace(/\s+/g, " ");
@@ -268,21 +316,7 @@ function formatRecentConversation(conversations) {
 }
 
 async function askAboutNote(note, question) {
-  if (!question || !question.trim()) {
-    throw new Error("No question provided.");
-  }
-
-  const messages = buildNoteQAMessages(note, question);
-
-  const startTime = Date.now();
-  const result = await generateLocalReply(messages);
-  const llmDurationMs = Date.now() - startTime;
-
-  return {
-    answer: result.content,
-    llmDurationMs,
-    modelName: result.modelName,
-  };
+  return defaultStructuredProcessor.askAboutNote(note, question);
 }
 
 module.exports = {

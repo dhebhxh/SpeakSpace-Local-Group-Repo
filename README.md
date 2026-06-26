@@ -4,7 +4,7 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-22 12:56
+- 最后更新：2026-06-26 23:16
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
@@ -15,21 +15,38 @@
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
+| `origin/fix/note-qa-grounded-ai-jack` | `2f4ea51` | fix: tune note ask ai grounding for testing | Yanqing | 2026-06-26 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 删除 `origin/codex/remove-agent-handoff`：原 `dab0ebb`
-- 删除 `origin/fix/agent-mode-session-notes`：原 `d9539bf`
+- 新增 `origin/fix/note-qa-grounded-ai-jack`：`2f4ea51`
 
 ### 最近提交
-- 本次没有可列出的新增提交，可能是文档缺失修复或分支删除。
+- `origin/fix/note-qa-grounded-ai-jack` `2f4ea51`：fix: tune note ask ai grounding for testing（Yanqing，2026-06-26）
+- `origin/fix/note-qa-grounded-ai-jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+- `origin/fix/note-qa-grounded-ai-jack` `13075df`：Add files via upload（Fan Lin，2026-06-21）
+- `origin/fix/note-qa-grounded-ai-jack` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
 
 ### 主要文件变化
 - 暂无可列出的文件 diff。
 
 ## 更新记录
+
+### 2026-06-26 23:16 — 自动更新
+
+**分支变化**
+- 新增 `origin/fix/note-qa-grounded-ai-jack`：`2f4ea51`
+
+**提交摘要**
+- `origin/fix/note-qa-grounded-ai-jack` `2f4ea51`：fix: tune note ask ai grounding for testing（Yanqing，2026-06-26）
+- `origin/fix/note-qa-grounded-ai-jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
+- `origin/fix/note-qa-grounded-ai-jack` `13075df`：Add files via upload（Fan Lin，2026-06-21）
+- `origin/fix/note-qa-grounded-ai-jack` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
+
+**主要文件变化**
+- 暂无可列出的文件 diff。
 
 ### 2026-06-22 12:56 — 自动更新
 
@@ -267,13 +284,6 @@
 
 - 更新 `origin/Jack`：`e54f1b3` → `ca4a834`（Yanqing：Fix light theme UI polish）
 - 变更文件：`M  src/main/note-store.js`、`M  src/renderer/renderer.js`、`M  src/renderer/styles.css`
-
----
-
-### 2026-06-18 01:00 — origin/Jack 前端亮色主题完善
-
-- 更新 `origin/Jack`：`f499af0` → `e54f1b3`（Jack8ot：Front End: light theme update and UI Fixing）
-- 变更文件：`M  src/renderer/styles.css`、`M  .gitignore`
 
 ---
 

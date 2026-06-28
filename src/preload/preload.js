@@ -44,6 +44,8 @@ contextBridge.exposeInMainWorld("desktopSTT", {
   },
 
   createNote: (noteData) => ipcRenderer.invoke("note:create", noteData),
+  addSubnote: (noteId, subnoteData) => ipcRenderer.invoke("note:add-subnote", noteId, subnoteData),
+  regenerateStructured: (noteId) => ipcRenderer.invoke("note:regenerate-structured", noteId),
   updateNote: (noteId, updates) => ipcRenderer.invoke("note:update", noteId, updates),
   deleteNote: (noteId) => ipcRenderer.invoke("note:delete", noteId),
   moveNoteToTrash: (noteId) => ipcRenderer.invoke("note:move-to-trash", noteId),

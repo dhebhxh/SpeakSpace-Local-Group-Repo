@@ -58,7 +58,8 @@ db.exec(`
     structuredData TEXT,
     status TEXT DEFAULT 'ready',
     statusMessage TEXT,
-    transcriptSegments TEXT
+    transcriptSegments TEXT,
+    subnotes TEXT DEFAULT '[]'
   );
 `);
 
@@ -69,6 +70,7 @@ const requiredNoteColumns = [
   { name: "status", definition: "status TEXT DEFAULT 'ready'" },
   { name: "statusMessage", definition: "statusMessage TEXT" },
   { name: "transcriptSegments", definition: "transcriptSegments TEXT" },
+  { name: "subnotes", definition: "subnotes TEXT DEFAULT '[]'" },
   { name: "embedding", definition: "embedding TEXT" },
   { name: "embeddingModel", definition: "embeddingModel TEXT" },
 ];
@@ -114,6 +116,7 @@ function deserializeNote(row) {
     tags: row.tags ? JSON.parse(row.tags) : [],
     performance: row.performance ? JSON.parse(row.performance) : null,
     conversations: row.conversations ? JSON.parse(row.conversations) : [],
+    subnotes: row.subnotes ? JSON.parse(row.subnotes) : [],
   };
   delete note.summary;
   delete note.keyPoints;
@@ -148,11 +151,12 @@ async function createNote(noteData) {
     status: noteData.status || "ready",
     statusMessage: noteData.statusMessage || null,
     transcriptSegments: JSON.stringify(noteData.transcriptSegments || []),
+    subnotes: JSON.stringify(noteData.subnotes || []),
   };
 
   const insert = db.prepare(`
-    INSERT INTO notes (id, title, createdAt, updatedAt, deletedAt, audioPath, transcript, summary, keyPoints, actionItems, tags, folder, performance, conversations, templateId, sourceNoteId, structuredData, status, statusMessage, transcriptSegments)
-    VALUES (@id, @title, @createdAt, @updatedAt, @deletedAt, @audioPath, @transcript, @summary, @keyPoints, @actionItems, @tags, @folder, @performance, @conversations, @templateId, @sourceNoteId, @structuredData, @status, @statusMessage, @transcriptSegments)
+    INSERT INTO notes (id, title, createdAt, updatedAt, deletedAt, audioPath, transcript, summary, keyPoints, actionItems, tags, folder, performance, conversations, templateId, sourceNoteId, structuredData, status, statusMessage, transcriptSegments, subnotes)
+    VALUES (@id, @title, @createdAt, @updatedAt, @deletedAt, @audioPath, @transcript, @summary, @keyPoints, @actionItems, @tags, @folder, @performance, @conversations, @templateId, @sourceNoteId, @structuredData, @status, @statusMessage, @transcriptSegments, @subnotes)
   `);
   
   insert.run(note);
@@ -192,6 +196,7 @@ async function updateNote(noteId, updates) {
         status = @status,
         statusMessage = @statusMessage,
         transcriptSegments = @transcriptSegments,
+        subnotes = @subnotes,
         embedding = NULL,
         embeddingModel = NULL
     WHERE id = @id
@@ -211,6 +216,7 @@ async function updateNote(noteId, updates) {
     status: updatedNote.status || "ready",
     statusMessage: updatedNote.statusMessage || null,
     transcriptSegments: JSON.stringify(updatedNote.transcriptSegments || []),
+    subnotes: updatedNote.subnotes ? JSON.stringify(updatedNote.subnotes) : JSON.stringify([]),
   });
 
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
@@ -341,6 +347,25 @@ async function appendConversation(noteId, message) {
 
   const update = db.prepare(`UPDATE notes SET conversations = ?, updatedAt = ? WHERE id = ?`);
   update.run(JSON.stringify(conversations), new Date().toISOString(), noteId);
+  
+  return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
+}
+
+//Append a new subnote to the note
+async function addSubnote(noteId, subnoteData) {
+  const note = await getNote(noteId);
+  const subnotes = note.subnotes || [];
+  
+  subnotes.push({
+    id: generateId(),
+    type: subnoteData.type || 'text',
+    content: subnoteData.content || '',
+    audioPath: subnoteData.audioPath || null,
+    createdAt: new Date().toISOString()
+  });
+
+  const update = db.prepare(`UPDATE notes SET subnotes = ?, updatedAt = ? WHERE id = ?`);
+  update.run(JSON.stringify(subnotes), new Date().toISOString(), noteId);
   
   return deserializeNote(db.prepare("SELECT * FROM notes WHERE id = ?").get(noteId));
 }
@@ -487,6 +512,7 @@ module.exports = {
   listFolders,
   listTags,
   appendConversation,
+  addSubnote,
   setActionItemCompletion,
   markInterruptedTranscriptions,
   setNoteEmbedding,

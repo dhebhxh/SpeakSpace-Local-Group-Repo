@@ -882,12 +882,18 @@ const trashCountEl = document.querySelector("#trashCount");
 const noteSearchInput = document.querySelector("#noteSearchInput");
 const notesListEl = document.querySelector("#notesList");
 const notesCountEl = document.querySelector("#notesCount");
-const backToNotesBtn = document.querySelector("#backToNotesBtn");
 const deleteNoteBtn = document.querySelector("#deleteNoteBtn");
 const noteDetailContent = document.querySelector("#noteDetailContent");
 const noteQaMessages = document.querySelector("#noteQaMessages");
 const noteQaInput = document.querySelector("#noteQaInput");
 const noteQaSendBtn = document.querySelector("#noteQaSendBtn");
+const subnotesTimeline = document.querySelector("#subnotesTimeline");
+const subnoteInput = document.querySelector("#subnoteInput");
+const subnoteSendBtn = document.querySelector("#subnoteSendBtn");
+const askAiToggleBtn = document.querySelector("#askAiToggleBtn");
+const askAiSidebar = document.querySelector("#askAiSidebar");
+const askAiCloseBtn = document.querySelector("#askAiCloseBtn");
+
 
 const statusChip = document.querySelector("#statusChip");
 const settingsOverlay = document.querySelector("#settingsOverlay");
@@ -1153,7 +1159,6 @@ function applyLanguageUI() {
   noteQaRecordToggleBtn.setAttribute("aria-label", t("record"));
   promptInputEl.placeholder = state.agentMode ? t("agentInputPlaceholder") : t("promptPlaceholder");
   sendBtn.setAttribute("aria-label", t("send"));
-  backToNotesBtn.textContent = t("backToAssistant");
   deleteNoteBtn.textContent = t("moveToTrash");
   noteQaInput.placeholder = t("noteQaPlaceholder");
   noteQaSendBtn.setAttribute("aria-label", t("ask"));
@@ -1324,9 +1329,11 @@ async function confirmAndLeaveCurrentWork() {
 }
 
 async function startNewSession() {
-  if (!(await confirmAndLeaveCurrentWork())) return;
-  stopTTS();
-  state.messages = [];
+  try {
+    if (!(await confirmAndLeaveCurrentWork())) return;
+    stopTTS();
+    state.messages = [];
+    state.currentNoteId = null;
   state.lastTranscript = "";
   state.lastAudioPath = "";
   state.lastSourceDurationMs = null;
@@ -1342,6 +1349,10 @@ async function startNewSession() {
   setJobStatus("");
   updateButtons();
   switchView("assistant");
+  } catch (err) {
+    console.error("startNewSession Error:", err);
+    setJobStatus("Error starting new session: " + err.message, true);
+  }
 }
 
 function renderSettingsCategory() {
@@ -1378,19 +1389,52 @@ function closeSettings() {
   settingsOverlay.classList.add("hidden");
 }
 
-newSessionBtn.addEventListener("click", () => {
-  // In the active assistant Agent view, New Session just starts a fresh agent chat.
-  // From detail/progress views, it must navigate back to the assistant view too.
-  if (
-    window.agentConversationState.shouldResetOnlyAgentForNewSession({
-      agentMode: state.agentMode,
-      currentView: state.currentView,
-    })
-  ) {
-    agentResetConversation();
-    return;
+newSessionBtn.addEventListener("click", async () => {
+  try {
+    if (typeof confirmAndLeaveCurrentWork === "function") {
+      const canLeave = await confirmAndLeaveCurrentWork();
+      if (!canLeave) return;
+    }
+    
+    if (typeof stopTTS === "function") {
+      try { stopTTS(); } catch (e) { console.error("stopTTS failed", e); }
+    }
+    
+    state.messages = [];
+    state.currentNoteId = null;
+    state.lastTranscript = "";
+    state.lastAudioPath = "";
+    state.lastSourceDurationMs = null;
+    state.lastTranscriptSegments = [];
+    state.lastAssistantText = "";
+    state.lastPerformance = null;
+    state.selectedFile = "";
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    
+    if (typeof agentResetConversation === "function") {
+      try { agentResetConversation(); } catch(e) { console.error("agentResetConversation failed", e); }
+    }
+    if (typeof renderMessages === "function") {
+      try { renderMessages(); } catch(e) { console.error("renderMessages failed", e); }
+    }
+    if (typeof updateSelectedFileMeta === "function") {
+      try { updateSelectedFileMeta(); } catch(e) { console.error("updateSelectedFileMeta failed", e); }
+    }
+    if (typeof setJobStatus === "function") setJobStatus("");
+    if (typeof updateButtons === "function") {
+      try { updateButtons(); } catch(e) { console.error("updateButtons failed", e); }
+    }
+    if (typeof switchView === "function") switchView("assistant");
+    
+  } catch (err) {
+    console.error("Super newSessionBtn Error:", err);
+    if (typeof setJobStatus === "function") {
+      setJobStatus("Error: " + err.message, true);
+    }
+    // Force switch view anyway
+    if (typeof switchView === "function") switchView("assistant");
   }
-  startNewSession();
 });
 trashOpenBtn.addEventListener("click", () => {
   openTrashOverlay();
@@ -3776,7 +3820,7 @@ function handleCancelModelDownload(kind, modelName) {
 }
 
 function setJobStatus(text, isError = false) {
-  [jobStatusEl, noteJobStatusEl].forEach((element) => {
+  [jobStatusEl, noteJobStatusEl, document.getElementById('askAiJobStatus')].forEach((element) => {
     if (!element) return;
     element.textContent = text;
     element.classList.toggle("error", isError);
@@ -3908,7 +3952,32 @@ async function copyTextToClipboard(text) {
   const cleanText = String(text || "").trim();
   if (!cleanText) return;
 
-  await navigator.clipboard.writeText(cleanText);
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(cleanText);
+    } else {
+      throw new Error("Clipboard API not available");
+    }
+  } catch (err) {
+    const textArea = document.createElement("textarea");
+    textArea.value = cleanText;
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand("copy");
+    } catch (e) {
+      console.error("Fallback copy failed", e);
+      setTemporaryJobStatus(t("operationFailed", { message: "Copy failed" }), true, 2600);
+      document.body.removeChild(textArea);
+      return;
+    }
+    document.body.removeChild(textArea);
+  }
   setTemporaryJobStatus(t("copied"));
 }
 
@@ -4757,6 +4826,43 @@ async function handleLanguageChange(language) {
   updateButtons();
 }
 
+
+async function handleSubnoteSend(content = "", type = "text", audioPath = null) {
+  if (!state.currentNoteId) return;
+  const text = content.trim();
+  if (type === "text" && !text) return;
+
+  if (type === "text") {
+    subnoteInput.value = "";
+  }
+
+  setJobStatus(t("thinking"));
+  try {
+    state.isWorking = true;
+    updateButtons();
+    
+    // Add subnote to DB
+    await window.desktopSTT.addSubnote(state.currentNoteId, {
+      type, content: text, audioPath
+    });
+    
+    // Regenerate structure
+    await window.desktopSTT.regenerateStructured(state.currentNoteId);
+    
+    // Refresh note detail
+    const note = await window.desktopSTT.getNote(state.currentNoteId);
+    renderNoteDetail(note);
+    
+  } catch (error) {
+    console.error("Error adding subnote:", error);
+    setJobStatus(t("failed", { message: error.message }), true);
+  } finally {
+    state.isWorking = false;
+    updateButtons();
+    setJobStatus("");
+  }
+}
+
 /* ========== Assistant Chat ========== */
 
 function maybeAutoplayAssistantMessage(text, sourceKey) {
@@ -5027,23 +5133,26 @@ async function handlePickFile() {
 }
 
 async function handleSend() {
-  if (state.agentMode) {
-    await runAgentInstruction();
-    return;
-  }
-  if (state.pendingMeetingSourceNoteId) {
-    return;
-  }
   const text = state.draft.trim();
-  if (!text) {
-    return;
-  }
-
+  if (!text) return;
   state.draft = "";
   promptInputEl.value = "";
-  window.noteDraftSource.applyTypedInputToDraftSource(state, text);
   autoResizePrompt();
-  await sendUserMessage(text, t("typedInput"));
+  try {
+    state.isWorking = true;
+    updateButtons();
+    const newNote = await window.desktopSTT.createNote({
+      title: text,
+      transcript: "",
+    });
+    await loadNotesList();
+    openNoteDetail(newNote.id);
+  } catch (error) {
+    console.error("Error creating note", error);
+  } finally {
+    state.isWorking = false;
+    updateButtons();
+  }
 }
 
 /* ========== Save as Note ========== */
@@ -6099,6 +6208,7 @@ async function openNoteDetail(noteId) {
     renderNoteDetail(note);
     switchView("detail");
     highlightActiveNote();
+    setJobStatus("");
   } catch (error) {
     setJobStatus(t("openNoteFailed", { message: error.message }), true);
   }
@@ -6171,40 +6281,58 @@ function renderNoteDetail(note) {
 
     ${note.structured ? `
       <div class="note-section">
-        <h4>${t("summary")}</h4>
-        <div class="note-summary">${renderStructuredSummaryHtml(note.structured.summary)}</div>
+        <div class="note-sub-section">
+          <h4 style="display:flex; justify-content:space-between; align-items:center;">
+            Structured Output
+            <button class="note-copy-btn" data-action="copy" data-copy-text="${escapeHtml([
+              note.structured.summary ? 'Summary:\n' + note.structured.summary : '',
+              note.structured.keyPoints?.length ? 'Key Points:\n' + note.structured.keyPoints.join('\n') : '',
+              note.structured.decisions?.length ? 'Decisions:\n' + note.structured.decisions.join('\n') : '',
+              note.structured.actionItems?.length ? 'Action Items:\n' + note.structured.actionItems.map(a => typeof a === 'string' ? a : a.text).join('\n') : '',
+              note.structured.openQuestions?.length ? 'Open Questions:\n' + note.structured.openQuestions.join('\n') : ''
+            ].filter(Boolean).join('\n\n'))}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy All
+            </button>
+          </h4>
+          
+          <h4 style="margin-top: 12px;">${t("summary")}</h4>
+          <div class="note-summary">${renderStructuredSummaryHtml(note.structured.summary)}</div>
+        </div>
+
+        ${note.structured.keyPoints?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("keyPoints")}</h4>
+            <ul>${renderSourceItems(note.structured.keyPoints)}</ul>
+          </div>
+        ` : ""}
+
+        ${note.templateId === "meeting" && note.structured.decisions?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("decisions")}</h4>
+            <ul>${renderSourceItems(note.structured.decisions)}</ul>
+          </div>
+        ` : ""}
+
+        ${note.structured.actionItems?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("actionItems")}</h4>
+            <ul class="action-items">${note.templateId === "meeting"
+              ? renderMeetingActionItems(note.structured.actionItems)
+              : note.structured.actionItems.map((a) => `<li>${escapeHtml(noteItemText(a))}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+
+        ${note.templateId === "meeting" && note.structured.openQuestions?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("openQuestions")}</h4>
+            <ul>${renderSourceItems(note.structured.openQuestions)}</ul>
+          </div>
+        ` : ""}
       </div>
-
-      ${note.structured.keyPoints?.length > 0 ? `
-        <div class="note-section">
-          <h4>${t("keyPoints")}</h4>
-          <ul>${renderSourceItems(note.structured.keyPoints)}</ul>
-        </div>
-      ` : ""}
-
-      ${note.templateId === "meeting" && note.structured.decisions?.length > 0 ? `
-        <div class="note-section">
-          <h4>${t("decisions")}</h4>
-          <ul>${renderSourceItems(note.structured.decisions)}</ul>
-        </div>
-      ` : ""}
-
-      ${note.structured.actionItems?.length > 0 ? `
-        <div class="note-section">
-          <h4>${t("actionItems")}</h4>
-          <ul class="action-items">${note.templateId === "meeting"
-            ? renderMeetingActionItems(note.structured.actionItems)
-            : note.structured.actionItems.map((a) => `<li>${escapeHtml(noteItemText(a))}</li>`).join("")}</ul>
-        </div>
-      ` : ""}
-
-      ${note.templateId === "meeting" && note.structured.openQuestions?.length > 0 ? `
-        <div class="note-section">
-          <h4>${t("openQuestions")}</h4>
-          <ul>${renderSourceItems(note.structured.openQuestions)}</ul>
-        </div>
-      ` : ""}
     ` : ""}
+
+
 
     ${note.transcript ? `
       <div class="note-section transcript-section">
@@ -6213,6 +6341,23 @@ function renderNoteDetail(note) {
       </div>
     ` : ""}
   `;
+
+  
+  if (subnotesTimeline) {
+    if (note.subnotes && note.subnotes.length > 0) {
+      subnotesTimeline.innerHTML = note.subnotes.map(sn => `
+        <div class="subnote-item">
+          <div class="subnote-meta">
+            <span>${sn.type === 'audio' ? '🎤 Audio' : '📝 Text'}</span>
+            <span>${new Date(sn.createdAt).toLocaleString(state.uiLanguage === "zh-CN" ? "zh-CN" : "en-US")}</span>
+          </div>
+          <div class="subnote-content">${escapeHtml(sn.content || '')}</div>
+        </div>
+      `).join("");
+    } else {
+      subnotesTimeline.innerHTML = "";
+    }
+  }
 
   noteDetailContent.querySelectorAll(".note-action-checkbox").forEach((checkbox) => {
     checkbox.addEventListener("change", () => handleActionCompletionToggle(note, checkbox));
@@ -6467,7 +6612,7 @@ async function transcribeAndAskAboutNote(filePath, sourceLabel) {
 
   try {
     const { transcript } = await transcribeAudioInput(filePath, sourceLabel);
-    await sendNoteQaQuestion(transcript);
+    await handleSubnoteSend(transcript, "audio", filePath);
   } catch (error) {
     setJobStatus(t("failed", { message: error.message }), true);
     state.isWorking = false;
@@ -6771,6 +6916,11 @@ document.querySelectorAll(".meeting-review-tab").forEach((tab) => {
   });
 });
 window.desktopSTT.onTranscriptionStatus(handleTranscriptionStatus);
+window.addEventListener("DOMContentLoaded", () => {
+  loadNotesList();
+  refreshTrashCount();
+});
+
 window.addEventListener("beforeunload", (event) => {
   if (!state.meetingEditDirty && !state.meetingDraftDirty) return;
   event.preventDefault();
@@ -6792,11 +6942,31 @@ noteSearchInput.addEventListener("input", () => {
   loadNotesList(noteSearchInput.value.trim());
 });
 
-backToNotesBtn.addEventListener("click", async () => {
-  if (await confirmAndLeaveCurrentWork()) switchView("assistant");
-});
 deleteNoteBtn.addEventListener("click", handleDeleteNote);
 noteQaSendBtn.addEventListener("click", handleNoteQaSend);
+
+if (subnoteSendBtn) {
+  subnoteSendBtn.addEventListener("click", () => handleSubnoteSend(subnoteInput.value, "text"));
+}
+if (askAiToggleBtn) {
+  askAiToggleBtn.addEventListener("click", () => {
+    askAiSidebar.classList.toggle("hidden");
+  });
+}
+if (askAiCloseBtn) {
+  askAiCloseBtn.addEventListener("click", () => {
+    askAiSidebar.classList.add("hidden");
+  });
+}
+if (subnoteInput) {
+  subnoteInput.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      await handleSubnoteSend(subnoteInput.value, "text");
+    }
+  });
+}
+
 
 noteQaInput.addEventListener("input", () => {
   autoResizeNoteQaInput();
@@ -7511,3 +7681,11 @@ if (window.desktopSTT && typeof window.desktopSTT.onAgentStep === "function") {
   window.desktopSTT.onAgentStep(renderAgentStep);
 }
 applyAgentLanguageUI();
+
+document.addEventListener("click", (e) => {
+  const copyBtn = e.target.closest(".note-copy-btn");
+  if (copyBtn) {
+    const text = copyBtn.getAttribute("data-copy-text");
+    if (text) copyTextToClipboard(decodeURIComponent(text));
+  }
+});

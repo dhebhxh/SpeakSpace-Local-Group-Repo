@@ -191,6 +191,18 @@ async function generateStructuredNote(transcript, options) {
   return defaultStructuredProcessor.generateStructuredNote(transcript, options);
 }
 
+async function generateNoteStructuredDataWithSubnotes(transcript, subnotes, options) {
+  let combinedText = transcript || "";
+  if (subnotes && subnotes.length > 0) {
+    combinedText += "\n\n--- SUBNOTES ---\n";
+    for (const subnote of subnotes) {
+       combinedText += `\n[${subnote.createdAt}] ${subnote.type.toUpperCase()}: ${subnote.content}`;
+    }
+  }
+  const result = await defaultStructuredProcessor.generateStructuredNote(combinedText, options);
+  return result.structured;
+}
+
 function parseNoteQAResponse(content) {
   const normalized = String(content || "").trim();
   const answerMatch = normalized.match(/^\s*Answer\s*:\s*([\s\S]*?)(?:\n\s*Evidence\s*:|$)/i);
@@ -321,8 +333,11 @@ async function askAboutNote(note, question) {
 
 module.exports = {
   NOTE_TEMPLATE_IDS,
-  createStructuredProcessor,
   generateStructuredNote,
-  buildNoteQAMessages,
+  generateNoteStructuredData: generateStructuredNote, // alias for main.js
+  generateNoteStructuredDataWithSubnotes,
   askAboutNote,
+  buildNoteQAMessages,
+  parseNoteQAResponse,
+  createStructuredProcessor,
 };

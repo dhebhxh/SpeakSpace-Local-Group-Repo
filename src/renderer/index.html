@@ -207,7 +207,7 @@
 
             <textarea
               id="promptInput"
-              placeholder="Type a question, or import audio / record..."
+              placeholder="Type a title to create a new note, or import audio / record..."
               spellcheck="false"
             ></textarea>
 
@@ -302,102 +302,73 @@
           </div>
           <div class="topbar-drag-region"></div>
           <div class="topbar-actions">
-            <button id="backToNotesBtn" class="ghost-btn" type="button">← Back to Assistant</button>
-            <button id="deleteNoteBtn" class="ghost-btn danger-btn" type="button">Delete</button>
+
+            <button id="deleteNoteBtn" class="ghost-btn danger-btn" type="button">Move to Trash</button>
           </div>
         </header>
 
         <section class="note-detail-container">
           <div id="noteDetailContent" class="note-detail-content"></div>
 
+          <!-- Subnotes Section -->
           <div class="note-qa-section">
-            <h3 id="noteQaTitle" class="note-qa-title">Ask About This Note</h3>
-            <div id="noteQaMessages" class="note-qa-messages"></div>
-            <div class="note-qa-composer">
-              <div id="noteQaInputMeta" class="input-meta">
-                <div id="noteSelectedFileMeta" class="meta-chip hidden"></div>
-                <div id="noteRecordingMeta" class="meta-chip hidden"></div>
-                <div id="noteJobStatus" class="meta-status"></div>
-              </div>
-              <div class="composer">
-                <div class="composer-toolbar">
-                  <button
-                    id="noteQaPickFileBtn"
-                    class="icon-btn"
-                    type="button"
-                    title="Import audio file"
-                    aria-label="Import audio file"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.8"
-                      />
-                      <path
-                        d="M13 6l-5 5 5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.8"
-                      />
-                    </svg>
-                  </button>
-
-                  <button
-                    id="noteQaRecordToggleBtn"
-                    class="icon-btn"
-                    type="button"
-                    title="Record"
-                    aria-label="Record"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <rect
-                        x="9"
-                        y="3"
-                        width="6"
-                        height="11"
-                        rx="3"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                      />
-                      <path
-                        d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.8"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <textarea
-                  id="noteQaInput"
-                  placeholder="For example: What should I do after this meeting?"
-                  spellcheck="false"
-                ></textarea>
-                <button id="noteQaSendBtn" class="send-btn" type="button" aria-label="Ask">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M5 12h14M13 6l6 6-6 6"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <h3 class="note-qa-title">Subnotes</h3>
+            <div id="subnotesTimeline" class="subnotes-timeline"></div>
           </div>
         </section>
+
+        <!-- Subnotes Composer (Sticky at bottom) -->
+        <section id="noteQaComposerShell" class="composer-shell">
+          <div id="noteQaInputMeta" class="input-meta">
+            <div id="noteSelectedFileMeta" class="meta-chip hidden"></div>
+            <div id="noteRecordingMeta" class="meta-chip hidden"></div>
+            <div id="noteJobStatus" class="meta-status"></div>
+          </div>
+          <div class="composer">
+            <div class="composer-toolbar">
+              <button id="noteQaPickFileBtn" class="icon-btn" type="button" title="Import audio file">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                  <path d="M13 6l-5 5 5 5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                </svg>
+              </button>
+              <button id="noteQaRecordToggleBtn" class="icon-btn" type="button" title="Record">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                </svg>
+              </button>
+              <button id="askAiToggleBtn" class="icon-btn accent-btn" type="button" title="Ask AI">
+                <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <textarea id="subnoteInput" placeholder="Add a text subnote..." spellcheck="false"></textarea>
+            <button id="subnoteSendBtn" class="send-btn" type="button" aria-label="Send Subnote">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ASK AI Right Sidebar -->
+        <aside id="askAiSidebar" class="ask-ai-sidebar hidden">
+          <header class="ask-ai-header">
+            <h3>ASK AI</h3>
+            <button id="askAiCloseBtn" class="ghost-btn" type="button">Close</button>
+          </header>
+          <div id="noteQaMessages" class="note-qa-messages"></div>
+          <div class="ask-ai-composer">
+            <textarea id="noteQaInput" placeholder="Ask a question about this note..." spellcheck="false"></textarea>
+            <button id="noteQaSendBtn" class="send-btn" type="button" aria-label="Ask">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </aside>
       </section>
     </main>
 

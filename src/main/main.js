@@ -50,10 +50,11 @@ const {
   appendConversation,
   getStoreInfo,
   countNotesUsingAudioPath,
+  addSubnote,
   setActionItemCompletion,
   markInterruptedTranscriptions,
 } = require("./db-service");
-const { generateStructuredNote, askAboutNote } = require("./structured-processor");
+const { generateNoteStructuredData, generateNoteStructuredDataWithSubnotes, askAboutNote } = require("./structured-processor");
 const { runAgent } = require("./agent-orchestrator");
 const { createTranscriptionJobManager } = require("./transcription-job-manager");
 const { getManagedRecordingDisposition } = require("./audio-retention");
@@ -973,6 +974,16 @@ ipcMain.handle("note:append-conversation", async (_event, noteId, message) => {
 
 ipcMain.handle("note:store-info", async () => {
   return getStoreInfo();
+});
+
+ipcMain.handle("note:add-subnote", async (_event, noteId, subnoteData) => {
+  return addSubnote(noteId, subnoteData);
+});
+
+ipcMain.handle("note:regenerate-structured", async (_event, noteId) => {
+  const note = await getNote(noteId);
+  const structuredData = await generateNoteStructuredDataWithSubnotes(note.transcript, note.subnotes || []);
+  return updateNote(noteId, { structured: structuredData });
 });
 
 ipcMain.handle("note:set-action-completion", async (_event, noteId, actionItemId, isCompleted) => {

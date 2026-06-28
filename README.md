@@ -4,7 +4,7 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-06-26 23:16
+- 最后更新：2026-06-28 16:13
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
@@ -15,24 +15,46 @@
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
-| `origin/fix/note-qa-grounded-ai-jack` | `2f4ea51` | fix: tune note ask ai grounding for testing | Yanqing | 2026-06-26 |
+| `origin/fix/note-qa-grounded-ai-jack` | `3801e1b` | Front End Update | Jack8ot | 2026-06-28 |
 | `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 |
 | `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 |
 
 ## 最近变化摘要
 
-- 新增 `origin/fix/note-qa-grounded-ai-jack`：`2f4ea51`
+- 更新 `origin/fix/note-qa-grounded-ai-jack`：`2f4ea51` → `3801e1b`
 
 ### 最近提交
-- `origin/fix/note-qa-grounded-ai-jack` `2f4ea51`：fix: tune note ask ai grounding for testing（Yanqing，2026-06-26）
-- `origin/fix/note-qa-grounded-ai-jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
-- `origin/fix/note-qa-grounded-ai-jack` `13075df`：Add files via upload（Fan Lin，2026-06-21）
-- `origin/fix/note-qa-grounded-ai-jack` `f06b9c6`：Update README.md info related to SQL（Jack8ot，2026-06-20）
+- `origin/fix/note-qa-grounded-ai-jack` `3801e1b`：Front End Update（Jack8ot，2026-06-28）
 
 ### 主要文件变化
-- 暂无可列出的文件 diff。
+- `origin/fix/note-qa-grounded-ai-jack`: `D	src/SpeakSpace-Local-Group-Repo.lnk`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/db-service.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/main.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/structured-processor.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/preload/preload.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/index.html`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/renderer.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/styles.css`
 
 ## 更新记录
+
+### 2026-06-28 16:13 — 自动更新
+
+**分支变化**
+- 更新 `origin/fix/note-qa-grounded-ai-jack`：`2f4ea51` → `3801e1b`
+
+**提交摘要**
+- `origin/fix/note-qa-grounded-ai-jack` `3801e1b`：Front End Update（Jack8ot，2026-06-28）
+
+**主要文件变化**
+- `origin/fix/note-qa-grounded-ai-jack`: `D	src/SpeakSpace-Local-Group-Repo.lnk`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/db-service.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/main.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/structured-processor.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/preload/preload.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/index.html`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/renderer.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/styles.css`
 
 ### 2026-06-26 23:16 — 自动更新
 
@@ -277,13 +299,6 @@
 
 - 更新 `origin/Jack`：`ca4a834` → `1593624`（Yanqing：Refine sidebar theme toggle）
 - 变更文件：`M  src/renderer/index.html`、`M  src/renderer/renderer.js`、`M  src/renderer/styles.css`
-
----
-
-### 2026-06-18 10:00 — origin/Jack 亮色模式 UI 打磨修复
-
-- 更新 `origin/Jack`：`e54f1b3` → `ca4a834`（Yanqing：Fix light theme UI polish）
-- 变更文件：`M  src/main/note-store.js`、`M  src/renderer/renderer.js`、`M  src/renderer/styles.css`
 
 ---
 

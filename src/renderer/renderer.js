@@ -1162,7 +1162,6 @@ function applyLanguageUI() {
   deleteNoteBtn.textContent = t("moveToTrash");
   noteQaInput.placeholder = t("noteQaPlaceholder");
   noteQaSendBtn.setAttribute("aria-label", t("ask"));
-  document.querySelector("#noteQaTitle").textContent = t("askAboutNote");
   document.querySelector("#settingsSidebarLabel").textContent = t("localEngineLabel");
   document.querySelector("#settingsTitle").textContent = t("settingsTitle");
   settingsCloseBtn.setAttribute("aria-label", t("close"));

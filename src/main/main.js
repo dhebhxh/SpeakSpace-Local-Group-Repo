@@ -991,7 +991,7 @@ ipcMain.handle("note:set-action-completion", async (_event, noteId, actionItemId
 });
 
 ipcMain.handle("process:structured", async (_event, transcript) => {
-  return generateStructuredNote(transcript);
+  return generateNoteStructuredData(transcript);
 });
 
 ipcMain.handle("note:ask", async (_event, noteId, question) => {

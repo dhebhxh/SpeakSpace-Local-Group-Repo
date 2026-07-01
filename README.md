@@ -4,14 +4,14 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-07-01 14:51
+- 最后更新：2026-07-01 15:38
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
-| `origin/Jack` | `d9539bf` | [verified] fix: persist agent notes and reset sessions | Yanqing | 2026-06-22 |
+| `origin/Jack` | `e2cd6a4` | fix: restore settings runtime status initialization | Yanqing | 2026-07-01 |
 | `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 |
 | `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 |
 | `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 |
@@ -21,19 +21,59 @@
 
 ## 最近变化摘要
 
-- 更新 `origin/fix/note-qa-grounded-ai-jack`：`3801e1b` → `e2cd6a4`（fast-forward）
+- 更新 `origin/Jack`：`d9539bf` → `e2cd6a4`（fast-forward）
+- `origin/Jack` 与 `origin/fix/note-qa-grounded-ai-jack` 现在指向同一 commit `e2cd6a4`
 
-### 最近提交
-- `origin/fix/note-qa-grounded-ai-jack` `e2cd6a4`：fix: restore settings runtime status initialization（Yanqing，2026-07-01）
+### 新增提交（从「最近变化」角度，origin/Jack 新增了以下 3 个提交）
 
-### 主要文件变化
-- `origin/fix/note-qa-grounded-ai-jack`:
-  - `M	src/main/main.js` — 修复设置运行时状态初始化
-  - `M	src/renderer/renderer.js` — 修复渲染进程相应的状态恢复逻辑
-  - `A	tests/main-ipc-handler-integrity.test.js` — 新增主进程 IPC handler 完整性测试
-  - `A	tests/renderer-dom-integrity.test.js` — 新增渲染进程 DOM 完整性测试
+| SHA | 日期 | 作者 | 提交信息 |
+|---|---|---|---|
+| `e2cd6a4` | 2026-07-01 | Yanqing | fix: restore settings runtime status initialization |
+| `3801e1b` | 2026-06-28 | Jack8ot | Front End Update |
+| `2f4ea51` | 2026-06-26 | Yanqing | fix: tune note ask ai grounding for testing |
+
+### 主要文件变化（origin/Jack d9539bf → e2cd6a4）
+
+| 变更类型 | 文件 | 说明 |
+|---|---|---|
+| M | `README.md` | 项目说明更新 |
+| A | `docs/note-qa-grounding-test-brief.md` | 新增 note QA grounding 测试简介 |
+| D | `src/SpeakSpace-Local-Group-Repo.lnk` | 删除 Windows 快捷方式文件 |
+| M | `src/main/db-service.js` | 数据库服务更新 |
+| M | `src/main/main.js` | 设置运行时状态初始化修复 |
+| M | `src/main/structured-processor.js` | 结构化处理器更新 |
+| M | `src/preload/preload.js` | 预加载脚本更新 |
+| M | `src/renderer/index.html` | 渲染入口更新 |
+| M | `src/renderer/renderer.js` | 渲染逻辑更新 |
+| M | `src/renderer/styles.css` | 样式更新 |
+| A | `tests/main-ipc-handler-integrity.test.js` | 新增主进程 IPC handler 完整性测试 |
+| M | `tests/note-qa-context.test.js` | note QA 上下文测试更新 |
+| A | `tests/renderer-dom-integrity.test.js` | 新增渲染进程 DOM 完整性测试 |
 
 ## 更新记录
+
+### 2026-07-01 15:38 — 自动更新
+
+**分支变化**
+- 更新 `origin/Jack`：`d9539bf` → `e2cd6a4`（fast-forward）
+- `origin/Jack` 现在与 `origin/fix/note-qa-grounded-ai-jack` 指向同一 commit `e2cd6a4`
+
+**新增提交**
+- `e2cd6a4`：fix: restore settings runtime status initialization（Yanqing，2026-07-01）
+- `3801e1b`：Front End Update（Jack8ot，2026-06-28）
+- `2f4ea51`：fix: tune note ask ai grounding for testing（Yanqing，2026-06-26）
+
+**主要文件变化**
+- `A  docs/note-qa-grounding-test-brief.md` — 新增 note QA grounding 测试说明文档
+- `D  src/SpeakSpace-Local-Group-Repo.lnk` — 删除 Windows 快捷方式
+- `M  README.md`、`src/main/db-service.js`、`src/main/main.js`、`src/main/structured-processor.js`、`src/preload/preload.js`、`src/renderer/index.html`、`src/renderer/renderer.js`、`src/renderer/styles.css`、`tests/note-qa-context.test.js`
+- `A  tests/main-ipc-handler-integrity.test.js` — 新增测试
+- `A  tests/renderer-dom-integrity.test.js` — 新增测试
+
+**事项状态变化**
+- 无变化：当前仍为 6 项待确认、1 项已解决、0 项过期
+
+---
 
 ### 2026-07-01 14:51 — 自动更新
 
@@ -44,10 +84,10 @@
 - `origin/fix/note-qa-grounded-ai-jack` `e2cd6a4`：fix: restore settings runtime status initialization（Yanqing，2026-07-01）
 
 **主要文件变化**
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/main.js` (设置运行时状态初始化修复)
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/renderer.js` (渲染进程恢复逻辑)
-- `origin/fix/note-qa-grounded-ai-jack`: `A	tests/main-ipc-handler-integrity.test.js`
-- `origin/fix/note-qa-grounded-ai-jack`: `A	tests/renderer-dom-integrity.test.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/main/main.js` (设置运行时状态初始化修复)
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/renderer/renderer.js` (渲染进程恢复逻辑)
+- `origin/fix/note-qa-grounded-ai-jack`: `A  tests/main-ipc-handler-integrity.test.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `A  tests/renderer-dom-integrity.test.js`
 
 **事项状态变化**
 - 新增待确认：`origin/fix/note-qa-grounded-ai-jack 合并/同步计划`（SPK-ORIGIN-FIX-NOTE-QA-GROUN）
@@ -64,14 +104,14 @@
 - `origin/fix/note-qa-grounded-ai-jack` `3801e1b`：Front End Update（Jack8ot，2026-06-28）
 
 **主要文件变化**
-- `origin/fix/note-qa-grounded-ai-jack`: `D	src/SpeakSpace-Local-Group-Repo.lnk`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/db-service.js`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/main.js`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/main/structured-processor.js`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/preload/preload.js`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/index.html`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/renderer.js`
-- `origin/fix/note-qa-grounded-ai-jack`: `M	src/renderer/styles.css`
+- `origin/fix/note-qa-grounded-ai-jack`: `D  src/SpeakSpace-Local-Group-Repo.lnk`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/main/db-service.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/main/main.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/main/structured-processor.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/preload/preload.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/renderer/index.html`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/renderer/renderer.js`
+- `origin/fix/note-qa-grounded-ai-jack`: `M  src/renderer/styles.css`
 
 ### 2026-06-26 23:16 — 自动更新
 
@@ -113,11 +153,11 @@
 - `origin/Jack` `d9539bf`：[verified] fix: persist agent notes and reset sessions（Yanqing，2026-06-22）
 
 **主要文件变化**
-- `origin/Jack`: `M	README.md`
-- `origin/Jack`: `A	src/renderer/agent-conversation-state.js`
-- `origin/Jack`: `M	src/renderer/index.html`
-- `origin/Jack`: `M	src/renderer/renderer.js`
-- `origin/Jack`: `A	tests/agent-conversation-state.test.js`
+- `origin/Jack`: `M  README.md`
+- `origin/Jack`: `A  src/renderer/agent-conversation-state.js`
+- `origin/Jack`: `M  src/renderer/index.html`
+- `origin/Jack`: `M  src/renderer/renderer.js`
+- `origin/Jack`: `A  tests/agent-conversation-state.test.js`
 
 ### 2026-06-21 04:03 — 自动更新
 
@@ -161,29 +201,13 @@
 - `origin/Jack` `77b9620`：Add resilient transcription and note workflows（Yanqing，2026-06-20）
 
 **主要文件变化**
-- `origin/codex/remove-agent-handoff`: `M	AGENTS.md`, `D	docs/agents/speakspace-ui-pr6-handoff-2026-06-15.md`
+- `origin/codex/remove-agent-handoff`: `M  AGENTS.md`, `D  docs/agents/speakspace-ui-pr6-handoff-2026-06-15.md`
 - `origin/Jack`: 大量新增/修改文件，包括 audio-duration.js、audio-retention.js、transcript-segments.js、transcription-job-manager.js、draft-conversation-context.js、drop-input.js、note-draft-source.js、note-library-state.js 等
 
 ### 2026-06-20 00:32 — 自动更新
 
 **分支变化**
 - 删除 `origin/YQ`：`1c7066b` → 已移除（已通过 PR #7 合入 main）
-
-### 2026-06-20 00:30 — 自动更新
-
-- 更新 `origin/codex/meeting-note-templates`：`77b9620` → `e7ac17c`（Yanqing：Fix Windows native rebuild invocation）
-
-### 2026-06-20 00:27 — 自动更新
-
-- 新增 `origin/codex/meeting-note-templates`：`77b9620`（Yanqing：Add resilient transcription and note workflows）
-
-### 2026-06-19 18:12 — origin/Jack 合并冲突修复
-
-- 更新 `origin/Jack`：`113b428` → `367fd0a`（Yanqing：fix: resolve db-service merge conflict markers）
-
-### 2026-06-19 11:49 — origin/feature/dod README 更新
-
-- 更新 `origin/feature/dod`：`a4fb32b` → `6c82d18`（Jack8ot：Update README.md）
 
 ## 当前待确认事项
 
@@ -196,7 +220,7 @@
 | 多语言支持范围 | ⏳ 待确认 | 2026-06-18 | 客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。 |
 | Windows 兼容性验证 | ⏳ 待确认 | 2026-06-18 | GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。 |
 | TTS V2 时间线 | ⏳ 待确认 | 2026-06-18 | README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。 |
-| `origin/fix/note-qa-grounded-ai-jack` 合并/同步计划 | ⏳ 待确认 | 2026-07-01 | 该分支有新的远端变化（3801e1b → e2cd6a4），涉及 main.js、renderer.js 修复及 2 个新增测试文件，是否需要合并入主线或同步方案待确认。 |
+| `origin/fix/note-qa-grounded-ai-jack` 合并/同步计划 | ⏳ 待确认 | 2026-07-01 | 该分支有新的远端变化，涉及 main.js、renderer.js 修复及 2 个新增测试文件；`origin/Jack` 现已与该分支指向同一 commit `e2cd6a4`，但分支本身是否仍保留、是否需要正式合并确认，待团队确认。 |
 
 ## 已解决或已变化事项
 

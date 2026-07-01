@@ -11,6 +11,12 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="fileDropOverlay" class="file-drop-overlay hidden" aria-hidden="true">
+      <div class="file-drop-card">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <strong id="fileDropTitle">Drop audio or video to transcribe</strong>
+      </div>
+    </div>
     <main class="layout">
       <aside id="appSidebar" class="sidebar">
         <div class="brand-block">
@@ -44,14 +50,6 @@
           <span id="trashCount" class="trash-count">0</span>
         </button>
 
-        <button id="themeToggleBtn" class="sidebar-nav-btn" type="button">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 2v20a10 10 0 0 0 0-20z"/>
-          </svg>
-          <span id="themeLabel">Theme</span>
-        </button>
-
         <div class="sidebar-library">
           <div class="library-head">
             <p id="notesLibraryTitle" class="sidebar-title">Notes Library</p>
@@ -71,9 +69,13 @@
             <span class="status-chip-dots">
               <span id="sttStatusDot" class="status-dot pending"></span>
               <span id="llmStatusDot" class="status-dot pending"></span>
+              <span id="embeddingStatusDot" class="status-dot pending"></span>
             </span>
             <span class="status-chip-text">Local Engine</span>
             <svg class="status-chip-gear" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Theme" aria-label="Theme">
+            <svg id="themeIcon" class="theme-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
           </button>
         </div>
       </aside>
@@ -100,6 +102,12 @@
           </div>
           <div class="topbar-drag-region"></div>
           <div class="topbar-actions">
+            <label class="template-picker" for="noteTemplateSelect">
+              <span id="noteTemplateLabel">Template</span>
+              <select id="noteTemplateSelect">
+                <option value="general">General</option>
+              </select>
+            </label>
             <button id="copyBtn" class="ghost-btn" type="button" disabled>
               Copy Reply
             </button>
@@ -111,9 +119,10 @@
 
         <section class="conversation-wrap">
           <div id="chatList" class="chat-list"></div>
+          <div id="agentTrace" class="chat-list agent-trace hidden"></div>
         </section>
 
-        <section class="composer-shell">
+        <section id="assistantComposerShell" class="composer-shell">
           <div id="inputMeta" class="input-meta">
             <div id="selectedFileMeta" class="meta-chip hidden"></div>
             <div id="recordingMeta" class="meta-chip hidden"></div>
@@ -122,6 +131,19 @@
 
           <div class="composer">
             <div class="composer-toolbar">
+              <span class="composer-tooltip" data-composer-tooltip>
+                <button
+                  id="composerAgentToggle"
+                  class="icon-btn composer-mode-toggle"
+                  type="button"
+                  title="Agent mode"
+                  aria-label="Agent mode"
+                  aria-pressed="false"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 4v4M8.5 13h.01M15.5 13h.01M2 12v3M22 12v3M9 19v2M15 19v2"/></svg>
+                </button>
+              </span>
+
               <span class="composer-tooltip" data-composer-tooltip>
                 <button
                   id="pickFileBtn"
@@ -185,7 +207,7 @@
 
             <textarea
               id="promptInput"
-              placeholder="Type a question, or import audio / record..."
+              placeholder="Type a title to create a new note, or import audio / record..."
               spellcheck="false"
             ></textarea>
 
@@ -210,6 +232,56 @@
         </section>
       </section>
 
+      <!-- VIEW: Meeting processing and review -->
+      <section id="viewMeetingReview" class="main-panel">
+        <header class="topbar">
+          <div class="topbar-leading">
+            <button id="meetingReviewBackBtn" class="ghost-btn" type="button">Cancel</button>
+          </div>
+          <div class="topbar-drag-region"></div>
+          <div class="topbar-actions">
+            <span id="meetingReviewDraftState" class="review-draft-state"></span>
+            <button id="meetingReviewSaveBtn" class="ghost-btn accent-btn" type="button" disabled>Save Note</button>
+          </div>
+        </header>
+
+        <section class="meeting-review-shell">
+          <div id="meetingProgressPanel" class="meeting-progress-panel hidden" role="status" aria-live="polite">
+            <p id="meetingProgressKicker" class="sidebar-label">MEETING NOTE</p>
+            <h2 id="meetingProgressTitle">Analyzing transcript</h2>
+            <p id="meetingProgressDetail" class="meeting-progress-detail"></p>
+            <div class="meeting-progress-meta">
+              <span id="meetingProgressElapsed"></span>
+              <span id="meetingProgressModel"></span>
+            </div>
+            <div class="meeting-progress-actions">
+              <button id="meetingPauseBtn" class="ghost-btn" type="button">Pause</button>
+              <button id="meetingRetryBtn" class="ghost-btn hidden" type="button">Retry</button>
+              <button id="meetingCancelBtn" class="ghost-btn danger-btn" type="button">Cancel</button>
+            </div>
+            <pre id="meetingRawOutput" class="meeting-raw-output hidden"></pre>
+          </div>
+
+          <div id="meetingReviewWorkspace" class="meeting-review-workspace hidden">
+            <nav class="meeting-review-tabs" aria-label="Meeting review panes">
+              <button class="meeting-review-tab active" type="button" data-review-pane="transcript">Transcript</button>
+              <button class="meeting-review-tab" type="button" data-review-pane="minutes">Minutes</button>
+            </nav>
+            <section class="meeting-source-pane" data-review-panel="transcript">
+              <label class="meeting-search-label" for="meetingTranscriptSearch">Search transcript</label>
+              <input id="meetingTranscriptSearch" class="meeting-search-input" type="search" spellcheck="false" />
+              <div id="meetingTranscriptReadOnly" class="meeting-transcript-readonly"></div>
+            </section>
+            <form id="meetingReviewForm" class="meeting-editor-pane" data-review-panel="minutes">
+              <label>Title<input id="meetingTitleInput" name="title" type="text" maxlength="300" required /></label>
+              <label>Summary<textarea id="meetingSummaryInput" name="summary" rows="5" maxlength="10000"></textarea></label>
+              <div id="meetingStructuredSections"></div>
+              <label>Tags<input id="meetingTagsInput" name="tags" type="text" maxlength="1000" /></label>
+            </form>
+          </div>
+        </section>
+      </section>
+
       <!-- VIEW: Note Detail -->
       <section id="viewNoteDetail" class="main-panel">
         <header class="topbar">
@@ -230,102 +302,73 @@
           </div>
           <div class="topbar-drag-region"></div>
           <div class="topbar-actions">
-            <button id="backToNotesBtn" class="ghost-btn" type="button">← Back to Assistant</button>
-            <button id="deleteNoteBtn" class="ghost-btn danger-btn" type="button">Delete</button>
+
+            <button id="deleteNoteBtn" class="ghost-btn danger-btn" type="button">Move to Trash</button>
           </div>
         </header>
 
         <section class="note-detail-container">
           <div id="noteDetailContent" class="note-detail-content"></div>
 
+          <!-- Subnotes Section -->
           <div class="note-qa-section">
-            <h3 id="noteQaTitle" class="note-qa-title">Ask About This Note</h3>
-            <div id="noteQaMessages" class="note-qa-messages"></div>
-            <div class="note-qa-composer">
-              <div id="noteQaInputMeta" class="input-meta">
-                <div id="noteSelectedFileMeta" class="meta-chip hidden"></div>
-                <div id="noteRecordingMeta" class="meta-chip hidden"></div>
-                <div id="noteJobStatus" class="meta-status"></div>
-              </div>
-              <div class="composer">
-                <div class="composer-toolbar">
-                  <button
-                    id="noteQaPickFileBtn"
-                    class="icon-btn"
-                    type="button"
-                    title="Import audio file"
-                    aria-label="Import audio file"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.8"
-                      />
-                      <path
-                        d="M13 6l-5 5 5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.8"
-                      />
-                    </svg>
-                  </button>
-
-                  <button
-                    id="noteQaRecordToggleBtn"
-                    class="icon-btn"
-                    type="button"
-                    title="Record"
-                    aria-label="Record"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <rect
-                        x="9"
-                        y="3"
-                        width="6"
-                        height="11"
-                        rx="3"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                      />
-                      <path
-                        d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.8"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <textarea
-                  id="noteQaInput"
-                  placeholder="For example: What should I do after this meeting?"
-                  spellcheck="false"
-                ></textarea>
-                <button id="noteQaSendBtn" class="send-btn" type="button" aria-label="Ask">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M5 12h14M13 6l6 6-6 6"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <h3 class="note-qa-title">Subnotes</h3>
+            <div id="subnotesTimeline" class="subnotes-timeline"></div>
           </div>
         </section>
+
+        <!-- Subnotes Composer (Sticky at bottom) -->
+        <section id="noteQaComposerShell" class="composer-shell">
+          <div id="noteQaInputMeta" class="input-meta">
+            <div id="noteSelectedFileMeta" class="meta-chip hidden"></div>
+            <div id="noteRecordingMeta" class="meta-chip hidden"></div>
+            <div id="noteJobStatus" class="meta-status"></div>
+          </div>
+          <div class="composer">
+            <div class="composer-toolbar">
+              <button id="noteQaPickFileBtn" class="icon-btn" type="button" title="Import audio file">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                  <path d="M13 6l-5 5 5 5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                </svg>
+              </button>
+              <button id="noteQaRecordToggleBtn" class="icon-btn" type="button" title="Record">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                </svg>
+              </button>
+              <button id="askAiToggleBtn" class="icon-btn accent-btn" type="button" title="Ask AI">
+                <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <textarea id="subnoteInput" placeholder="Add a text subnote..." spellcheck="false"></textarea>
+            <button id="subnoteSendBtn" class="send-btn" type="button" aria-label="Send Subnote">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ASK AI Right Sidebar -->
+        <aside id="askAiSidebar" class="ask-ai-sidebar hidden">
+          <header class="ask-ai-header">
+            <h3>ASK AI</h3>
+            <button id="askAiCloseBtn" class="ghost-btn" type="button">Close</button>
+          </header>
+          <div id="noteQaMessages" class="note-qa-messages"></div>
+          <div class="ask-ai-composer">
+            <textarea id="noteQaInput" placeholder="Ask a question about this note..." spellcheck="false"></textarea>
+            <button id="noteQaSendBtn" class="send-btn" type="button" aria-label="Ask">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </aside>
       </section>
     </main>
 
@@ -353,14 +396,11 @@
             <button class="settings-nav-btn" type="button" data-settings-category="llm">
               <span id="settingsNavLlm">Local LLM</span>
             </button>
+            <button class="settings-nav-btn" type="button" data-settings-category="embedding">
+              <span id="settingsNavEmbedding">Embedding</span>
+            </button>
             <button class="settings-nav-btn" type="button" data-settings-category="tts">
               <span id="settingsNavTts">Text-to-Speech</span>
-            </button>
-            <button class="settings-nav-btn" type="button" data-settings-category="hardware">
-              <span id="settingsNavHardware">Hardware</span>
-            </button>
-            <button class="settings-nav-btn" type="button" data-settings-category="storage">
-              <span id="settingsNavStorage">Storage</span>
             </button>
           </nav>
 
@@ -384,6 +424,94 @@
                       <div class="custom-dropdown-menu"></div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div id="hardwareInfoPanel" class="hardware-panel hardware-panel-spaced">
+                <div class="hardware-panel-head">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
+                  <span id="hardwarePanelTitle" class="hardware-panel-title">Device Hardware</span>
+                  <span id="hwRecommendBadge" class="hw-recommend-badge"></span>
+                </div>
+
+                <div class="hw-grid">
+                  <div class="hw-item">
+                    <div class="hw-item-icon cpu">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
+                    </div>
+                    <div class="hw-item-body">
+                      <span id="hwCpuLabel" class="hw-item-label">Processor</span>
+                      <span id="hwCpuModel" class="hw-item-value">Checking...</span>
+                      <span id="hwCpuCores" class="hw-item-sub"></span>
+                    </div>
+                  </div>
+
+                  <div class="hw-item">
+                    <div class="hw-item-icon memory">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19v-8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8"/><rect x="2" y="19" width="20" height="2" rx="1"/><path d="M9 9V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>
+                    </div>
+                    <div class="hw-item-body">
+                      <span id="hwMemLabel" class="hw-item-label">System Memory</span>
+                      <span id="hwMemTotal" class="hw-item-value">Checking...</span>
+                      <div id="hwMemBar" class="hw-progress-bar">
+                        <div id="hwMemBarFill" class="hw-progress-fill"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="hw-item">
+                    <div class="hw-item-icon gpu">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 21V17M10 21V17M14 21V17M18 21V17M6 7V3M18 7V3"/></svg>
+                    </div>
+                    <div class="hw-item-body">
+                      <span id="hwGpuLabel" class="hw-item-label">Graphics (GPU)</span>
+                      <span id="hwGpuName" class="hw-item-value">Checking...</span>
+                      <span id="hwGpuVram" class="hw-item-sub"></span>
+                    </div>
+                  </div>
+
+                  <div class="hw-item">
+                    <div class="hw-item-icon cuda" id="hwCudaIcon">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <div class="hw-item-body">
+                      <span id="hwAccelLabel" class="hw-item-label">Inference Acceleration</span>
+                      <span id="hwCudaStatus" class="hw-item-value">Checking...</span>
+                      <span id="hwCudaDetail" class="hw-item-sub"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="hwRecommendation" class="hw-recommendation"></div>
+              </div>
+
+              <div class="settings-group-head settings-group-head-spaced">
+                <span id="storageGroupTitle" class="settings-group-title">Storage</span>
+              </div>
+              <div class="settings-setting-list">
+                <div class="settings-setting-row">
+                  <div class="settings-setting-copy">
+                    <span id="managedDataTitle" class="model-label">Managed Data Directory</span>
+                    <p id="managedDataPath" class="settings-help-text">Checking...</p>
+                  </div>
+                </div>
+                <div class="settings-setting-row">
+                  <div class="settings-setting-copy">
+                    <span id="cleanAssetsTitle" class="model-label">Clean Local Assets</span>
+                    <p id="cleanAssetsHelpText" class="settings-help-text">Removes project-managed runtimes, models, and caches. Notes are kept.</p>
+                  </div>
+                  <div class="settings-setting-control compact">
+                    <button id="cleanAllAssetsBtn" class="ghost-btn settings-action-btn danger-btn" type="button">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
+                      Clean All Local Assets
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-actions-row settings-footer-actions">
+                  <button id="refreshRuntimeBtn" class="ghost-btn refresh-btn settings-action-btn" type="button">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    Refresh Status
+                  </button>
                 </div>
               </div>
             </section>
@@ -555,6 +683,44 @@
               </div>
             </section>
 
+            <section class="settings-section" data-settings-section="embedding">
+              <div class="settings-group-head">
+                <span id="embeddingStatusDotPanel" class="status-dot pending"></span>
+                <span id="embeddingGroupTitle" class="settings-group-title">Embedding</span>
+              </div>
+              <div class="stt-engine-layout">
+                <aside class="stt-engine-nav" aria-label="Embedding engines">
+                  <p id="embeddingEngineListTitle" class="stt-engine-nav-title">Local Engines</p>
+                  <button class="stt-engine-btn active" type="button" data-embedding-engine="ollama" aria-pressed="true">
+                    <span class="stt-engine-btn-main">
+                      <span class="stt-engine-btn-name">Ollama</span>
+                      <span id="embeddingOllamaEngineStatus" class="stt-engine-status">Active</span>
+                    </span>
+                    <span class="stt-engine-btn-desc">Local model runtime.</span>
+                  </button>
+                </aside>
+
+                <div class="stt-engine-detail">
+                  <header class="stt-engine-detail-head">
+                    <div>
+                      <h3>Ollama</h3>
+                      <p id="embeddingHelpText" class="settings-help-text">Local embedding model that powers semantic note search.</p>
+                    </div>
+                    <span id="embeddingEngineDetailBadge" class="dropdown-item-badge">Active</span>
+                  </header>
+
+                  <div class="stt-models-panel">
+                    <div class="stt-models-head">
+                      <div>
+                        <span id="embeddingModelLabel" class="stt-capability-title">Embedding models</span>
+                      </div>
+                    </div>
+                    <div id="embeddingModelCards" class="stt-model-card-list"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <section class="settings-section" data-settings-section="tts">
               <div class="settings-group-head">
                 <span id="ttsStatusDotPanel" class="status-dot pending"></span>
@@ -669,98 +835,6 @@
                 </div>
               </div>
             </section>
-
-            <section class="settings-section" data-settings-section="hardware">
-              <div id="hardwareInfoPanel" class="hardware-panel">
-                <div class="hardware-panel-head">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
-                  <span id="hardwarePanelTitle" class="hardware-panel-title">Device Hardware</span>
-                  <span id="hwRecommendBadge" class="hw-recommend-badge"></span>
-                </div>
-
-                <div class="hw-grid">
-                  <div class="hw-item">
-                    <div class="hw-item-icon cpu">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>
-                    </div>
-                    <div class="hw-item-body">
-                      <span id="hwCpuLabel" class="hw-item-label">Processor</span>
-                      <span id="hwCpuModel" class="hw-item-value">Checking...</span>
-                      <span id="hwCpuCores" class="hw-item-sub"></span>
-                    </div>
-                  </div>
-
-                  <div class="hw-item">
-                    <div class="hw-item-icon memory">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19v-8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8"/><rect x="2" y="19" width="20" height="2" rx="1"/><path d="M9 9V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>
-                    </div>
-                    <div class="hw-item-body">
-                      <span id="hwMemLabel" class="hw-item-label">System Memory</span>
-                      <span id="hwMemTotal" class="hw-item-value">Checking...</span>
-                      <div id="hwMemBar" class="hw-progress-bar">
-                        <div id="hwMemBarFill" class="hw-progress-fill"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="hw-item">
-                    <div class="hw-item-icon gpu">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 21V17M10 21V17M14 21V17M18 21V17M6 7V3M18 7V3"/></svg>
-                    </div>
-                    <div class="hw-item-body">
-                      <span id="hwGpuLabel" class="hw-item-label">Graphics (GPU)</span>
-                      <span id="hwGpuName" class="hw-item-value">Checking...</span>
-                      <span id="hwGpuVram" class="hw-item-sub"></span>
-                    </div>
-                  </div>
-
-                  <div class="hw-item">
-                    <div class="hw-item-icon cuda" id="hwCudaIcon">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    </div>
-                    <div class="hw-item-body">
-                      <span id="hwAccelLabel" class="hw-item-label">Inference Acceleration</span>
-                      <span id="hwCudaStatus" class="hw-item-value">Checking...</span>
-                      <span id="hwCudaDetail" class="hw-item-sub"></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div id="hwRecommendation" class="hw-recommendation"></div>
-              </div>
-            </section>
-
-            <section class="settings-section" data-settings-section="storage">
-              <div class="settings-group-head">
-                <span id="storageGroupTitle" class="settings-group-title">Storage</span>
-              </div>
-              <div class="settings-setting-list">
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <span id="managedDataTitle" class="model-label">Managed Data Directory</span>
-                    <p id="managedDataPath" class="settings-help-text">Checking...</p>
-                  </div>
-                </div>
-                <div class="settings-setting-row">
-                  <div class="settings-setting-copy">
-                    <span id="cleanAssetsTitle" class="model-label">Clean Local Assets</span>
-                    <p id="cleanAssetsHelpText" class="settings-help-text">Removes project-managed runtimes, models, and caches. Notes are kept.</p>
-                  </div>
-                  <div class="settings-setting-control compact">
-                    <button id="cleanAllAssetsBtn" class="ghost-btn settings-action-btn danger-btn" type="button">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
-                      Clean All Local Assets
-                    </button>
-                  </div>
-                </div>
-                <div class="settings-actions-row settings-footer-actions">
-                  <button id="refreshRuntimeBtn" class="ghost-btn refresh-btn settings-action-btn" type="button">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                    Refresh Status
-                  </button>
-                </div>
-              </div>
-            </section>
           </div>
         </div>
       </div>
@@ -797,6 +871,76 @@
       </div>
     </div>
 
+    <!-- Agent overlay: tool-calling orchestration with a visible reasoning trace -->
+    <div id="agentOverlay" class="agent-overlay hidden">
+      <div class="agent-panel">
+        <header class="agent-header">
+          <div>
+            <p id="agentKicker" class="sidebar-label">Local Agent</p>
+            <h2 id="agentTitle">Agent</h2>
+            <p id="agentSubtitle" class="agent-subtitle">The local model plans and calls local tools to fulfill your request.</p>
+          </div>
+          <div class="agent-header-actions">
+            <button id="agentClearBtn" class="ghost-btn agent-clear-btn" type="button">New chat</button>
+            <button id="agentCloseBtn" class="settings-close" type="button" aria-label="Close">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="agent-body">
+          <div id="agentTraceList" class="agent-trace"></div>
+        </div>
+
+        <div class="agent-composer">
+          <div class="agent-composer-meta">
+            <span id="agentRecordingMeta" class="meta-chip hidden"></span>
+            <div id="agentRunStatus" class="agent-run-status"></div>
+          </div>
+          <div class="agent-input-row">
+            <div class="composer-toolbar agent-toolbar">
+              <button id="agentPickFileBtn" class="icon-btn" type="button" title="Import audio file" aria-label="Import audio file">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18a5 5 0 0 1 0-10h6a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M13 6l-5 5 5 5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
+              </button>
+              <button id="agentRecordBtn" class="icon-btn" type="button" title="Record" aria-label="Record">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 10a6 6 0 0 0 12 0M12 16v5M8.5 21h7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
+              </button>
+            </div>
+            <textarea id="agentInput" class="agent-input" rows="2" spellcheck="false"></textarea>
+            <button id="agentRunBtn" class="send-btn agent-run-btn" type="button" aria-label="Run">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating download dock: peeks from the right edge, expands on hover -->
+    <div id="downloadDock" class="download-dock hidden" aria-live="polite">
+      <button id="downloadDockHandle" class="download-dock-handle" type="button" aria-label="Downloads in progress">
+        <span id="downloadDockRing" class="download-dock-ring indeterminate">
+          <svg class="download-dock-handle-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+        </span>
+        <span id="downloadDockHandleCount" class="download-dock-handle-count">0</span>
+      </button>
+      <div class="download-dock-panel">
+        <div class="download-dock-head">
+          <span id="downloadDockTitle" class="download-dock-title">Downloads</span>
+          <span id="downloadDockCount" class="download-dock-count"></span>
+        </div>
+        <div id="downloadDockList" class="download-dock-list"></div>
+      </div>
+    </div>
+
+    <script src="./drop-input.js"></script>
+    <script src="./draft-conversation-context.js"></script>
+    <script src="./note-draft-source.js"></script>
+    <script src="./agent-conversation-state.js"></script>
+    <script src="./note-library-state.js"></script>
+    <script src="./transcript-view.js"></script>
+    <script src="./note-summary-view.js"></script>
+    <script src="./transcribed-draft-view.js"></script>
+    <script src="./transcription-progress-view.js"></script>
     <script src="./ime-events.js"></script>
     <script src="./renderer.js"></script>
   </body>

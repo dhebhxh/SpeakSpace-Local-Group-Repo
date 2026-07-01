@@ -19,6 +19,68 @@
 
 ---
 
+## 更新日志
+
+### 2026-06-26 · Ask AI prompt-only grounding test branch
+
+- `Ask AI` 现在通过 prompt 约束只基于当前笔记 / 转写内容回答，不再使用额外的代码层 evidence / relation / target validator 强制 fallback。
+- `Recent Q&A` 只作为对话上下文，不作为事实来源；如果当前笔记 / 转写中没有足够信息，prompt 会要求模型用用户语言说明缺少相关信息。
+- 为避免内部验证文本泄漏，代码会清理模型输出中的 `Answer:` / `Evidence:` 标签和 inline `Evidence:` 片段，但不会根据 `Evidence: NONE` 强行替换回答。
+- `Transcript Excerpt` 默认截取长度从 `2200` 字符提高到 `8000` 字符，便于中等长度会议、课堂或语音笔记的后续问答。
+- 该改动当前位于测试分支 `fix/note-qa-grounded-ai-jack`，用于团队测试反馈，暂未合并进 `Jack` 分支。
+- 面向小组报告和测试同步的简短说明见 `docs/note-qa-grounding-test-brief.md`。
+
+### 2026-06-22 · Agent Mode note / session fixes
+
+- `Agent Mode` 完成回答后，现在可以复用现有 `Save as Note` 流程转写为结构化笔记，并显示在左侧笔记栏。
+- `New Session` 会同步清理 Agent 对话状态，避免从普通模式重新进入 Agent Mode 时带回旧对话。
+- 从 Agent 对话保存后的笔记详情 / 处理页面点击 `New Session`，会直接跳回新的空对话界面，不再停留在刚生成的笔记页。
+- 新增 `src/renderer/agent-conversation-state.js` 与 `tests/agent-conversation-state.test.js`，覆盖 Agent 对话可保存内容和 session reset 行为。
+
+### 2026-06-21 凌晨 3:46 · linfan
+
+本次由 **linfan** 更新，主要包含三块改动：
+
+#### 1. 设置页面整合：General / 硬件设备 / 存储 三页合一
+
+- 原本的 `General`（通用）、`Devices & Hardware`（硬件设备）、`Storage`（存储）是三个相互独立的设置子页面
+- 现在把硬件设备页和存储页**统一收编进 `General` 页面**，由 General 页面集中展示与控制，进入 General 即可一并查看硬件信息、托管目录与一键清理
+- 设置侧边导航因此更精简，不再为硬件、存储单独各占一栏
+- 同时设置区新增了独立的 `Embedding` 子页面，用于向量检索模型（见第 3 点）
+
+#### 2. 模型下载：修复串行限制，支持并行下载 + 进度显示
+
+- 修复了原先的下载 Bug：之前多个模型只能**一个接一个串行下载**，不同模型之间无法同时进行
+- 现在不同模型之间**支持并行下载**，互不阻塞
+- 新增下载进度显示（Download Dock 下载坞），用户可以实时看到每个模型各自的下载进度
+
+#### 3. 新增向量检索（Embedding 语义检索）与本地智能体（Agent）
+
+这是本次改动最大的一块，给应用补上了「语义检索」和「会自己调用工具的智能体」两项能力。
+
+**向量检索 / 语义搜索**
+
+- 新增本地 Embedding 模型 `bge-m3`（多语言，中文支持良好），**复用已有的 Ollama 服务**，不引入新的运行时
+- 笔记会在本地计算语义向量，向量作为索引与笔记一起存储在 SQLite（`notes` 表新增 `embedding` / `embeddingModel` 字段），SQLite 仍是数据的唯一事实来源
+- 检索时**先做关键词精确匹配，匹配不到再回退到向量余弦相似度排序**，让检索结果更准确——尤其是换种说法、跨中英文表达时也能召回相关笔记
+- 可通过 `npm run download:embedding` 单独拉取该模型，且**不会改动聊天默认模型**（仍为 `qwen3:4b-instruct`）
+
+**本地智能体 Agent**
+
+- 新增 `src/main/agent-orchestrator.js`：一个**有边界的「工具调用」智能体**，不再是写死的固定流水线
+- 工作方式：本地模型自己「思考 → 每次只调用一个本地工具 → 读取结果 → 决定下一步」，最多 6 步，任务完成后直接给出简短的最终答复
+- 接入的本地工具共 5 个：
+  - `transcribe_audio` —— 转写本地音频 / 视频文件
+  - `structure_note` —— 把文本整理成结构化笔记
+  - `search_notes` —— 搜索本地笔记（关键词 + 上面的向量语义检索）
+  - `read_note` —— 按 id 读取某条笔记的完整内容
+  - `speak` —— 用本地 TTS 把文本朗读出来
+- 智能体会把每一步（思考、调用了哪个工具、工具结果、最终答复）**实时流式展示在对话区**，整个过程透明可见
+- 目的 / 作用：让用户用一句自然语言描述任务（例如「把这段录音整理成纪要并读出来」「找一下我之前关于 X 的笔记并总结一下」），智能体就能**自动规划**并把转写 / 结构化 / 检索 / 朗读这些本地能力**自动串起来**完成，全程本地离线
+- 入口：在输入框左下角的**机器人图标**可切换进入 / 退出 Agent 模式
+
+---
+
 ## 项目定位
 
 这个项目不是一个纯聊天壳子，而是一个面向“本地会议记录 / 访谈整理 / 语音笔记 / 离线辅助问答”的桌面端原型。核心思路是：
@@ -74,7 +136,9 @@
 
 - 用户可以在单条笔记下继续追问
 - 应用会把笔记摘要、要点、行动项、转写摘录和近期问答一起组装给本地 `LLM`
-- 回答仍然走本地模型
+- `Ask AI` 采用 prompt-only grounding：prompt 明确要求模型只基于当前笔记 / 转写回答，不使用外部知识；近期问答只作为上下文，不作为事实来源
+- 为了让中等长度语音笔记有更多原文可参考，转写摘录默认最多传入 `8000` 字符
+- 回答仍然走本地模型，代码只清理内部 `Answer:` / `Evidence:` 标签，不再用额外规则强制替换模型回答
 
 ### 7. 本地 TTS 播报
 
@@ -130,7 +194,7 @@
 
 ### 数据与存储
 
-- JSON 文件型笔记存储
+- `SQLite` 笔记数据库（`better-sqlite3`），含用于向量检索的笔记 Embedding 字段
 - 项目内统一托管目录
 - Electron `userData` 目录下的笔记数据库
 
@@ -158,13 +222,13 @@ npm.cmd start
 
 ```bash
 > speakspace-local-desktop@1.0.0 start
-> electron .
+> npm run native:electron && electron .
 ```
 
 这表示：
 
 - `npm start` 或 `npm.cmd start` 最终都会执行 `package.json` 里的 `start` 脚本
-- 当前项目的 `start` 脚本实际内容是 `electron .`
+- 当前项目的 `start` 脚本会先执行 `npm run native:electron`，确保 `better-sqlite3` 等 native 依赖适配当前 Electron 版本，然后再执行 `electron .`
 - `electron .` 会读取当前目录下 `package.json` 的 `main` 字段，并从 `src/main/main.js` 启动整个桌面应用
 
 如果你只想先检查本地是否准备好，可以运行：
@@ -248,10 +312,16 @@ npm.cmd start
   - 语音合成
 - `tts-worker.js`
   - TTS 子进程工作逻辑
-- `note-store.js`
-  - 笔记增删改查
-  - 文件夹 / 标签聚合
-  - 问答消息追加
+- `db-service.js`
+  - 基于 `SQLite`（`better-sqlite3`）的笔记存储
+  - 笔记增删改查、文件夹 / 标签聚合、问答消息追加
+  - 笔记向量（Embedding）索引的读写
+- `embedding-service.js`
+  - 本地语义向量计算（`bge-m3`，复用 Ollama 服务）
+  - 余弦相似度排序，支撑笔记的向量检索
+- `agent-orchestrator.js`
+  - 本地智能体的工具调用循环（思考 → 调用工具 → 读取结果 → 决定下一步）
+  - 编排 transcribe / structure / search / read / speak 等本地工具
 - `structured-processor.js`
   - 结构化笔记整理
   - 针对笔记问答
@@ -390,24 +460,20 @@ npm.cmd start
 
 与 `.speakspace-data/` 不同，笔记本身不保存在项目目录里，而是保存在 Electron `userData` 目录下。
 
-当前存储实现：
+当前存储实现（由 `src/main/db-service.js` 负责）：
 
 - 笔记目录：`app.getPath("userData")/speakspace-notes`
-- 数据文件：`notes-db.json`
+- 数据文件：`notes.db`（`SQLite`，通过 `better-sqlite3` 读写；早期的 `notes-db.json` 已迁移到该数据库）
+- 表结构升级采用「`CREATE TABLE IF NOT EXISTS` + 按列增量迁移」，首次启动自动建库建表，迁移前会自动备份
 
-每条笔记包含：
+`notes` 表每条笔记主要包含：
 
-- `id`
-- `title`
-- `createdAt`
-- `updatedAt`
-- `audioPath`
-- `transcript`
-- `structured`
-- `tags`
-- `folder`
-- `performance`
-- `conversations`
+- `id` / `title` / `createdAt` / `updatedAt` / `deletedAt`
+- `audioPath` / `transcript` / `transcriptSegments`
+- `summary` / `keyPoints` / `actionItems` / `structuredData`
+- `tags` / `folder` / `templateId` / `sourceNoteId`
+- `status` / `statusMessage` / `performance` / `conversations`
+- `embedding` / `embeddingModel`（用于本地向量检索的语义向量及其模型）
 
 这使得应用本体和模型目录可以清理，而笔记数据仍可独立管理。
 
@@ -508,14 +574,15 @@ npm.cmd start
 
 ### 设置面板
 
-- `STT / LLM / TTS` 状态查看
+- 子页面：`General`、`STT`、`LLM`、`Embedding`、`TTS`（硬件信息、存储与清理已统一并入 `General`）
+- `STT / LLM / TTS / Embedding` 状态查看
 - runtime 下载 / 删除
-- 模型下载 / 删除
+- 模型下载 / 删除（支持多个模型并行下载，并显示各自下载进度）
 - TTS 模型和音色切换
 - 自动播报开关
 - 界面语言切换
-- 硬件信息展示
-- `Clean All Local Assets`
+- 硬件信息展示（位于 `General` 页）
+- 托管目录与 `Clean All Local Assets`（位于 `General` 页）
 
 ---
 
@@ -530,7 +597,9 @@ src/
     llm-service.js
     tts-service.js
     tts-worker.js
-    note-store.js
+    db-service.js
+    embedding-service.js
+    agent-orchestrator.js
     structured-processor.js
   preload/
     preload.js
@@ -543,6 +612,7 @@ scripts/
   download-runtime.js
   download-tts-runtime.js
   download-llm-runtime.js
+  download-embedding-model.js
   cleanup-local-assets.js
   cleanup-local-assets.ps1
   cleanup-local-assets.sh
@@ -614,6 +684,18 @@ npm run download:llm:check
 npm run cleanup:assets
 ```
 
+运行自动化测试：
+
+```bash
+npm test
+```
+
+运行本地验证脚本：
+
+```bash
+npm run verify:local
+```
+
 只拉某个 LLM 模型：
 
 ```bash
@@ -630,7 +712,7 @@ node ./scripts/download-llm-runtime.js --preset candidates --default-model phi4-
 
 当前 `package.json` 中几个最常用脚本的实际展开如下：
 
-- `npm start` -> `electron .`
+- `npm start` -> `npm run native:electron && electron .`
 - `npm run download:runtime` -> `node ./scripts/download-runtime.js`
 - `npm run download:tts` -> `node ./scripts/download-tts-runtime.js`
 - `npm run download:llm` -> `node ./scripts/download-llm-runtime.js`
@@ -639,6 +721,8 @@ node ./scripts/download-llm-runtime.js --preset candidates --default-model phi4-
 - `npm run download:tts:check` -> `node ./scripts/download-tts-runtime.js --check`
 - `npm run download:llm:check` -> `node ./scripts/download-llm-runtime.js --check`
 - `npm run cleanup:assets` -> `node ./scripts/cleanup-local-assets.js`
+- `npm run verify:local` -> `npm run native:node && node ./scripts/verify-local.js`
+- `npm test` -> `npm run native:node && node --test tests/*.test.js`
 
 ---
 

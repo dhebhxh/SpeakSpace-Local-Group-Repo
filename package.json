@@ -4,17 +4,20 @@
   "description": "Local Electron desktop speech-to-text MVP powered by whisper.cpp",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
+    "native:electron": "node ./scripts/prepare-native.js electron",
+    "native:node": "node ./scripts/prepare-native.js node",
+    "start": "npm run native:electron && electron .",
     "download:runtime": "node ./scripts/download-runtime.js",
     "download:tts": "node ./scripts/download-tts-runtime.js",
     "download:llm": "node ./scripts/download-llm-runtime.js",
     "download:llm:candidates": "node ./scripts/download-llm-runtime.js --preset candidates",
+    "download:embedding": "node ./scripts/download-embedding-model.js",
     "download:runtime:check": "node ./scripts/download-runtime.js --check",
     "download:tts:check": "node ./scripts/download-tts-runtime.js --check",
     "download:llm:check": "node ./scripts/download-llm-runtime.js --check",
     "cleanup:assets": "node ./scripts/cleanup-local-assets.js",
-    "verify:local": "node ./scripts/verify-local.js",
-    "test": "echo \"No automated tests configured\""
+    "verify:local": "npm run native:node && node ./scripts/verify-local.js",
+    "test": "npm run native:node && node --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +27,7 @@
     "electron": "^42.4.0"
   },
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
     "sherpa-onnx": "^1.13.2",
     "sherpa-onnx-node": "^1.13.2"
   }

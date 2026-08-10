@@ -4,40 +4,59 @@
 > 内容基于 Git/repo 静态分析生成；未运行测试、build 或 dev server。  
 > This branch contains only an auto-generated project status dashboard. It is based on static Git/repo analysis and does not include runnable source code.
 
-- 最后更新：2026-08-05 15:06
+- 最后更新：2026-08-10 13:10
 - 分析方式：静态分析（Git refs / commits / docs / package.json / src tree）
 
 ## 分支状态
 
 | 分支 | HEAD | 最近提交 | 作者 | 日期 |
 |---|---:|---|---|---|
-| `origin/Jack` | `e2cd6a4` | fix: restore settings runtime status initialization | Yanqing | 2026-07-01 14:49 +0100 |
-| `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 13:06 +0100 |
-| `origin/W` | `305e03b` | Merge pull request #5 from dhebhxh/codex/add-client-meeting-eval-prep | Wenlei Miao | 2026-06-07 21:58 +0100 |
-| `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 11:48 +0100 |
-| `origin/fix/note-qa-grounded-ai-jack` | `e2cd6a4` | fix: restore settings runtime status initialization | Yanqing | 2026-07-01 14:49 +0100 |
-| `origin/gigi/ask-ai` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 10:49 +0100 |
-| `origin/integration/jack-to-main` | `2055ab3` | chore: integrate Jack app state for main | Yanqing | 2026-07-01 15:38 +0100 |
-| `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 10:49 +0100 |
-| `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 13:06 +0100 |
+| `origin/Jack` | `e2cd6a4` | fix: restore settings runtime status initialization | Yanqing | 2026-07-01 14:49:56 +0100 |
+| `origin/LF-c-patch-1` | `fb2389c` | feat: 新增亮色模式與切換按鈕 | Jack8ot | 2026-06-16 13:06:01 +0100 |
+| `origin/feature/dod` | `6c82d18` | Update README.md | Jack8ot | 2026-06-19 11:48:15 +0100 |
+| `origin/fix/note-qa-grounded-ai-jack` | `e2cd6a4` | fix: restore settings runtime status initialization | Yanqing | 2026-07-01 14:49:56 +0100 |
+| `origin/gigi/ask-ai` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 10:49:21 +0100 |
+| `origin/integration/jack-to-main` | `2055ab3` | chore: integrate Jack app state for main | Yanqing | 2026-07-01 15:38:27 +0100 |
+| `origin/main` | `18a5655` | Merge pull request #7 from dhebhxh/YQ | Wenlei Miao | 2026-06-17 10:49:21 +0100 |
+| `origin/project-proposal` | `259ed1a` | proposal-draft | Greta | 2026-06-10 13:06:35 +0100 |
 
 ### 本次变化分支
 
 | 类型 | 分支 | old_sha → new_sha |
 |---|---|---|
-| 新增 | `origin/gigi/ask-ai` | `不存在` → `18a56553ff4e71e5afa83ebfdc4b793b188f0caf` |
-| 删除 | 无 | — |
+| 新增 | 无 | — |
+| 删除 | `origin/W` | `305e03b5475367a5948f926eb669782ff6b98d81` → `不存在` |
 | 更新 | 无 | — |
 
 ## 最近变化摘要
 
-- 本次变化清单新增观察到 `origin/gigi/ask-ai`：`不存在` → `18a56553ff4e71e5afa83ebfdc4b793b188f0caf`。
-- `origin/gigi/ask-ai` 与 `origin/main` 当前指向同一提交 `18a56553ff4e71e5afa83ebfdc4b793b188f0caf`。
-- 新增分支的 HEAD 元数据显示，最近提交为 `Merge pull request #7 from dhebhxh/YQ`，作者为 Wenlei Miao，提交时间为 2026-06-17 10:49:21 +0100。
-- 本次静态上下文中的 `commits` 和 `files` 均为空，因此没有可进一步列出的新增提交或文件级 diff。
-- Dashboard 当前保持 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
+- 远端分支 `origin/W` 已从本次分支列表中删除：`305e03b5475367a5948f926eb669782ff6b98d81` → `不存在`。
+- 本次变化清单没有新增或更新分支。
+- `origin/Jack` 与 `origin/fix/note-qa-grounded-ai-jack` 当前指向同一提交 `e2cd6a4fa7cdc20d9d8cbe2b887fcd7b00eadac6`；`origin/main` 与 `origin/gigi/ask-ai` 当前指向同一提交 `18a56553ff4e71e5afa83ebfdc4b793b188f0caf`。
+- 删除分支的变化详情没有提供提交列表或文件级变化列表，因此无法从本次上下文判断删除原因或对应代码变化。
+- Dashboard 当前保持 6 项待确认、1 项已解决或已变化、0 项过期或证据不足；本次没有新增、重新打开、解决或转为过期的事项事件。
 
 ## 更新记录
+
+### 2026-08-10 13:10 — 自动更新
+
+**分支变化**
+
+- 新增分支：无
+- 删除 `origin/W`：`305e03b5475367a5948f926eb669782ff6b98d81` → `不存在`
+- 更新分支：无
+
+**提交与文件摘要**
+
+- 本次变化仅记录远端分支删除。
+- `changes.details` 未提供相关提交或文件列表，不能据此推断合并状态、删除原因或代码内容变化。
+
+**事项状态**
+
+- 当前 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
+- `dashboard_items.events` 中的 `resolved`、`stale`、`reopened` 和 `added_pending` 均为空。
+
+---
 
 ### 2026-08-05 15:06 — 自动更新
 
@@ -50,12 +69,12 @@
 **提交与文件摘要**
 
 - `origin/gigi/ask-ai` 的 HEAD 为 `18a5655`，提交主题为 `Merge pull request #7 from dhebhxh/YQ`。
-- 该分支当前与 `origin/main` 指向同一提交。
-- 本次上下文未提供新增提交列表或文件级变化列表。
+- 该分支当时与 `origin/main` 指向同一提交。
+- 当次上下文未提供新增提交列表或文件级变化列表。
 
 **事项状态**
 
-- 当前 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
+- 当时记录为 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
 - `dashboard_items.events` 为空。
 
 ---
@@ -80,7 +99,7 @@
 **事项状态**
 
 - `dashboard_items.events` 为空。
-- 当时记录为 6 项待确认、1 项已解决、0 项过期。
+- 当时记录为 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
 
 ---
 
@@ -105,7 +124,7 @@
 
 **事项状态**
 
-- 当时记录为 6 项待确认、1 项已解决、0 项过期。
+- 当时记录为 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
 
 ---
 
@@ -127,42 +146,82 @@
 **事项状态**
 
 - 新增待确认事项 `origin/fix/note-qa-grounded-ai-jack 合并/同步计划`（`SPK-ORIGIN-FIX-NOTE-QA-GROUN`）。
-- 当时记录为 6 项待确认、1 项已解决、0 项过期。
+- 当时记录为 6 项待确认、1 项已解决或已变化、0 项过期或证据不足。
 
 ## 当前待确认事项
 
-- `SPK-SQLITE-VS-JSON-存储方案` **SQLite vs JSON 存储方案**
-  - 说明：`origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。
-  - 证据：当前静态上下文仍出现相关证据：json, notes, origin/jack, origin/main, sqlite
+> 本节仅呈现确定性脚本提供的 `dashboard_items.current_pending`，不额外新增、解决、归档或重新打开事项。
 
-- `SPK-ORIGIN-JACK-合并计划` **`origin/Jack` 合并计划**
-  - 说明：该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。
-  - 证据：当前静态上下文仍出现相关证据：main, origin/jack, sqlite
+### 1. SQLite vs JSON 存储方案
 
-- `SPK-多语言支持范围` **多语言支持范围**
-  - 说明：客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。
-  - 证据：当前静态上下文仍出现相关证据：readme, 切换
+- ID：`SPK-SQLITE-VS-JSON-存储方案`
+- 状态：`pending`
+- 创建时间：2026-06-18 15:38
+- 最近证据时间：2026-08-10 13:10
+- 详情：`origin/Jack` 引入了 SQLite 数据层（notes + conversations 表），但 `origin/main` 当前使用的是 JSON 文件存储方案。两个数据层方案是否需要统一、何时合并，待团队确认。
+- 证据：当前静态上下文仍出现相关证据：json, notes, origin/jack, origin/main, sqlite
 
-- `SPK-WINDOWS-兼容性验证` **Windows 兼容性验证**
-  - 说明：GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。
-  - 证据：当前静态上下文仍出现相关证据：github, verify-local.yml, windows, 工作流, 确认
+### 2. `origin/Jack` 合并计划
 
-- `SPK-TTS-V2-时间线` **TTS V2 时间线**
-  - 说明：README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。
-  - 证据：当前静态上下文仍出现相关证据：readme, tts, 功能
+- ID：`SPK-ORIGIN-JACK-合并计划`
+- 状态：`pending`
+- 创建时间：2026-06-18 15:38
+- 最近证据时间：2026-08-10 13:10
+- 详情：该分支独立维护了一批功能（SQLite、全栈代码），尚未合并入 main。是否需要合并、合并顺序和冲突处理方案待确认。
+- 证据：当前静态上下文仍出现相关证据：main, origin/jack, sqlite
 
-- `SPK-ORIGIN-FIX-NOTE-QA-GROUN` **origin/fix/note-qa-grounded-ai-jack 合并/同步计划**
-  - 说明：origin/fix/note-qa-grounded-ai-jack 有新的远端变化，是否需要合并入主线或同步方案待确认。
-  - 证据：当前静态上下文仍出现相关证据：origin/fix/note-qa-grounded-ai-jack, 合并
+### 3. 多语言支持范围
+
+- ID：`SPK-多语言支持范围`
+- 状态：`pending`
+- 创建时间：2026-06-18 15:38
+- 最近证据时间：2026-08-10 13:10
+- 详情：客户会议材料提到需关注英文、中文和印地语，但当前 i18n 仅覆盖中英文界面切换（从 README 描述推断），印地语支持待确认。
+- 证据：当前静态上下文仍出现相关证据：readme, 切换
+
+### 4. Windows 兼容性验证
+
+- ID：`SPK-WINDOWS-兼容性验证`
+- 状态：`pending`
+- 创建时间：2026-06-18 15:38
+- 最近证据时间：2026-08-10 13:10
+- 详情：GitHub Actions 工作流 `verify-local.yml` 的存在表明有 CI 关注，但当前项目启动方式有 Windows PowerShell 执行策略注意事项（npm.ps1 拦截），跨平台验证状态待确认。
+- 证据：当前静态上下文仍出现相关证据：github, verify-local.yml, windows, 工作流, 确认
+
+### 5. TTS V2 时间线
+
+- ID：`SPK-TTS-V2-时间线`
+- 状态：`pending`
+- 创建时间：2026-06-18 15:38
+- 最近证据时间：2026-08-10 13:10
+- 详情：README 和客户会议材料一致认为 TTS 为 V2 功能，具体时间表待确认。
+- 证据：当前静态上下文仍出现相关证据：readme, tts, 功能
+
+### 6. origin/fix/note-qa-grounded-ai-jack 合并/同步计划
+
+- ID：`SPK-ORIGIN-FIX-NOTE-QA-GROUN`
+- 状态：`pending`
+- 创建时间：2026-07-01 14:51
+- 最近证据时间：2026-08-10 13:10
+- 来源：分支变化 `origin/fix/note-qa-grounded-ai-jack`
+- 详情：origin/fix/note-qa-grounded-ai-jack 有新的远端变化，是否需要合并入主线或同步方案待确认。
+- 证据：当前静态上下文仍出现相关证据：origin/fix/note-qa-grounded-ai-jack, 合并
 
 ## 已解决或已变化事项
 
-- `SPK-LLM-评估结果落地` **LLM 评估结果落地**
-  - 状态：已解决
-  - 解决时间：2026-08-05 15:10
-  - 说明：`origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。
-  - 证据：当前静态上下文仍出现相关证据：llm, main, qwen3:4b-instruct
+> 本节仅呈现确定性脚本提供的 `dashboard_items.resolved_items`。脚本状态不代表静态分析已确认相关产品或技术决策完成。
+
+### LLM 评估结果落地
+
+- ID：`SPK-LLM-评估结果落地`
+- 状态：`resolved`
+- 创建时间：2026-06-18 15:38
+- 最近证据时间：2026-06-20 00:51
+- 脚本记录的解决时间：2026-08-10 13:10
+- 详情：`origin/YQ` 包含多轮 LLM 评估报告（已合入 main），但当前默认模型 `qwen3:4b-instruct` 是否基于评估结果确定，从静态分析无法确认。
+- 证据：当前静态上下文仍出现相关证据：llm, main, qwen3:4b-instruct
+- 最近一次状态转换记录：2026-06-20 00:54，因提到的远端分支已不存在：`origin/YQ`，由 `pending` 转为 `resolved`。
 
 ## 过期或证据不足事项
 
-- 最近没有过期或证据不足事项。
+无。确定性脚本提供的 `dashboard_items.stale_items` 为空。

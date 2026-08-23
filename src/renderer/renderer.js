@@ -2,10 +2,15 @@ const APP_LANGUAGE_STORAGE_KEY = "speakspace.uiLanguage";
 const DEFAULT_APP_LANGUAGE = "en";
 const LANGUAGE_OPTIONS = ["en", "zh-CN"];
 const SETTINGS_CATEGORY_STORAGE_KEY = "speakspace.settingsCategory";
-const SETTINGS_CATEGORIES = ["general", "stt", "llm", "tts", "hardware", "storage"];
+const SETTINGS_CATEGORIES = ["general", "stt", "llm", "embedding", "tts"];
 const STT_ENGINE_OPTIONS = ["whisper", "parakeet"];
 const textInputEvents = window.SpeakSpaceIme;
 const THEME_STORAGE_KEY = "speakspace.theme";
+const THEME_ICON_SVG = {
+  dark: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  light:
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+};
 const I18N = {
   en: {
     systemPrompt:
@@ -78,6 +83,9 @@ const I18N = {
     noteDeletedForever: "Note permanently deleted",
     deleteForeverConfirm:
       "Permanently delete this note? This cannot be undone.",
+    deleteManagedRecordingConfirm: "Also delete the app-managed recording file? Choose Cancel to keep the audio.",
+    managedRecordingShared: "The note was deleted, but its recording was kept because another note still uses it.",
+    managedRecordingDeleteFailed: "The note was deleted, but the recording could not be removed: {message}",
     trashLoadFailed: "Failed to load Trash: {message}",
     trashEmpty: "Trash is empty",
     trashEmptyDesc: "Deleted notes will appear here.",
@@ -194,6 +202,18 @@ const I18N = {
     failed: "Failed: {message}",
     sttNotReady: "Local transcription runtime is not ready.",
     transcribing: "Transcribing...",
+    transcriptionProgress: "Transcribing audio",
+    transcriptionReady: "Transcription ready",
+    processingNote: "STRUCTURED NOTE",
+    transcriptionNote: "TRANSCRIPTION",
+    cancelTranscription: "Cancel Transcription",
+    transcriptionCancelled: "Transcription cancelled.",
+    resumeTranscription: "Resume Transcription",
+    deleteTranscriptionNote: "Delete",
+    transcriptionNoteDeleted: "Transcription note moved to trash.",
+    backToAssistant: "Back to Assistant",
+    dropMediaToTranscribe: "Drop audio or video to transcribe",
+    unsupportedDrop: "This file format is not supported.",
     transcriptionEmpty: "Transcription result is empty.",
     transcribeTag: "Transcription",
     importedFile: "Imported File",
@@ -218,11 +238,57 @@ const I18N = {
     keyPoints: "Key Points",
     actionItems: "Action Items",
     originalTranscript: "Original Transcript",
+    decisions: "Decisions",
+    openQuestions: "Open Questions",
+    noteTemplate: "Template",
+    templateGeneral: "General",
+    templateMeeting: "Meeting",
+    convertToMeeting: "Convert to Meeting Note",
+    meetingNote: "Meeting Note",
+    saveNote: "Save Note",
+    cancel: "Cancel",
+    pause: "Pause",
+    resume: "Resume",
+    retry: "Retry",
+    discard: "Discard",
+    analyzingTranscript: "Analyzing transcript",
+    extractingSections: "Extracting section {completed} of {total}",
+    mergingSections: "Merging meeting sections",
+    validatingMeeting: "Validating evidence and structure",
+    meetingReady: "Ready for review",
+    meetingReviewSaved: "Draft saved locally",
+    meetingReviewRecovered: "Recovered an unfinished meeting note",
+    meetingPaused: "Processing paused. You can resume from the latest checkpoint.",
+    meetingInvalidOutput: "The model did not return a valid meeting note. Retry or cancel; nothing was saved.",
+    meetingReviewTitle: "Review Meeting Note",
+    transcript: "Transcript",
+    minutes: "Minutes",
+    searchTranscript: "Search transcript",
+    title: "Title",
+    tags: "Tags",
+    addItem: "Add item",
+    remove: "Remove",
+    assignee: "Assignee",
+    deadline: "Deadline",
+    normalizedDate: "Normalized date",
+    possibleDuplicate: "Possible duplicate",
+    sourceEvidence: "Source: {quote}",
+    edit: "Edit",
+    save: "Save",
+    undo: "Undo",
+    unsavedMeetingConfirm: "Discard unsaved meeting edits?",
+    meetingTooLong: "This recording is longer than 3 hours. Split it into smaller files first.",
+    longMeetingMode: "Long recording mode · checkpoints enabled",
     errorPrefix: "Error: {message}",
     deleteFailed: "Delete failed: {message}",
     languageEnglish: "English",
     languageChinese: "简体中文",
     llmModelLabel: "Model",
+    embeddingTitle: "Embedding",
+    embeddingModelsTitle: "Embedding models",
+    embeddingHelp:
+      "Local embedding model that powers semantic note search. Runs on the same Ollama runtime.",
+    embeddingNotReady: "Model needed",
     ttsStatusChecking: "Checking...",
     sttHelpReady: "STT runtime and default model are ready.",
     sttHelpReadyProject:
@@ -270,6 +336,16 @@ const I18N = {
     deleteSucceeded: "{target} was deleted.",
     deleteFailed: "{target} delete failed: {message}",
     downloadCancelled: "Download cancelled.",
+    downloadsTitle: "Downloads",
+    downloadsActive: "{count} active",
+    downloadPhaseStarting: "Preparing…",
+    downloadPhaseDownloading: "Downloading",
+    downloadPhaseExtracting: "Extracting…",
+    downloadPhaseInstalling: "Installing runtime…",
+    downloadElapsed: "Elapsed",
+    downloadEta: "ETA",
+    downloadCalculating: "Calculating…",
+    downloadsHandleTooltip: "Downloads in progress",
     runtimeNeeded: "Runtime not detected — click to download",
     runtimeReady: "Runtime is ready",
     setupStepRuntime: "Step 1: Download Runtime",
@@ -347,6 +423,9 @@ const I18N = {
     noteRestored: "笔记已恢复",
     noteDeletedForever: "笔记已永久删除",
     deleteForeverConfirm: "要永久删除这条笔记吗？此操作无法撤销。",
+    deleteManagedRecordingConfirm: "是否同时删除由应用管理的录音文件？选择“取消”会保留音频。",
+    managedRecordingShared: "笔记已删除，但该录音仍被另一条笔记使用，因此已保留。",
+    managedRecordingDeleteFailed: "笔记已删除，但录音文件删除失败：{message}",
     trashLoadFailed: "加载回收站失败: {message}",
     trashEmpty: "回收站为空",
     trashEmptyDesc: "被删除的笔记会显示在这里。",
@@ -463,6 +542,18 @@ const I18N = {
     failed: "失败: {message}",
     sttNotReady: "本地转写运行时未就绪。",
     transcribing: "转写中...",
+    transcriptionProgress: "正在转写音频",
+    transcriptionReady: "转写已完成",
+    processingNote: "结构化笔记",
+    transcriptionNote: "语音转写",
+    cancelTranscription: "取消转写",
+    transcriptionCancelled: "转写已取消。",
+    resumeTranscription: "恢复转写",
+    deleteTranscriptionNote: "删除",
+    transcriptionNoteDeleted: "转写笔记已移入回收站。",
+    backToAssistant: "返回主界面",
+    dropMediaToTranscribe: "松开即可转写音频或视频",
+    unsupportedDrop: "不支持该文件格式",
     transcriptionEmpty: "转写结果为空",
     transcribeTag: "转写",
     importedFile: "导入文件",
@@ -487,11 +578,56 @@ const I18N = {
     keyPoints: "要点",
     actionItems: "待办事项",
     originalTranscript: "原始转录",
+    decisions: "已确认决定",
+    openQuestions: "待确认问题",
+    noteTemplate: "模板",
+    templateGeneral: "通用",
+    templateMeeting: "会议",
+    convertToMeeting: "转为会议纪要",
+    meetingNote: "会议纪要",
+    saveNote: "保存笔记",
+    cancel: "取消",
+    pause: "暂停",
+    resume: "继续",
+    retry: "重试",
+    discard: "放弃",
+    analyzingTranscript: "正在分析转录",
+    extractingSections: "正在提取第 {completed}/{total} 段",
+    mergingSections: "正在合并会议内容",
+    validatingMeeting: "正在校验证据和结构",
+    meetingReady: "可以复核",
+    meetingReviewSaved: "草稿已保存到本地",
+    meetingReviewRecovered: "已恢复未完成的会议纪要",
+    meetingPaused: "处理已暂停，可以从最近检查点继续。",
+    meetingInvalidOutput: "模型未能生成有效会议纪要。可重试或取消；当前内容不会保存。",
+    meetingReviewTitle: "复核会议纪要",
+    transcript: "转录原文",
+    minutes: "会议纪要",
+    searchTranscript: "搜索转录原文",
+    title: "标题",
+    tags: "标签",
+    addItem: "添加一项",
+    remove: "移除",
+    assignee: "负责人",
+    deadline: "截止时间",
+    normalizedDate: "规范日期",
+    possibleDuplicate: "可能重复",
+    sourceEvidence: "原文：{quote}",
+    edit: "编辑",
+    save: "保存",
+    undo: "撤销",
+    unsavedMeetingConfirm: "要放弃尚未保存的会议编辑吗？",
+    meetingTooLong: "该录音超过 3 小时，请先拆分成较小文件。",
+    longMeetingMode: "长录音模式 · 已启用检查点",
     errorPrefix: "错误: {message}",
     deleteFailed: "删除失败: {message}",
     languageEnglish: "English",
     languageChinese: "简体中文",
     llmModelLabel: "模型",
+    embeddingTitle: "向量模型",
+    embeddingModelsTitle: "向量模型",
+    embeddingHelp: "驱动笔记语义检索的本地向量模型，运行在同一个 Ollama 运行时上。",
+    embeddingNotReady: "模型未下载",
     ttsStatusChecking: "检查中...",
     sttHelpReady: "STT 运行时和默认模型已就绪。",
     sttHelpReadyProject:
@@ -539,6 +675,16 @@ const I18N = {
     deleteSucceeded: "{target} 已删除。",
     deleteFailed: "{target} 删除失败: {message}",
     downloadCancelled: "下载已取消。",
+    downloadsTitle: "下载任务",
+    downloadsActive: "{count} 个进行中",
+    downloadPhaseStarting: "准备中…",
+    downloadPhaseDownloading: "下载中",
+    downloadPhaseExtracting: "解压中…",
+    downloadPhaseInstalling: "安装运行时…",
+    downloadElapsed: "已用",
+    downloadEta: "预计剩余",
+    downloadCalculating: "计算中…",
+    downloadsHandleTooltip: "下载进行中",
     runtimeNeeded: "未检测到运行时 — 点击下载",
     runtimeReady: "运行时已就绪",
     setupStepRuntime: "第一步：下载运行时",
@@ -587,6 +733,8 @@ const state = {
     llmModelName: "",
     sttModels: [],
     llmModels: [],
+    embeddingModels: [],
+    embeddingModelName: "",
   },
   tts: {
     available: false,
@@ -603,25 +751,40 @@ const state = {
     voiceLang: "",
   },
   currentView: "assistant",
+  noteTemplateId: "general",
+  currentMeetingDraft: null,
+  meetingProgress: null,
+  meetingStartedAt: null,
+  meetingDraftDirty: false,
+  meetingEditDirty: false,
+  pendingMeetingSourceNoteId: null,
+  currentProcessingNoteId: null,
+  processingKind: null,
+  activeTranscriptionNoteIds: new Set(),
+  currentNote: null,
+  meetingEditMode: false,
   messages: [],
   draft: "",
   selectedFile: "",
   lastTranscript: "",
   lastAudioPath: "",
+  lastSourceDurationMs: null,
+  lastTranscriptSegments: [],
   lastAssistantText: "",
   lastPerformance: null,
   isWorking: false,
   isRecording: false,
   recordingSeconds: 0,
-  runtimeDownloadTarget: "",
+  downloads: new Map(),
   runtimeDeleteTarget: "",
   sttEngineView: "whisper",
   assetCleanupInProgress: false,
-  modelDownloadTarget: "",
-  modelDownloadKind: "",
   modelDeleteTarget: "",
   modelDeleteKind: "",
   settingsCategory: "general",
+  agentMode: false,
+  agentConversation: { turns: [], noteText: "" },
+  agentLastPerformance: null,
   notes: [],
   deletedNotes: [],
   currentNoteId: null,
@@ -635,6 +798,10 @@ const sttStatusDotEl = document.querySelector("#sttStatusDot");
 const llmStatusDotEl = document.querySelector("#llmStatusDot");
 const sttStatusDotPanelEl = document.querySelector("#sttStatusDotPanel");
 const llmStatusDotPanelEl = document.querySelector("#llmStatusDotPanel");
+const embeddingStatusDotEl = document.querySelector("#embeddingStatusDot");
+const embeddingStatusDotPanelEl = document.querySelector("#embeddingStatusDotPanel");
+const embeddingOllamaEngineStatusEl = document.querySelector("#embeddingOllamaEngineStatus");
+const embeddingEngineDetailBadgeEl = document.querySelector("#embeddingEngineDetailBadge");
 const sttStatusTextEl = document.querySelector("#sttStatusText");
 const llmStatusTextEl = document.querySelector("#llmStatusText");
 const ttsStatusDotPanelEl = document.querySelector("#ttsStatusDotPanel");
@@ -662,6 +829,7 @@ const noteSelectedFileMetaEl = document.querySelector("#noteSelectedFileMeta");
 const noteRecordingMetaEl = document.querySelector("#noteRecordingMeta");
 const noteJobStatusEl = document.querySelector("#noteJobStatus");
 const chatListEl = document.querySelector("#chatList");
+const assistantComposerShell = document.querySelector("#assistantComposerShell");
 const promptInputEl = document.querySelector("#promptInput");
 const pickFileBtn = document.querySelector("#pickFileBtn");
 const recordToggleBtn = document.querySelector("#recordToggleBtn");
@@ -675,9 +843,35 @@ const copyBtn = document.querySelector("#copyBtn");
 const saveAsNoteBtn = document.querySelector("#saveAsNoteBtn");
 const sendBtn = document.querySelector("#sendBtn");
 const particleCanvas = document.querySelector("#particleCanvas");
+const fileDropOverlay = document.querySelector("#fileDropOverlay");
+const fileDropTitle = document.querySelector("#fileDropTitle");
 
 const viewAssistant = document.querySelector("#viewAssistant");
 const viewNoteDetail = document.querySelector("#viewNoteDetail");
+const viewMeetingReview = document.querySelector("#viewMeetingReview");
+const noteTemplateSelect = document.querySelector("#noteTemplateSelect");
+const noteTemplateLabel = document.querySelector("#noteTemplateLabel");
+const meetingReviewBackBtn = document.querySelector("#meetingReviewBackBtn");
+const meetingReviewSaveBtn = document.querySelector("#meetingReviewSaveBtn");
+const meetingReviewDraftState = document.querySelector("#meetingReviewDraftState");
+const meetingProgressPanel = document.querySelector("#meetingProgressPanel");
+const meetingProgressKicker = document.querySelector("#meetingProgressKicker");
+const meetingProgressTitle = document.querySelector("#meetingProgressTitle");
+const meetingProgressDetail = document.querySelector("#meetingProgressDetail");
+const meetingProgressElapsed = document.querySelector("#meetingProgressElapsed");
+const meetingProgressModel = document.querySelector("#meetingProgressModel");
+const meetingPauseBtn = document.querySelector("#meetingPauseBtn");
+const meetingRetryBtn = document.querySelector("#meetingRetryBtn");
+const meetingCancelBtn = document.querySelector("#meetingCancelBtn");
+const meetingRawOutput = document.querySelector("#meetingRawOutput");
+const meetingReviewWorkspace = document.querySelector("#meetingReviewWorkspace");
+const meetingReviewForm = document.querySelector("#meetingReviewForm");
+const meetingTitleInput = document.querySelector("#meetingTitleInput");
+const meetingSummaryInput = document.querySelector("#meetingSummaryInput");
+const meetingTagsInput = document.querySelector("#meetingTagsInput");
+const meetingStructuredSections = document.querySelector("#meetingStructuredSections");
+const meetingTranscriptSearch = document.querySelector("#meetingTranscriptSearch");
+const meetingTranscriptReadOnly = document.querySelector("#meetingTranscriptReadOnly");
 const sidebarToggleBtn = document.querySelector("#sidebarToggleBtn");
 const sidebarToggleBtnDetail = document.querySelector("#sidebarToggleBtnDetail");
 const sidebarCollapseBtn = document.querySelector("#sidebarCollapseBtn");
@@ -688,12 +882,18 @@ const trashCountEl = document.querySelector("#trashCount");
 const noteSearchInput = document.querySelector("#noteSearchInput");
 const notesListEl = document.querySelector("#notesList");
 const notesCountEl = document.querySelector("#notesCount");
-const backToNotesBtn = document.querySelector("#backToNotesBtn");
 const deleteNoteBtn = document.querySelector("#deleteNoteBtn");
 const noteDetailContent = document.querySelector("#noteDetailContent");
 const noteQaMessages = document.querySelector("#noteQaMessages");
 const noteQaInput = document.querySelector("#noteQaInput");
 const noteQaSendBtn = document.querySelector("#noteQaSendBtn");
+const subnotesTimeline = document.querySelector("#subnotesTimeline");
+const subnoteInput = document.querySelector("#subnoteInput");
+const subnoteSendBtn = document.querySelector("#subnoteSendBtn");
+const askAiToggleBtn = document.querySelector("#askAiToggleBtn");
+const askAiSidebar = document.querySelector("#askAiSidebar");
+const askAiCloseBtn = document.querySelector("#askAiCloseBtn");
+
 
 const statusChip = document.querySelector("#statusChip");
 const settingsOverlay = document.querySelector("#settingsOverlay");
@@ -735,6 +935,7 @@ const llmModelStorageTitleEl = document.querySelector("#llmModelStorageTitle");
 const llmModelStorageTextEl = document.querySelector("#llmModelStorageText");
 const llmModelsBadgeEl = document.querySelector("#llmModelsBadge");
 const llmModelCardsEl = document.querySelector("#llmModelCards");
+const embeddingModelCardsEl = document.querySelector("#embeddingModelCards");
 const llmEngineSettingsEl = document.querySelector(".llm-engine-settings");
 const ttsEngineListTitleEl = document.querySelector("#ttsEngineListTitle");
 const ttsKokoroEngineStatusEl = document.querySelector("#ttsKokoroEngineStatus");
@@ -787,6 +988,10 @@ let activeLocalTtsSourceNode = null;
 let activeLocalTtsPlaybackResolve = null;
 let ttsRequestSequence = 0;
 let uiMessageSequence = 0;
+let meetingDraftSaveTimer = null;
+let meetingDraftSavePromise = null;
+let meetingElapsedTimer = null;
+let fileDragDepth = 0;
 const TTS_SEGMENT_MAX_LENGTH = 120;
 
 function getStoredAppLanguage() {
@@ -801,6 +1006,7 @@ function getStoredAppLanguage() {
 function initTheme() {
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY) || "dark";
   document.documentElement.setAttribute("data-theme", savedTheme);
+  updateThemeToggle(savedTheme);
 }
 
 function toggleTheme() {
@@ -809,6 +1015,20 @@ function toggleTheme() {
   
   document.documentElement.setAttribute("data-theme", newTheme);
   window.localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+  updateThemeToggle(newTheme);
+}
+
+function updateThemeToggle(theme) {
+  const themeToggleBtn = document.querySelector("#themeToggleBtn");
+  const themeIcon = document.querySelector("#themeIcon");
+  const isLight = theme === "light";
+
+  if (themeIcon) {
+    themeIcon.innerHTML = isLight ? THEME_ICON_SVG.light : THEME_ICON_SVG.dark;
+  }
+
+  themeToggleBtn?.setAttribute("title", isLight ? "Light theme" : "Dark theme");
+  themeToggleBtn?.setAttribute("aria-label", isLight ? "Light theme" : "Dark theme");
 }
 initTheme();
 
@@ -852,8 +1072,28 @@ function getNoteQaMessageSourceKey(message) {
   return `noteqa:${ensureClientMessageId(message, "noteqa")}`;
 }
 
+function setInlineButtonLabel(button, label) {
+  if (!button) return;
+
+  const textNodes = [...button.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE);
+  const labelNode = textNodes.find((node) => node.textContent.trim());
+
+  textNodes.forEach((node) => {
+    if (node !== labelNode) node.remove();
+  });
+
+  if (labelNode) {
+    labelNode.textContent = ` ${label}`;
+    return;
+  }
+
+  button.append(document.createTextNode(` ${label}`));
+}
+
 function applyLanguageUI() {
   document.documentElement.lang = state.uiLanguage === "zh-CN" ? "zh-CN" : "en";
+  applyAgentLanguageUI();
+  fileDropTitle.textContent = t("dropMediaToTranscribe");
 
   document.querySelector("#newSessionLabel").textContent = t("newSession");
   document.querySelector("#trashLabel").textContent = t("trash");
@@ -865,6 +1105,49 @@ function applyLanguageUI() {
   statusChip.querySelector(".status-chip-text").textContent = t("localEngineLabel");
   copyBtn.textContent = t("copyReply");
   saveAsNoteBtn.textContent = t("saveAsNote");
+  noteTemplateLabel.textContent = t("noteTemplate");
+  noteTemplateSelect.options[0].textContent = t("templateGeneral");
+  meetingReviewBackBtn.textContent = t("cancel");
+  meetingReviewSaveBtn.textContent = t("saveNote");
+  meetingPauseBtn.textContent = t("pause");
+  meetingRetryBtn.textContent = t("retry");
+  meetingCancelBtn.textContent = t("cancel");
+  document.querySelector("#meetingProgressKicker").textContent = t("meetingNote");
+  document.querySelector(".meeting-search-label").textContent = t("searchTranscript");
+  document.querySelector('[data-review-pane="transcript"]').textContent = t("transcript");
+  document.querySelector('[data-review-pane="minutes"]').textContent = t("minutes");
+  meetingReviewForm.querySelector('label:has(#meetingTitleInput)').firstChild.textContent = t("title");
+  meetingReviewForm.querySelector('label:has(#meetingSummaryInput)').firstChild.textContent = t("summary");
+  meetingReviewForm.querySelector('label:has(#meetingTagsInput)').firstChild.textContent = t("tags");
+  const meetingSectionLabels = {
+    keyPoints: t("keyPoints"),
+    decisions: t("decisions"),
+    actionItems: t("actionItems"),
+    openQuestions: t("openQuestions"),
+  };
+  meetingStructuredSections.querySelectorAll(".meeting-section-editor").forEach((section) => {
+    const heading = section.querySelector("h3");
+    if (heading) heading.textContent = meetingSectionLabels[section.dataset.key] || section.dataset.key;
+    const addButton = section.querySelector(".meeting-section-head .ghost-btn");
+    if (addButton) addButton.textContent = t("addItem");
+    section.querySelectorAll(".danger-btn").forEach((button) => { button.textContent = t("remove"); });
+    section.querySelectorAll('[data-field="assignee"]').forEach((input) => { input.placeholder = t("assignee"); });
+    section.querySelectorAll('[data-field="deadlineText"]').forEach((input) => { input.placeholder = t("deadline"); });
+    section.querySelectorAll('[data-field="deadlineDate"]').forEach((input) => { input.title = t("normalizedDate"); });
+    section.querySelectorAll(".meeting-evidence").forEach((source) => {
+      let evidence = [];
+      try { evidence = JSON.parse(source.dataset.evidence || "[]"); } catch (_error) {}
+      source.textContent = evidence
+        .map((entry) => `${formatEvidenceTime(entry)}${t("sourceEvidence", { quote: entry.quote })}`)
+        .join(" · ");
+      if (source.dataset.possibleDuplicate === "true") {
+        const duplicate = document.createElement("span");
+        duplicate.className = "meeting-duplicate-badge";
+        duplicate.textContent = `${source.textContent ? " · " : ""}${t("possibleDuplicate")}`;
+        source.append(duplicate);
+      }
+    });
+  });
   pickFileBtn.title = t("importAudio");
   pickFileBtn.setAttribute("aria-label", t("importAudio"));
   recordToggleBtn.title = t("record");
@@ -874,22 +1157,19 @@ function applyLanguageUI() {
   noteQaPickFileBtn.setAttribute("aria-label", t("importAudio"));
   noteQaRecordToggleBtn.title = t("record");
   noteQaRecordToggleBtn.setAttribute("aria-label", t("record"));
-  promptInputEl.placeholder = t("promptPlaceholder");
+  promptInputEl.placeholder = state.agentMode ? t("agentInputPlaceholder") : t("promptPlaceholder");
   sendBtn.setAttribute("aria-label", t("send"));
-  backToNotesBtn.textContent = t("backToAssistant");
   deleteNoteBtn.textContent = t("moveToTrash");
   noteQaInput.placeholder = t("noteQaPlaceholder");
   noteQaSendBtn.setAttribute("aria-label", t("ask"));
-  document.querySelector("#noteQaTitle").textContent = t("askAboutNote");
   document.querySelector("#settingsSidebarLabel").textContent = t("localEngineLabel");
   document.querySelector("#settingsTitle").textContent = t("settingsTitle");
   settingsCloseBtn.setAttribute("aria-label", t("close"));
   document.querySelector("#settingsNavGeneral").textContent = t("settingsGeneral");
   document.querySelector("#settingsNavStt").textContent = t("sttTitle");
   document.querySelector("#settingsNavLlm").textContent = t("llmTitle");
+  document.querySelector("#settingsNavEmbedding").textContent = t("embeddingTitle");
   document.querySelector("#settingsNavTts").textContent = t("ttsTitle");
-  document.querySelector("#settingsNavHardware").textContent = t("hardwareTitle");
-  document.querySelector("#settingsNavStorage").textContent = t("settingsStorage");
   document.querySelector("#trashKicker").textContent = t("trashKicker");
   document.querySelector("#trashTitle").textContent = t("trash");
   document.querySelector("#trashListTitle").textContent = t("deletedNotes");
@@ -900,6 +1180,14 @@ function applyLanguageUI() {
   document.querySelector("#sttGroupTitle").textContent = t("sttTitle");
   document.querySelector("#llmGroupTitle").textContent = t("llmTitle");
   document.querySelector("#llmModelLabel").textContent = t("llmModelsTitle");
+  const embeddingGroupTitleEl = document.querySelector("#embeddingGroupTitle");
+  if (embeddingGroupTitleEl) embeddingGroupTitleEl.textContent = t("embeddingTitle");
+  const embeddingModelLabelEl = document.querySelector("#embeddingModelLabel");
+  if (embeddingModelLabelEl) embeddingModelLabelEl.textContent = t("embeddingModelsTitle");
+  const embeddingHelpTextEl = document.querySelector("#embeddingHelpText");
+  if (embeddingHelpTextEl) embeddingHelpTextEl.textContent = t("embeddingHelp");
+  const embeddingEngineListTitleEl = document.querySelector("#embeddingEngineListTitle");
+  if (embeddingEngineListTitleEl) embeddingEngineListTitleEl.textContent = t("sttEngineListTitle");
   updateRuntimeDownloadButtons();
   document.querySelector("#ttsGroupTitle").textContent = t("ttsTitle");
   document.querySelector("#ttsAutoplayTitle").textContent = t("ttsAutoplayTitle");
@@ -909,6 +1197,11 @@ function applyLanguageUI() {
   document.querySelector("#ttsVoiceLabel").textContent = t("ttsVoiceLabel");
   document.querySelector("#hardwarePanelTitle").textContent = t("hardwareTitle");
   document.querySelector("#storageGroupTitle").textContent = t("settingsStorage");
+  const downloadDockTitleEl = document.querySelector("#downloadDockTitle");
+  if (downloadDockTitleEl) downloadDockTitleEl.textContent = t("downloadsTitle");
+  const downloadDockHandleEl = document.querySelector("#downloadDockHandle");
+  if (downloadDockHandleEl) downloadDockHandleEl.setAttribute("aria-label", t("downloadsHandleTooltip"));
+  renderDownloadDock();
   document.querySelector("#managedDataTitle").textContent = t("managedDataDirectory");
   document.querySelector("#cleanAssetsTitle").textContent = t("cleanAssetsTitle");
   document.querySelector("#cleanAssetsHelpText").textContent = t("cleanAssetsHelp");
@@ -918,16 +1211,8 @@ function applyLanguageUI() {
   document.querySelector("#hwCpuLabel").textContent = t("cpu");
   document.querySelector("#hwMemLabel").textContent = t("memory");
   document.querySelector("#hwGpuLabel").textContent = t("gpu");
-  document.querySelector("#refreshRuntimeBtn").childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      node.textContent = ` ${t("refreshStatus")}`;
-    }
-  });
-  document.querySelector("#cleanAllAssetsBtn").childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      node.textContent = ` ${t("cleanAllAssets")}`;
-    }
-  });
+  setInlineButtonLabel(document.querySelector("#refreshRuntimeBtn"), t("refreshStatus"));
+  setInlineButtonLabel(document.querySelector("#cleanAllAssetsBtn"), t("cleanAllAssets"));
 
   [sidebarToggleBtn, sidebarToggleBtnDetail].forEach((button) => {
     button?.setAttribute("title", t("toggleSidebar"));
@@ -997,9 +1282,12 @@ function switchView(viewName) {
   state.currentView = viewName;
   viewAssistant.classList.toggle("view-active", viewName === "assistant");
   viewNoteDetail.classList.toggle("view-active", viewName === "detail");
+  viewMeetingReview.classList.toggle("view-active", viewName === "meeting-review");
 
   if (viewName === "assistant") {
     state.currentNoteId = null;
+    state.currentNote = null;
+    state.meetingEditMode = false;
     highlightActiveNote();
   }
 
@@ -1008,19 +1296,62 @@ function switchView(viewName) {
   updateButtons();
 }
 
-function startNewSession() {
-  stopTTS();
-  state.messages = [];
+async function confirmAndLeaveCurrentWork() {
+  if (
+    state.currentView === "meeting-review" &&
+    state.processingKind &&
+    state.processingKind !== "meeting"
+  ) {
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    stopMeetingElapsedTimer();
+    return true;
+  }
+  if (state.currentView === "meeting-review") {
+    if (state.pendingMeetingSourceNoteId) {
+      const source = await window.desktopSTT.updateNote(state.pendingMeetingSourceNoteId, {
+        status: "transcribed",
+        statusMessage: "",
+      });
+      upsertLibraryNote(source);
+    }
+    state.currentMeetingDraft = null;
+    state.meetingDraftDirty = false;
+    state.pendingMeetingSourceNoteId = null;
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+  }
+  if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) return false;
+  state.meetingEditDirty = false;
+  state.meetingEditMode = false;
+  return true;
+}
+
+async function startNewSession() {
+  try {
+    if (!(await confirmAndLeaveCurrentWork())) return;
+    stopTTS();
+    state.messages = [];
+    state.currentNoteId = null;
   state.lastTranscript = "";
   state.lastAudioPath = "";
+  state.lastSourceDurationMs = null;
+  state.lastTranscriptSegments = [];
   state.lastAssistantText = "";
   state.lastPerformance = null;
   state.selectedFile = "";
+  state.currentProcessingNoteId = null;
+  state.processingKind = null;
+  agentResetConversation();
   renderMessages();
   updateSelectedFileMeta();
   setJobStatus("");
   updateButtons();
   switchView("assistant");
+  } catch (err) {
+    console.error("startNewSession Error:", err);
+    setJobStatus("Error starting new session: " + err.message, true);
+  }
 }
 
 function renderSettingsCategory() {
@@ -1057,7 +1388,53 @@ function closeSettings() {
   settingsOverlay.classList.add("hidden");
 }
 
-newSessionBtn.addEventListener("click", startNewSession);
+newSessionBtn.addEventListener("click", async () => {
+  try {
+    if (typeof confirmAndLeaveCurrentWork === "function") {
+      const canLeave = await confirmAndLeaveCurrentWork();
+      if (!canLeave) return;
+    }
+    
+    if (typeof stopTTS === "function") {
+      try { stopTTS(); } catch (e) { console.error("stopTTS failed", e); }
+    }
+    
+    state.messages = [];
+    state.currentNoteId = null;
+    state.lastTranscript = "";
+    state.lastAudioPath = "";
+    state.lastSourceDurationMs = null;
+    state.lastTranscriptSegments = [];
+    state.lastAssistantText = "";
+    state.lastPerformance = null;
+    state.selectedFile = "";
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    
+    if (typeof agentResetConversation === "function") {
+      try { agentResetConversation(); } catch(e) { console.error("agentResetConversation failed", e); }
+    }
+    if (typeof renderMessages === "function") {
+      try { renderMessages(); } catch(e) { console.error("renderMessages failed", e); }
+    }
+    if (typeof updateSelectedFileMeta === "function") {
+      try { updateSelectedFileMeta(); } catch(e) { console.error("updateSelectedFileMeta failed", e); }
+    }
+    if (typeof setJobStatus === "function") setJobStatus("");
+    if (typeof updateButtons === "function") {
+      try { updateButtons(); } catch(e) { console.error("updateButtons failed", e); }
+    }
+    if (typeof switchView === "function") switchView("assistant");
+    
+  } catch (err) {
+    console.error("Super newSessionBtn Error:", err);
+    if (typeof setJobStatus === "function") {
+      setJobStatus("Error: " + err.message, true);
+    }
+    // Force switch view anyway
+    if (typeof switchView === "function") switchView("assistant");
+  }
+});
 trashOpenBtn.addEventListener("click", () => {
   openTrashOverlay();
 });
@@ -1082,6 +1459,7 @@ sttParakeetModelCardsEl?.addEventListener("click", handleParakeetModelCardClick)
 sttParakeetModelCardsEl?.addEventListener("keydown", handleParakeetModelCardKeydown);
 llmModelCardsEl?.addEventListener("click", handleLLMModelCardClick);
 llmModelCardsEl?.addEventListener("keydown", handleLLMModelCardKeydown);
+embeddingModelCardsEl?.addEventListener("click", handleEmbeddingModelCardClick);
 ttsModelCardsEl?.addEventListener("click", handleTTSModelCardClick);
 ttsModelCardsEl?.addEventListener("keydown", handleTTSModelCardKeydown);
 [sidebarToggleBtn, sidebarToggleBtnDetail, sidebarCollapseBtn].forEach((button) => {
@@ -1228,10 +1606,15 @@ function setEngineStatus(kind, status, text) {
   const dots =
     kind === "stt"
       ? [sttStatusDotEl, sttStatusDotPanelEl]
+      : kind === "embedding"
+      ? [embeddingStatusDotEl, embeddingStatusDotPanelEl]
       : [llmStatusDotEl, llmStatusDotPanelEl];
   dots.forEach((dot) => {
     if (dot) dot.className = `status-dot ${status}`;
   });
+
+  // Embedding has no per-engine status text element; only the dots update.
+  if (kind === "embedding") return;
 
   const textEl = kind === "stt" ? sttStatusTextEl : llmStatusTextEl;
   if (textEl) {
@@ -1271,6 +1654,22 @@ function persistTTSSpeakerId(speakerId) {
 
 function getSelectedTTSSpeaker() {
   return state.tts.speakers.find((speaker) => speaker.id === state.tts.localSpeakerId) || null;
+}
+
+function applyLLMRuntime(runtime = {}) {
+  state.runtime.llmReady = Boolean(runtime.runtimeReady);
+  state.runtime.llmOllamaExists = Boolean(runtime.ollamaExists);
+  state.runtime.llmModelExists = Boolean(runtime.modelExists);
+  state.runtime.llmRuntimeLocation = runtime.runtimeLocation || "";
+  state.runtime.llmModelDir = runtime.modelDir || "";
+  state.runtime.llmModelName = runtime.modelName || "";
+  state.runtime.llmModels = Array.isArray(runtime.installedModels) ? runtime.installedModels : [];
+  // The embedding model is an Ollama model too, so derive its install state from
+  // the same installed-models list (tag-normalized) rather than a separate probe.
+  state.runtime.embeddingModels = Object.keys(EMBEDDING_MODEL_META).filter((name) =>
+    isOllamaModelInstalled(state.runtime.llmModels, name)
+  );
+  state.runtime.embeddingModelName = state.runtime.embeddingModels[0] || "";
 }
 
 function applyLocalTTSRuntime(runtime = {}) {
@@ -1611,6 +2010,30 @@ function renderLLMModelCards() {
   renderModelCards(llmModelCardsEl, "llm", state.runtime.llmModelName);
 }
 
+function renderEmbeddingModelCards() {
+  renderModelCards(embeddingModelCardsEl, "embedding", state.runtime.embeddingModelName, {
+    showMetrics: false,
+  });
+}
+
+// The embedding tab's readiness is driven by whether the MODEL is installed, not
+// just whether the Ollama runtime exists — otherwise it would say "Active" while
+// semantic search is actually unavailable.
+function renderEmbeddingEnginePanel() {
+  const modelInstalled = (state.runtime.embeddingModels || []).length > 0;
+  const statusText = modelInstalled ? t("sttEngineActive") : t("embeddingNotReady");
+  if (embeddingOllamaEngineStatusEl) {
+    embeddingOllamaEngineStatusEl.textContent = statusText;
+    embeddingOllamaEngineStatusEl.classList.toggle("warning", !modelInstalled);
+  }
+  if (embeddingEngineDetailBadgeEl) {
+    embeddingEngineDetailBadgeEl.textContent = statusText;
+    embeddingEngineDetailBadgeEl.classList.toggle("warning", !modelInstalled);
+  }
+  setEngineStatus("embedding", modelInstalled ? "ready" : "pending");
+  renderEmbeddingModelCards();
+}
+
 function renderTTSModelCards() {
   renderModelCards(ttsModelCardsEl, "tts-model", state.tts.localModelName || "kokoro-multi-lang-v1_0", {
     showMetrics: false,
@@ -1671,6 +2094,7 @@ function renderLLMEnginePanel() {
   }
 
   renderLLMModelCards();
+  renderEmbeddingEnginePanel();
 }
 
 function renderTTSEnginePanel() {
@@ -1917,6 +2341,30 @@ function handleLLMModelCardClick(event) {
   void handleLLMModelChange(card.dataset.value);
 }
 
+// Embedding cards only support download/delete — there is no "activate" because
+// semantic search always uses the single configured embedding model.
+function handleEmbeddingModelCardClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  const downloadBtn = target.closest(".dropdown-item-download");
+  if (downloadBtn) {
+    event.stopPropagation();
+    if (downloadBtn.dataset.action === "cancel") {
+      handleCancelModelDownload();
+    } else {
+      void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
+    }
+    return;
+  }
+
+  const deleteBtn = target.closest(".dropdown-item-delete");
+  if (deleteBtn && !deleteBtn.disabled) {
+    event.stopPropagation();
+    void handleModelDelete(deleteBtn.dataset.kind, deleteBtn.dataset.value);
+  }
+}
+
 function handleLLMModelCardKeydown(event) {
   if (event.key !== "Enter" && event.key !== " ") return;
   const target = event.target instanceof Element ? event.target : null;
@@ -2019,13 +2467,30 @@ function updateRuntimeHelpTexts() {
   renderTTSEnginePanel();
 }
 
+/* ========== Concurrent download tracking ========== */
+
+function runtimeDownloadId(kind) {
+  return `runtime:${kind}`;
+}
+
+function modelDownloadId(kind, modelName) {
+  return `model:${kind}:${modelName}`;
+}
+
+function isRuntimeDownloading(kind) {
+  return state.downloads.has(runtimeDownloadId(kind));
+}
+
+function isModelDownloading(kind, modelName) {
+  return state.downloads.has(modelDownloadId(kind, modelName));
+}
+
+function hasActiveDownloads() {
+  return state.downloads.size > 0;
+}
+
 function updateRuntimeDownloadButtons() {
-  const isBusy =
-    Boolean(state.assetCleanupInProgress) ||
-    Boolean(state.runtimeDownloadTarget) ||
-    Boolean(state.runtimeDeleteTarget) ||
-    Boolean(state.modelDownloadTarget) ||
-    Boolean(state.modelDeleteTarget);
+  const cleanupBusy = Boolean(state.assetCleanupInProgress);
 
   const sttNeedsRuntime = !state.runtime.sttWhisperCliExists;
   const sttCanDeleteRuntime = state.runtime.sttRuntimeLocation === "portable";
@@ -2035,8 +2500,8 @@ function updateRuntimeDownloadButtons() {
   const ttsCanDeleteRuntime = Boolean(state.tts.available || state.tts.localAvailable);
 
   if (sttDownloadBtn) {
-    sttDownloadBtn.disabled = isBusy;
-    const isSttDownloading = state.runtimeDownloadTarget === "stt";
+    const isSttDownloading = isRuntimeDownloading("stt");
+    sttDownloadBtn.disabled = cleanupBusy || isSttDownloading || state.runtimeDeleteTarget === "stt";
     sttDownloadBtn.innerHTML = isSttDownloading
       ? `<span class="btn-spinner"></span> ${t("downloading")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg> ${t("downloadStt")}`;
@@ -2046,8 +2511,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (sttDeleteBtn) {
-    sttDeleteBtn.disabled = isBusy;
     const isSttDeleting = state.runtimeDeleteTarget === "stt";
+    sttDeleteBtn.disabled = cleanupBusy || isRuntimeDownloading("stt") || isSttDeleting;
     sttDeleteBtn.innerHTML = isSttDeleting
       ? `<span class="btn-spinner"></span> ${t("deleting")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteSttRuntime")}`;
@@ -2063,8 +2528,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (llmDownloadBtn) {
-    llmDownloadBtn.disabled = isBusy;
-    const isLlmDownloading = state.runtimeDownloadTarget === "llm";
+    const isLlmDownloading = isRuntimeDownloading("llm");
+    llmDownloadBtn.disabled = cleanupBusy || isLlmDownloading || state.runtimeDeleteTarget === "llm";
     llmDownloadBtn.innerHTML = isLlmDownloading
       ? `<span class="btn-spinner"></span> ${t("downloading")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg> ${t("downloadLlm")}`;
@@ -2074,8 +2539,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (llmDeleteBtn) {
-    llmDeleteBtn.disabled = isBusy;
     const isLlmDeleting = state.runtimeDeleteTarget === "llm";
+    llmDeleteBtn.disabled = cleanupBusy || isRuntimeDownloading("llm") || isLlmDeleting;
     llmDeleteBtn.innerHTML = isLlmDeleting
       ? `<span class="btn-spinner"></span> ${t("deleting")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteLlmRuntime")}`;
@@ -2091,8 +2556,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (ttsDownloadBtn) {
-    ttsDownloadBtn.disabled = isBusy;
-    const isTtsDownloading = state.runtimeDownloadTarget === "tts";
+    const isTtsDownloading = isRuntimeDownloading("tts");
+    ttsDownloadBtn.disabled = cleanupBusy || isTtsDownloading || state.runtimeDeleteTarget === "tts";
     ttsDownloadBtn.innerHTML = isTtsDownloading
       ? `<span class="btn-spinner"></span> ${t("downloading")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg> ${t("downloadTts")}`;
@@ -2102,8 +2567,8 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (ttsDeleteBtn) {
-    ttsDeleteBtn.disabled = isBusy;
     const isTtsDeleting = state.runtimeDeleteTarget === "tts";
+    ttsDeleteBtn.disabled = cleanupBusy || isRuntimeDownloading("tts") || isTtsDeleting;
     ttsDeleteBtn.innerHTML = isTtsDeleting
       ? `<span class="btn-spinner"></span> ${t("deleting")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("deleteTtsRuntime")}`;
@@ -2119,7 +2584,13 @@ function updateRuntimeDownloadButtons() {
   }
 
   if (cleanAllAssetsBtn) {
-    cleanAllAssetsBtn.disabled = isBusy || state.isWorking || state.isRecording;
+    cleanAllAssetsBtn.disabled =
+      cleanupBusy ||
+      hasActiveDownloads() ||
+      Boolean(state.runtimeDeleteTarget) ||
+      Boolean(state.modelDeleteTarget) ||
+      state.isWorking ||
+      state.isRecording;
     cleanAllAssetsBtn.innerHTML = state.assetCleanupInProgress
       ? `<span class="btn-spinner"></span> ${t("cleaningAssets")}`
       : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg> ${t("cleanAllAssets")}`;
@@ -2596,6 +3067,27 @@ const PARAKEET_MODEL_META = {
   },
 };
 
+// Ollama reports tagless pulls as "<name>:latest" (e.g. `ollama pull bge-m3`
+// appears in /api/tags as "bge-m3:latest"). Normalize so a catalog name like
+// "bge-m3" still matches the installed "bge-m3:latest".
+function isOllamaModelInstalled(installedList, name) {
+  const withTag = (value) => {
+    const text = String(value || "");
+    return text.includes(":") ? text : `${text}:latest`;
+  };
+  const target = withTag(name);
+  return (installedList || []).some((installed) => withTag(installed) === target);
+}
+
+const EMBEDDING_MODEL_META = {
+  "bge-m3": {
+    label: "BGE-M3 (multilingual)",
+    sizeMB: 1200,
+    desc: "Multilingual embedding model with strong Chinese support, for semantic note search",
+    recommended: true,
+  },
+};
+
 const LLM_MODEL_META = {
   "qwen3:4b-instruct": {
     label: "Qwen3 4B Instruct",
@@ -2743,6 +3235,8 @@ function getModelMeta(modelName, kind) {
       ? PARAKEET_MODEL_META
       : kind === "llm"
       ? LLM_MODEL_META
+      : kind === "embedding"
+      ? EMBEDDING_MODEL_META
       : TTS_SPEAKER_META;
   return catalog[modelName] || {
     label: String(modelName || "").replace(/\.bin$/, "").replace(/[-_]/g, " "),
@@ -2763,6 +3257,9 @@ function getInstalledModelsByKind(kind) {
   if (kind === "llm") {
     return state.runtime.llmModels || [];
   }
+  if (kind === "embedding") {
+    return state.runtime.embeddingModels || [];
+  }
   if (kind === "tts-model") {
     return state.tts.localAvailable && state.tts.localModelName ? [state.tts.localModelName] : [];
   }
@@ -2779,6 +3276,10 @@ function canDeleteInstalledModel(kind) {
   }
 
   if (kind === "llm") {
+    return state.runtime.llmRuntimeLocation === "portable";
+  }
+
+  if (kind === "embedding") {
     return state.runtime.llmRuntimeLocation === "portable";
   }
 
@@ -2802,6 +3303,10 @@ function getAllOptionsForKind(kind) {
     return [...new Set([...Object.keys(LLM_MODEL_META), ...state.runtime.llmModels, state.runtime.llmModelName].filter(Boolean))];
   }
 
+  if (kind === "embedding") {
+    return [...new Set([...Object.keys(EMBEDDING_MODEL_META), ...state.runtime.embeddingModels].filter(Boolean))];
+  }
+
   if (kind === "tts-model") {
     return [...new Set([...Object.keys(TTS_MODEL_META), state.tts.localModelName].filter(Boolean))];
   }
@@ -2821,7 +3326,7 @@ function createRatingDots(value, maxDots, colorClass) {
 }
 
 function getModelActionButtonsHTML(kind, name, isInstalled, isActive) {
-  const isDownloading = state.modelDownloadKind === kind && state.modelDownloadTarget === name;
+  const isDownloading = isModelDownloading(kind, name);
   const isDeleting = state.modelDeleteKind === kind && state.modelDeleteTarget === name;
   const canDelete = isInstalled && canDeleteInstalledModel(kind);
 
@@ -2955,7 +3460,7 @@ function initDropdown(dropdownEl, kind, onChange) {
     if (downloadBtn) {
       e.stopPropagation();
       if (downloadBtn.dataset.action === "cancel") {
-        handleCancelModelDownload();
+        handleCancelModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
       } else {
         void handleModelDownload(downloadBtn.dataset.kind, downloadBtn.dataset.value);
       }
@@ -2997,7 +3502,229 @@ function populateDropdown(dropdownEl, options, activeValue, kind) {
   renderDropdownMenu(dropdownEl, options, activeValue, kind);
 }
 
-let modelDownloadAbortController = null;
+function beginDownload(id, meta) {
+  const entry = {
+    id,
+    type: meta.type,
+    kind: meta.kind,
+    modelName: meta.modelName || null,
+    label: meta.label,
+    phase: "starting",
+    receivedBytes: 0,
+    totalBytes: null,
+    percent: null,
+    indeterminate: true,
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+    abortController: new AbortController(),
+    error: null,
+  };
+  state.downloads.set(id, entry);
+  renderDownloadDock();
+  return entry;
+}
+
+function endDownload(id) {
+  state.downloads.delete(id);
+  renderDownloadDock();
+}
+
+function handleDownloadProgress(payload) {
+  if (!payload || !payload.id) return;
+  const entry = state.downloads.get(payload.id);
+  if (!entry) return;
+
+  if (payload.phase) entry.phase = payload.phase;
+  if (typeof payload.receivedBytes === "number") entry.receivedBytes = payload.receivedBytes;
+  if (typeof payload.totalBytes === "number" && payload.totalBytes > 0) {
+    entry.totalBytes = payload.totalBytes;
+  }
+  if (typeof payload.percent === "number") entry.percent = payload.percent;
+
+  if (payload.indeterminate === true) {
+    entry.indeterminate = true;
+  } else if (typeof payload.percent === "number" || (entry.totalBytes && entry.receivedBytes >= 0)) {
+    entry.indeterminate = false;
+  }
+
+  entry.updatedAt = Date.now();
+  renderDownloadDock();
+}
+
+/* ========== Floating download dock ========== */
+
+function formatBytesShort(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let i = 0;
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024;
+    i += 1;
+  }
+  const rounded = value < 10 && i > 0 ? value.toFixed(1) : Math.round(value);
+  return `${rounded} ${units[i]}`;
+}
+
+function formatClock(totalSeconds) {
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "--:--";
+  const s = Math.floor(totalSeconds);
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = s % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getDownloadPhaseLabel(entry) {
+  switch (entry.phase) {
+    case "extracting":
+      return t("downloadPhaseExtracting");
+    case "installing":
+      return t("downloadPhaseInstalling");
+    case "starting":
+      return t("downloadPhaseStarting");
+    default:
+      return t("downloadPhaseDownloading");
+  }
+}
+
+function computeDownloadView(entry, now) {
+  const elapsedSec = Math.max(0, (now - entry.startedAt) / 1000);
+  let fraction = null;
+  if (!entry.indeterminate) {
+    if (entry.totalBytes && entry.totalBytes > 0) {
+      fraction = Math.min(1, entry.receivedBytes / entry.totalBytes);
+    } else if (typeof entry.percent === "number") {
+      fraction = Math.min(1, entry.percent / 100);
+    }
+  }
+  let etaSec = null;
+  if (fraction != null && fraction > 0.01 && fraction < 1) {
+    etaSec = (elapsedSec * (1 - fraction)) / fraction;
+  }
+  return { elapsedSec, fraction, etaSec };
+}
+
+let downloadDockTicker = null;
+
+function ensureDownloadDockTicker() {
+  if (state.downloads.size > 0 && !downloadDockTicker) {
+    downloadDockTicker = setInterval(renderDownloadDock, 1000);
+  } else if (state.downloads.size === 0 && downloadDockTicker) {
+    clearInterval(downloadDockTicker);
+    downloadDockTicker = null;
+  }
+}
+
+function renderDownloadDock() {
+  const dock = document.getElementById("downloadDock");
+  if (!dock) return;
+  const list = document.getElementById("downloadDockList");
+  const countEl = document.getElementById("downloadDockCount");
+  const handleCountEl = document.getElementById("downloadDockHandleCount");
+  const ringEl = document.getElementById("downloadDockRing");
+
+  ensureDownloadDockTicker();
+
+  const entries = [...state.downloads.values()];
+  if (entries.length === 0) {
+    dock.classList.add("hidden");
+    dock.classList.remove("pinned");
+    if (list) list.innerHTML = "";
+    return;
+  }
+
+  dock.classList.remove("hidden");
+  const now = Date.now();
+
+  if (handleCountEl) handleCountEl.textContent = String(entries.length);
+  if (countEl) countEl.textContent = t("downloadsActive", { count: entries.length });
+
+  let fractionSum = 0;
+  let determinateCount = 0;
+
+  const rows = entries.map((entry) => {
+    const { elapsedSec, fraction, etaSec } = computeDownloadView(entry, now);
+    const isIndeterminate = entry.indeterminate || fraction == null;
+    if (!isIndeterminate) {
+      fractionSum += fraction;
+      determinateCount += 1;
+    }
+
+    const pct = fraction != null ? Math.round(fraction * 100) : null;
+    const bar = isIndeterminate
+      ? `<span class="download-item-bar-indeterminate"></span>`
+      : `<span class="download-item-bar-fill" style="width:${(fraction * 100).toFixed(1)}%"></span>`;
+
+    const sizeText = entry.totalBytes
+      ? `${formatBytesShort(entry.receivedBytes)} / ${formatBytesShort(entry.totalBytes)}`
+      : pct != null
+      ? `${pct}%`
+      : "";
+    const phaseText = `${getDownloadPhaseLabel(entry)}${sizeText ? ` · ${sizeText}` : ""}`;
+    const etaText = isIndeterminate || etaSec == null ? t("downloadCalculating") : formatClock(etaSec);
+
+    return `
+      <div class="download-item">
+        <div class="download-item-top">
+          <span class="download-item-name" title="${escapeHtml(entry.label)}">${escapeHtml(entry.label)}</span>
+          <span class="download-item-pct">${isIndeterminate || pct == null ? "" : `${pct}%`}</span>
+        </div>
+        <div class="download-item-bar ${isIndeterminate ? "indeterminate" : ""}">${bar}</div>
+        <div class="download-item-phase">${escapeHtml(phaseText)}</div>
+        <div class="download-item-times">
+          <span><span class="download-time-label">${t("downloadElapsed")}</span> ${formatClock(elapsedSec)}</span>
+          <span><span class="download-time-label">${t("downloadEta")}</span> ${etaText}</span>
+        </div>
+      </div>`;
+  });
+
+  if (list) list.innerHTML = rows.join("");
+
+  if (ringEl) {
+    const aggregate = determinateCount > 0 ? fractionSum / determinateCount : 0;
+    if (determinateCount === 0) {
+      ringEl.removeAttribute("style");
+      ringEl.classList.add("indeterminate");
+    } else {
+      ringEl.classList.remove("indeterminate");
+      ringEl.style.setProperty("--ring-fraction", String(Math.round(aggregate * 100)));
+    }
+  }
+}
+
+function initDownloadDock() {
+  const dock = document.getElementById("downloadDock");
+  const handle = document.getElementById("downloadDockHandle");
+
+  if (handle) {
+    handle.addEventListener("click", () => {
+      dock?.classList.toggle("pinned");
+    });
+  }
+
+  if (dock) {
+    // mouseenter/mouseleave treat the (absolutely positioned) panel descendant as
+    // part of the dock, so moving from the handle onto the panel keeps it open.
+    // The short close delay tolerates the small gap between handle and panel.
+    let closeTimer = null;
+    dock.addEventListener("mouseenter", () => {
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+      dock.classList.add("open");
+    });
+    dock.addEventListener("mouseleave", () => {
+      closeTimer = setTimeout(() => dock.classList.remove("open"), 200);
+    });
+  }
+
+  renderDownloadDock();
+}
 
 function refreshDropdownForKind(kind) {
   if (kind === "stt") {
@@ -3007,6 +3734,8 @@ function refreshDropdownForKind(kind) {
   } else if (kind === "llm") {
     renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
     renderLLMModelCards();
+  } else if (kind === "embedding") {
+    renderEmbeddingModelCards();
   } else if (kind === "tts-model") {
     renderDropdownMenu(ttsModelDropdownEl, getAllOptionsForKind("tts-model"), state.tts.localModelName, "tts-model");
     renderTTSModelCards();
@@ -3015,19 +3744,19 @@ function refreshDropdownForKind(kind) {
 
 async function handleModelDownload(kind, modelName) {
   if (!kind || !modelName) return;
-  if (state.modelDownloadTarget || state.modelDeleteTarget || state.runtimeDeleteTarget) return;
+  if (isModelDownloading(kind, modelName)) return;
+  if (state.modelDeleteKind === kind && state.modelDeleteTarget === modelName) return;
 
   const targetLabel = getModelMeta(modelName, kind).label;
-  state.modelDownloadTarget = modelName;
-  state.modelDownloadKind = kind;
-  modelDownloadAbortController = new AbortController();
+  const id = modelDownloadId(kind, modelName);
+  const entry = beginDownload(id, { type: "model", kind, modelName, label: targetLabel });
   refreshDropdownForKind(kind);
   updateRuntimeDownloadButtons();
   setJobStatus(t("downloadingTarget", { target: targetLabel }));
 
   try {
-    await window.desktopSTT.downloadModel(kind, modelName);
-    if (modelDownloadAbortController?.signal.aborted) return;
+    await window.desktopSTT.downloadModel(kind, modelName, id);
+    if (entry.abortController.signal.aborted) return;
     await refreshRuntime();
     if (kind === "stt") {
       await handleSTTModelChange(modelName);
@@ -3040,15 +3769,13 @@ async function handleModelDownload(kind, modelName) {
     }
     setJobStatus(t("downloadSucceeded", { target: targetLabel }));
   } catch (error) {
-    if (modelDownloadAbortController?.signal.aborted) {
+    if (entry.abortController.signal.aborted) {
       setJobStatus(t("downloadCancelled"));
     } else {
       setJobStatus(t("downloadFailed", { target: targetLabel, message: error.message }), true);
     }
   } finally {
-    state.modelDownloadTarget = "";
-    state.modelDownloadKind = "";
-    modelDownloadAbortController = null;
+    endDownload(id);
     refreshDropdownForKind(kind);
     updateRuntimeDownloadButtons();
   }
@@ -3056,7 +3783,8 @@ async function handleModelDownload(kind, modelName) {
 
 async function handleModelDelete(kind, modelName) {
   if (!kind || !modelName) return;
-  if (state.modelDownloadTarget || state.modelDeleteTarget || state.runtimeDownloadTarget || state.runtimeDeleteTarget) return;
+  if (isModelDownloading(kind, modelName)) return;
+  if (state.modelDeleteTarget || state.runtimeDeleteTarget) return;
 
   const targetLabel = getModelMeta(modelName, kind).label;
   state.modelDeleteTarget = modelName;
@@ -3083,14 +3811,15 @@ async function handleModelDelete(kind, modelName) {
   }
 }
 
-function handleCancelModelDownload() {
-  if (modelDownloadAbortController) {
-    modelDownloadAbortController.abort();
+function handleCancelModelDownload(kind, modelName) {
+  const entry = state.downloads.get(modelDownloadId(kind, modelName));
+  if (entry?.abortController) {
+    entry.abortController.abort();
   }
 }
 
 function setJobStatus(text, isError = false) {
-  [jobStatusEl, noteJobStatusEl].forEach((element) => {
+  [jobStatusEl, noteJobStatusEl, document.getElementById('askAiJobStatus')].forEach((element) => {
     if (!element) return;
     element.textContent = text;
     element.classList.toggle("error", isError);
@@ -3161,30 +3890,40 @@ function updateMainComposerSttTooltips() {
 
 function updateButtons() {
   pickFileBtn.disabled =
-    state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady;
+    state.isWorking || state.isRecording || state.activeTranscriptionNoteIds.size > 0 || state.assetCleanupInProgress || !state.runtime.sttReady;
   if (noteQaPickFileBtn) {
     noteQaPickFileBtn.disabled =
-      state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId;
+      state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId || state.meetingEditMode;
   }
   refreshRuntimeBtn.disabled = state.isWorking || state.isRecording || state.assetCleanupInProgress;
   recordToggleBtn.disabled = state.isWorking || state.assetCleanupInProgress || !state.runtime.sttReady;
   if (noteQaRecordToggleBtn) {
     noteQaRecordToggleBtn.disabled =
-      state.isWorking || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId;
+      state.isWorking || state.assetCleanupInProgress || !state.runtime.sttReady || !state.currentNoteId || state.meetingEditMode;
   }
   recordToggleBtn.classList.toggle("recording", state.isRecording);
   noteQaRecordToggleBtn?.classList.toggle("recording", state.isRecording);
   sendBtn.disabled =
-    state.isWorking || state.isRecording || state.assetCleanupInProgress || !state.runtime.llmReady || !state.draft.trim();
+    state.pendingMeetingSourceNoteId ||
+    state.isWorking ||
+    state.isRecording ||
+    state.assetCleanupInProgress ||
+    !state.runtime.llmReady ||
+    !state.draft.trim();
   noteQaSendBtn.disabled =
     state.isWorking ||
     state.isRecording ||
     state.assetCleanupInProgress ||
     !state.runtime.llmReady ||
     !state.currentNoteId ||
+    state.meetingEditMode ||
     !noteQaInput.value.trim();
   copyBtn.disabled = !state.lastAssistantText;
-  saveAsNoteBtn.disabled = !state.lastTranscript && !state.lastAssistantText;
+  saveAsNoteBtn.disabled =
+    state.isWorking ||
+    !state.runtime.llmReady ||
+    !hasSaveableNoteContent();
+  saveAsNoteBtn.title = !state.runtime.llmReady ? t("llmNotReady") : "";
   updateMainComposerSttTooltips();
   updateRuntimeDownloadButtons();
 }
@@ -3212,7 +3951,32 @@ async function copyTextToClipboard(text) {
   const cleanText = String(text || "").trim();
   if (!cleanText) return;
 
-  await navigator.clipboard.writeText(cleanText);
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(cleanText);
+    } else {
+      throw new Error("Clipboard API not available");
+    }
+  } catch (err) {
+    const textArea = document.createElement("textarea");
+    textArea.value = cleanText;
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand("copy");
+    } catch (e) {
+      console.error("Fallback copy failed", e);
+      setTemporaryJobStatus(t("operationFailed", { message: "Copy failed" }), true, 2600);
+      document.body.removeChild(textArea);
+      return;
+    }
+    document.body.removeChild(textArea);
+  }
   setTemporaryJobStatus(t("copied"));
 }
 
@@ -3337,6 +4101,26 @@ function createMessageElement(message) {
 }
 
 function renderMessages() {
+  if (state.pendingMeetingSourceNoteId && state.lastTranscript) {
+    const draftView = window.transcribedDraftView.getTranscribedDraftView(
+      {
+        transcript: state.lastTranscript,
+        transcriptSegments: state.lastTranscriptSegments,
+      },
+      {
+        formatTranscript: window.transcriptView.formatTimestampedTranscript,
+      }
+    );
+    assistantComposerShell.classList.toggle("hidden", !draftView.composerVisible);
+    chatListEl.innerHTML = `
+      <div class="transcribed-draft-readonly" data-draft-mode="${draftView.mode}">
+        <pre class="transcribed-draft-text">${escapeHtml(draftView.transcriptText)}</pre>
+      </div>
+    `;
+    return;
+  }
+
+  assistantComposerShell.classList.remove("hidden");
   chatListEl.innerHTML = "";
 
   if (state.messages.length === 0) {
@@ -3378,30 +4162,14 @@ function addMessage(role, content, meta) {
 }
 
 function buildConversationMessages() {
-  const history = state.messages.slice(-10).map((message) => {
-    if (
-      message.role === "user" &&
-      (message.meta.includes("转写") || message.meta.includes("Transcription"))
-    ) {
-      return {
-        role: "user",
-        content: t("transcribedUserPrefix") + message.content,
-      };
-    }
-
-    return {
-      role: message.role,
-      content: message.content,
-    };
+  return window.draftConversationContext.buildDraftConversationMessages({
+    systemPrompt: getSystemPrompt(),
+    transcribedUserPrefix: t("transcribedUserPrefix"),
+    lastTranscript: state.lastTranscript,
+    lastTranscriptSegments: state.lastTranscriptSegments,
+    formatTranscript: window.transcriptView.formatTimestampedTranscript,
+    messages: state.messages,
   });
-
-  return [
-    {
-      role: "system",
-      content: getSystemPrompt(),
-    },
-    ...history,
-  ];
 }
 
 function formatDuration(totalSeconds) {
@@ -3720,6 +4488,7 @@ async function loadHardwareInfo() {
 async function refreshRuntime() {
   setEngineStatus("stt", "pending");
   setEngineStatus("llm", "pending");
+  setEngineStatus("embedding", "pending");
   setDropdownDisabled(llmModelDropdownEl, true);
   setDropdownDisabled(ttsModelDropdownEl, true);
   setDropdownDisabled(ttsSpeakerDropdownEl, true);
@@ -3740,7 +4509,6 @@ async function refreshRuntime() {
     state.runtime.sttReady = sttReady;
     state.runtime.sttEngineName = activeSTTEngine;
     state.sttEngineView = activeSTTEngine;
-    state.runtime.llmReady = llmReady;
     state.runtime.sttWhisperCliExists = Boolean(whisper.whisperCliExists);
     state.runtime.sttModelExists = Boolean(whisper.modelExists);
     state.runtime.sttRuntimeLocation = whisper.runtimeLocation || "";
@@ -3752,12 +4520,7 @@ async function refreshRuntime() {
     state.runtime.sttParakeetBackend = parakeet.backend || "";
     state.runtime.sttParakeetModelName = parakeet.modelName || "";
     state.runtime.sttParakeetModels = parakeet.availableModels || [];
-    state.runtime.llmOllamaExists = Boolean(llm.ollamaExists);
-    state.runtime.llmModelExists = Boolean(llm.modelExists);
-    state.runtime.llmRuntimeLocation = llm.runtimeLocation || "";
-    state.runtime.llmModelDir = llm.modelDir || "";
-    state.runtime.llmModelName = llm.modelName;
-    state.runtime.llmModels = llm.installedModels || [];
+    applyLLMRuntime(llm);
     applyLocalTTSRuntime(runtime.tts || {});
     if (managedDataPathEl) {
       managedDataPathEl.textContent = state.runtime.managedDataRoot || t("managedDataChecking");
@@ -3829,6 +4592,7 @@ async function refreshRuntime() {
     applyLocalTTSRuntime({ runtimeReady: false });
     setEngineStatus("stt", "error");
     setEngineStatus("llm", "error");
+    setEngineStatus("embedding", "error");
     setJobStatus(t("checkFailed", { message: error.message }), true);
   }
 
@@ -3840,9 +4604,8 @@ async function refreshRuntime() {
 async function handleCleanAllAssets() {
   if (
     state.assetCleanupInProgress ||
-    state.runtimeDownloadTarget ||
+    hasActiveDownloads() ||
     state.runtimeDeleteTarget ||
-    state.modelDownloadTarget ||
     state.modelDeleteTarget
   ) {
     return;
@@ -3876,31 +4639,31 @@ async function handleCleanAllAssets() {
 }
 
 async function handleRuntimeDownload(target) {
-  if (!target || state.runtimeDownloadTarget || state.runtimeDeleteTarget || state.modelDeleteTarget) {
-    return;
-  }
+  if (!target || state.assetCleanupInProgress) return;
+  if (isRuntimeDownloading(target) || state.runtimeDeleteTarget === target) return;
 
   const targetLabel =
     target === "stt" ? t("sttTitle") : target === "llm" ? t("llmTitle") : t("ttsTitle");
 
-  state.runtimeDownloadTarget = target;
+  const id = runtimeDownloadId(target);
+  beginDownload(id, { type: "runtime", kind: target, label: targetLabel });
   updateRuntimeDownloadButtons();
   setJobStatus(t("downloadingTarget", { target: targetLabel }));
 
   try {
-    await window.desktopSTT.downloadRuntime(target);
+    await window.desktopSTT.downloadRuntime(target, id);
     await refreshRuntime();
     setJobStatus(t("downloadSucceeded", { target: targetLabel }));
   } catch (error) {
     setJobStatus(t("downloadFailed", { target: targetLabel, message: error.message }), true);
   } finally {
-    state.runtimeDownloadTarget = "";
+    endDownload(id);
     updateRuntimeDownloadButtons();
   }
 }
 
 async function handleRuntimeDelete(target) {
-  if (!target || state.runtimeDownloadTarget || state.runtimeDeleteTarget || state.modelDownloadTarget || state.modelDeleteTarget) {
+  if (!target || hasActiveDownloads() || state.runtimeDeleteTarget || state.modelDeleteTarget) {
     return;
   }
 
@@ -3968,12 +4731,25 @@ async function handleLLMModelChange(modelName) {
   if (!modelName || modelName === state.runtime.llmModelName) return;
 
   try {
-    await window.desktopSTT.setLLMModel(modelName);
-    state.runtime.llmModelName = modelName;
-    setEngineStatus("llm", "ready", getModelMeta(modelName, "llm").label);
-    setDropdownValue(llmModelDropdownEl, modelName, "llm");
-    renderDropdownMenu(llmModelDropdownEl, getAllOptionsForKind("llm"), modelName, "llm");
+    const llm = await window.desktopSTT.setLLMModel(modelName);
+    applyLLMRuntime(llm);
+    setEngineStatus(
+      "llm",
+      state.runtime.llmReady
+        ? state.runtime.llmRuntimeLocation === "portable"
+          ? "ready"
+          : "pending"
+        : "error",
+      state.runtime.llmReady
+        ? state.runtime.llmRuntimeLocation === "portable"
+          ? getModelMeta(state.runtime.llmModelName, "llm").label
+          : t("externalRuntime")
+        : t("statusError")
+    );
+    populateDropdown(llmModelDropdownEl, getAllOptionsForKind("llm"), state.runtime.llmModelName, "llm");
     renderLLMEnginePanel();
+    updateRuntimeHelpTexts();
+    updateButtons();
   } catch (error) {
     setJobStatus(t("switchLlmFailed", { message: error.message }), true);
   }
@@ -4025,6 +4801,12 @@ async function handleLanguageChange(language) {
   if (!LANGUAGE_OPTIONS.includes(language) || language === state.uiLanguage) {
     return;
   }
+  if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) {
+    populateDropdown(languageDropdownEl, LANGUAGE_OPTIONS, state.uiLanguage, "language");
+    return;
+  }
+  state.meetingEditDirty = false;
+  state.meetingEditMode = false;
 
   state.uiLanguage = language;
   persistAppLanguage(language);
@@ -4041,6 +4823,43 @@ async function handleLanguageChange(language) {
   }
 
   updateButtons();
+}
+
+
+async function handleSubnoteSend(content = "", type = "text", audioPath = null) {
+  if (!state.currentNoteId) return;
+  const text = content.trim();
+  if (type === "text" && !text) return;
+
+  if (type === "text") {
+    subnoteInput.value = "";
+  }
+
+  setJobStatus(t("thinking"));
+  try {
+    state.isWorking = true;
+    updateButtons();
+    
+    // Add subnote to DB
+    await window.desktopSTT.addSubnote(state.currentNoteId, {
+      type, content: text, audioPath
+    });
+    
+    // Regenerate structure
+    await window.desktopSTT.regenerateStructured(state.currentNoteId);
+    
+    // Refresh note detail
+    const note = await window.desktopSTT.getNote(state.currentNoteId);
+    renderNoteDetail(note);
+    
+  } catch (error) {
+    console.error("Error adding subnote:", error);
+    setJobStatus(t("failed", { message: error.message }), true);
+  } finally {
+    state.isWorking = false;
+    updateButtons();
+    setJobStatus("");
+  }
 }
 
 /* ========== Assistant Chat ========== */
@@ -4105,6 +4924,130 @@ async function sendUserMessage(content, meta) {
   }
 }
 
+function upsertLibraryNote(note) {
+  if (!note?.id) return null;
+  const result = window.noteLibraryState.upsertNoteInLibrary(state.notes, note);
+  state.notes = result.notes;
+  renderNotesList();
+  return result.visibleNote;
+}
+
+function showTranscriptionProgress(note) {
+  const progressView = window.transcriptionProgressView.getTranscriptionProgressView(note, {
+    modelName: state.runtime.sttModelName,
+    nowMs: Date.now(),
+    t,
+  });
+  state.currentProcessingNoteId = note.id;
+  state.processingKind = "transcription";
+  state.meetingStartedAt = progressView.startedAtMs;
+  switchView("meeting-review");
+  meetingProgressKicker.textContent = t("transcriptionNote").toLocaleUpperCase();
+  meetingProgressTitle.textContent = progressView.title;
+  meetingProgressDetail.textContent = progressView.detail;
+  meetingProgressModel.textContent = progressView.modelText;
+  meetingProgressPanel.classList.remove("hidden");
+  meetingReviewWorkspace.classList.add("hidden");
+  meetingReviewSaveBtn.disabled = true;
+  const actionIds = new Set(progressView.actions.map((action) => action.id));
+  const actionById = Object.fromEntries(progressView.actions.map((action) => [action.id, action]));
+  meetingPauseBtn.classList.toggle("hidden", !actionIds.has("delete"));
+  meetingPauseBtn.textContent = actionById.delete?.label || t("deleteTranscriptionNote");
+  meetingRetryBtn.classList.toggle("hidden", !actionIds.has("retry"));
+  meetingRetryBtn.textContent = actionById.retry?.label || t("resumeTranscription");
+  meetingRawOutput.classList.add("hidden");
+  meetingCancelBtn.textContent =
+    actionById.cancel?.label || actionById.back?.label || t("backToAssistant");
+  meetingProgressElapsed.textContent = Number.isFinite(progressView.elapsedSeconds)
+    ? formatDuration(progressView.elapsedSeconds)
+    : "";
+  if (progressView.shouldRunElapsedTimer && !meetingElapsedTimer) {
+    meetingElapsedTimer = window.setInterval(updateMeetingElapsed, 1000);
+  } else if (!progressView.shouldRunElapsedTimer) {
+    stopMeetingElapsedTimer();
+  }
+}
+
+function showGeneralProgress(note) {
+  state.currentProcessingNoteId = note.id;
+  state.processingKind = "general";
+  state.meetingStartedAt = Date.now();
+  switchView("meeting-review");
+  meetingProgressKicker.textContent = t("processingNote").toLocaleUpperCase();
+  meetingProgressTitle.textContent = note.status === "error"
+    ? t("saveFailed", { message: note.statusMessage || "" })
+    : t("generatingNote");
+  meetingProgressDetail.textContent = note.title || "";
+  meetingProgressModel.textContent = state.runtime.llmModelName
+    ? `${t("model")}: ${state.runtime.llmModelName}`
+    : "";
+  meetingProgressPanel.classList.remove("hidden");
+  meetingReviewWorkspace.classList.add("hidden");
+  meetingReviewSaveBtn.disabled = true;
+  meetingPauseBtn.classList.add("hidden");
+  meetingRetryBtn.classList.add("hidden");
+  meetingRawOutput.classList.add("hidden");
+  meetingCancelBtn.textContent = t("backToAssistant");
+  updateMeetingElapsed();
+  if (note.status === "structuring" && !meetingElapsedTimer) {
+    meetingElapsedTimer = window.setInterval(updateMeetingElapsed, 1000);
+  } else if (note.status !== "structuring") {
+    stopMeetingElapsedTimer();
+  }
+}
+
+function openTranscribedDraft(note) {
+  state.currentProcessingNoteId = null;
+  state.processingKind = null;
+  state.pendingMeetingSourceNoteId = note.id;
+  state.messages = [];
+  state.lastTranscript = note.transcript || "";
+  state.lastAudioPath = note.audioPath || "";
+  state.lastTranscriptSegments = Array.isArray(note.transcriptSegments)
+    ? note.transcriptSegments
+    : [];
+  state.lastPerformance = note.performance || null;
+  state.selectedFile = note.audioPath || "";
+  state.lastAssistantText = "";
+  state.meetingStartedAt = null;
+  switchView("assistant");
+  renderMessages();
+  updateSelectedFileMeta();
+  updateButtons();
+}
+
+async function startLibraryTranscription(filePath) {
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("sttNotReady"), true);
+    return;
+  }
+  try {
+    const pending = await window.desktopSTT.startTranscription(filePath);
+    const visibleNote = upsertLibraryNote(pending);
+    if (visibleNote.status === "transcribing") state.activeTranscriptionNoteIds.add(pending.id);
+    else state.activeTranscriptionNoteIds.delete(pending.id);
+    if (visibleNote.status === "transcribed") openTranscribedDraft(visibleNote);
+    else showTranscriptionProgress(visibleNote);
+    updateButtons();
+  } catch (error) {
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+function handleTranscriptionStatus(note) {
+  const visibleNote = upsertLibraryNote(note);
+  if (visibleNote.status === "transcribing") state.activeTranscriptionNoteIds.add(note.id);
+  else state.activeTranscriptionNoteIds.delete(note.id);
+  updateButtons();
+  if (state.currentProcessingNoteId !== visibleNote.id) return;
+  if (visibleNote.status === "transcribed") {
+    stopMeetingElapsedTimer();
+    openTranscribedDraft(visibleNote);
+    return;
+  }
+  showTranscriptionProgress(visibleNote);
+}
+
 async function transcribeAudioInput(filePath, sourceLabel) {
   setJobStatus(t("transcribing"));
   const transcription = await window.desktopSTT.transcribeAudio(filePath);
@@ -4117,6 +5060,12 @@ async function transcribeAudioInput(filePath, sourceLabel) {
   state.selectedFile = filePath;
   state.lastTranscript = transcript;
   state.lastAudioPath = filePath;
+  state.lastSourceDurationMs = Number.isFinite(transcription.durationMs)
+    ? transcription.durationMs
+    : state.lastSourceDurationMs;
+  state.lastTranscriptSegments = Array.isArray(transcription.segments)
+    ? transcription.segments
+    : [];
   updateSelectedFileMeta();
 
   if (transcription.sttDurationMs) {
@@ -4165,64 +5114,574 @@ async function handlePickFile() {
     return;
   }
 
+  if (state.currentView !== "detail" && state.noteTemplateId === "meeting") {
+    const durationMs = await window.desktopSTT.getAudioDuration(filePath);
+    if (Number.isFinite(durationMs)) state.lastSourceDurationMs = durationMs;
+    if (durationMs > 3 * 60 * 60 * 1000) {
+      setJobStatus(t("meetingTooLong"), true);
+      return;
+    }
+  }
+
   if (state.currentView === "detail") {
     await transcribeAndAskAboutNote(filePath, t("importedFile"));
     return;
   }
 
-  await transcribeAndSend(filePath, t("importedFile"));
+  await startLibraryTranscription(filePath);
 }
 
 async function handleSend() {
   const text = state.draft.trim();
-  if (!text) {
-    return;
-  }
-
+  if (!text) return;
   state.draft = "";
   promptInputEl.value = "";
-  state.lastTranscript = text;
-  state.lastAudioPath = "";
   autoResizePrompt();
-  await sendUserMessage(text, t("typedInput"));
+  try {
+    state.isWorking = true;
+    updateButtons();
+    const newNote = await window.desktopSTT.createNote({
+      title: text,
+      transcript: "",
+    });
+    await loadNotesList();
+    openNoteDetail(newNote.id);
+  } catch (error) {
+    console.error("Error creating note", error);
+  } finally {
+    state.isWorking = false;
+    updateButtons();
+  }
 }
 
 /* ========== Save as Note ========== */
 
+function meetingProgressCopy(progress) {
+  if (!progress) return { title: t("analyzingTranscript"), detail: "" };
+  if (progress.phase === "extracting") {
+    return {
+      title: t("extractingSections", {
+        completed: progress.completed || 0,
+        total: progress.total || 0,
+      }),
+      detail: progress.total > 1 ? `${progress.completed || 0} / ${progress.total}` : "",
+    };
+  }
+  if (progress.phase === "merging") return { title: t("mergingSections"), detail: "" };
+  if (progress.phase === "validating") return { title: t("validatingMeeting"), detail: "" };
+  if (progress.phase === "complete") return { title: t("meetingReady"), detail: "" };
+  return { title: t("analyzingTranscript"), detail: "" };
+}
+
+function updateMeetingElapsed() {
+  if (!state.meetingStartedAt) {
+    meetingProgressElapsed.textContent = "";
+    return;
+  }
+  meetingProgressElapsed.textContent = formatDuration(
+    Math.max(0, Math.floor((Date.now() - state.meetingStartedAt) / 1000))
+  );
+}
+
+function showMeetingProgress(progress = state.meetingProgress) {
+  state.processingKind = "meeting";
+  state.meetingProgress = progress;
+  const copy = meetingProgressCopy(progress);
+  meetingProgressTitle.textContent = copy.title;
+  meetingProgressKicker.textContent = t("meetingNote").toLocaleUpperCase();
+  const meetingDurationMs = state.currentMeetingDraft?.durationMs || state.lastSourceDurationMs;
+  const longMode = meetingDurationMs >= 90 * 60 * 1000 && meetingDurationMs <= 3 * 60 * 60 * 1000;
+  meetingProgressDetail.textContent = [copy.detail, longMode ? t("longMeetingMode") : ""]
+    .filter(Boolean)
+    .join(" · ");
+  const progressModelName = state.currentMeetingDraft?.modelName || state.runtime.llmModelName;
+  meetingProgressModel.textContent = progressModelName
+    ? `${t("model")}: ${progressModelName}`
+    : "";
+  meetingProgressPanel.classList.remove("hidden");
+  meetingReviewWorkspace.classList.add("hidden");
+  meetingReviewSaveBtn.disabled = true;
+  meetingPauseBtn.classList.toggle("hidden", !state.isWorking);
+  meetingRetryBtn.classList.add("hidden");
+  meetingCancelBtn.textContent = t("cancel");
+  meetingRawOutput.classList.add("hidden");
+  updateMeetingElapsed();
+  if (!meetingElapsedTimer) {
+    meetingElapsedTimer = window.setInterval(updateMeetingElapsed, 1000);
+  }
+}
+
+function stopMeetingElapsedTimer() {
+  if (meetingElapsedTimer) {
+    window.clearInterval(meetingElapsedTimer);
+    meetingElapsedTimer = null;
+  }
+}
+
+function formatEvidenceTime(evidence) {
+  if (!Number.isFinite(evidence?.startMs)) return "";
+  return `${formatDuration(Math.floor(evidence.startMs / 1000))} · `;
+}
+
+function createMeetingListRow(key, item, index) {
+  const row = document.createElement("div");
+  row.className = `meeting-list-row${key === "actionItems" ? " action-row" : ""}`;
+  row.dataset.itemIndex = String(index);
+
+  const textInput = document.createElement("input");
+  textInput.type = "text";
+  textInput.dataset.field = "text";
+  textInput.value = item?.text || "";
+  textInput.maxLength = 2000;
+  row.append(textInput);
+
+  if (key === "actionItems") {
+    const assignee = document.createElement("input");
+    assignee.type = "text";
+    assignee.dataset.field = "assignee";
+    assignee.placeholder = t("assignee");
+    assignee.value = item?.assignee || "";
+    const deadline = document.createElement("input");
+    deadline.type = "text";
+    deadline.dataset.field = "deadlineText";
+    deadline.placeholder = t("deadline");
+    deadline.value = item?.deadlineText || "";
+    const deadlineDate = document.createElement("input");
+    deadlineDate.type = "date";
+    deadlineDate.dataset.field = "deadlineDate";
+    deadlineDate.title = t("normalizedDate");
+    deadlineDate.value = item?.deadlineDate || "";
+    deadline.addEventListener("input", () => { deadlineDate.value = ""; });
+    row.append(assignee, deadline, deadlineDate);
+  }
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "ghost-btn danger-btn";
+  remove.textContent = t("remove");
+  remove.addEventListener("click", () => {
+    state.currentMeetingDraft.structured = collectMeetingReview();
+    state.currentMeetingDraft.structured[key].splice(index, 1);
+    state.meetingDraftDirty = true;
+    renderMeetingReviewDraft(state.currentMeetingDraft);
+    scheduleMeetingDraftSave();
+  });
+  row.append(remove);
+
+  const evidence = Array.isArray(item?.evidence) ? item.evidence : [];
+  if (evidence.length > 0 || item?.possibleDuplicateGroupId) {
+    const source = document.createElement("p");
+    source.className = "meeting-evidence";
+    source.dataset.evidence = JSON.stringify(evidence);
+    source.dataset.possibleDuplicate = item?.possibleDuplicateGroupId ? "true" : "false";
+    const quotes = evidence
+      .map((entry) => `${formatEvidenceTime(entry)}${t("sourceEvidence", { quote: entry.quote })}`)
+      .join(" · ");
+    source.textContent = quotes;
+    if (item?.possibleDuplicateGroupId) {
+      const duplicate = document.createElement("span");
+      duplicate.className = "meeting-duplicate-badge";
+      duplicate.textContent = `${quotes ? " · " : ""}${t("possibleDuplicate")}`;
+      source.append(duplicate);
+    }
+    row.append(source);
+  }
+  return row;
+}
+
+function renderMeetingSections(structured) {
+  meetingStructuredSections.replaceChildren();
+  const sections = [
+    ["keyPoints", t("keyPoints")],
+    ["decisions", t("decisions")],
+    ["actionItems", t("actionItems")],
+    ["openQuestions", t("openQuestions")],
+  ];
+
+  for (const [key, label] of sections) {
+    const section = document.createElement("section");
+    section.className = "meeting-section-editor";
+    section.dataset.key = key;
+    const head = document.createElement("div");
+    head.className = "meeting-section-head";
+    const heading = document.createElement("h3");
+    heading.textContent = label;
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "ghost-btn";
+    add.textContent = t("addItem");
+    add.addEventListener("click", () => {
+      state.currentMeetingDraft.structured = collectMeetingReview();
+      state.currentMeetingDraft.structured[key].push(key === "actionItems"
+        ? { text: "", assignee: null, deadlineText: null, deadlineDate: null, status: "pending", evidence: [] }
+        : { text: "", evidence: [] });
+      state.meetingDraftDirty = true;
+      renderMeetingReviewDraft(state.currentMeetingDraft);
+    });
+    head.append(heading, add);
+    section.append(head);
+    (structured[key] || []).forEach((item, index) => {
+      section.append(createMeetingListRow(key, item, index));
+    });
+    meetingStructuredSections.append(section);
+  }
+}
+
+function appendHighlightedTranscriptText(container, text, query) {
+  const cleanQuery = String(query || "").trim();
+  if (!cleanQuery) {
+    container.textContent = text;
+    return;
+  }
+  const lowerText = text.toLocaleLowerCase();
+  const lowerQuery = cleanQuery.toLocaleLowerCase();
+  let cursor = 0;
+  while (cursor < text.length) {
+    const index = lowerText.indexOf(lowerQuery, cursor);
+    if (index < 0) {
+      container.append(document.createTextNode(text.slice(cursor)));
+      break;
+    }
+    container.append(document.createTextNode(text.slice(cursor, index)));
+    const mark = document.createElement("mark");
+    mark.textContent = text.slice(index, index + cleanQuery.length);
+    container.append(mark);
+    cursor = index + cleanQuery.length;
+  }
+}
+
+function renderTranscriptRows(container, transcript, segments, query = "") {
+  const rows = window.transcriptView.buildTranscriptRows(transcript, segments);
+  container.replaceChildren();
+  for (const row of rows) {
+    const element = document.createElement("div");
+    element.className = "transcript-segment-row";
+    if (row.label) {
+      const timestamp = document.createElement("span");
+      timestamp.className = "transcript-segment-time";
+      timestamp.textContent = row.label;
+      element.append(timestamp);
+    }
+    const text = document.createElement("span");
+    text.className = "transcript-segment-text";
+    appendHighlightedTranscriptText(text, row.text, query);
+    element.append(text);
+    container.append(element);
+  }
+}
+
+function renderTimestampedTranscriptHtml(transcript, segments) {
+  return window.transcriptView
+    .buildTranscriptRows(transcript, segments)
+    .map((row) => `<div class="transcript-segment-row">
+      ${row.label ? `<span class="transcript-segment-time">${escapeHtml(row.label)}</span>` : ""}
+      <span class="transcript-segment-text">${escapeHtml(row.text)}</span>
+    </div>`)
+    .join("");
+}
+
+function renderStructuredSummaryHtml(summary) {
+  return window.noteSummaryView.renderStructuredSummaryHtml(summary);
+}
+
+function renderMeetingTranscript(query = meetingTranscriptSearch.value) {
+  renderTranscriptRows(
+    meetingTranscriptReadOnly,
+    state.currentMeetingDraft?.transcript || "",
+    state.currentMeetingDraft?.segments || [],
+    query
+  );
+}
+
+function renderMeetingReviewDraft(draft) {
+  state.currentMeetingDraft = draft;
+  stopMeetingElapsedTimer();
+  state.meetingStartedAt = null;
+  meetingProgressPanel.classList.add("hidden");
+  meetingReviewWorkspace.classList.remove("hidden");
+  meetingReviewSaveBtn.disabled = false;
+  meetingTitleInput.value = draft.structured?.title || "";
+  meetingSummaryInput.value = draft.structured?.summary || "";
+  meetingTagsInput.value = (draft.structured?.tags || []).join(", ");
+  draft.structured = {
+    ...draft.structured,
+    keyPoints: [...(draft.structured?.keyPoints || [])],
+    decisions: [...(draft.structured?.decisions || [])],
+    actionItems: [...(draft.structured?.actionItems || [])],
+    openQuestions: [...(draft.structured?.openQuestions || [])],
+  };
+  renderMeetingSections(draft.structured);
+  renderMeetingTranscript();
+  meetingReviewDraftState.textContent = state.meetingDraftDirty
+    ? ""
+    : t("meetingReviewSaved");
+}
+
+function collectMeetingReview() {
+  const structured = {
+    title: meetingTitleInput.value.trim(),
+    summary: meetingSummaryInput.value.trim(),
+    tags: meetingTagsInput.value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean),
+    keyPoints: [],
+    decisions: [],
+    actionItems: [],
+    openQuestions: [],
+  };
+  meetingStructuredSections.querySelectorAll(".meeting-section-editor").forEach((section) => {
+    const key = section.dataset.key;
+    section.querySelectorAll(".meeting-list-row").forEach((row) => {
+      const index = Number(row.dataset.itemIndex);
+      const original = state.currentMeetingDraft?.structured?.[key]?.[index] || {};
+      const text = row.querySelector('[data-field="text"]')?.value.trim() || "";
+      if (!text) return;
+      const item = {
+        ...original,
+        text,
+        evidence: Array.isArray(original.evidence) ? original.evidence : [],
+      };
+      if (key === "actionItems") {
+        item.assignee = row.querySelector('[data-field="assignee"]')?.value.trim() || null;
+        const deadlineInput = row.querySelector('[data-field="deadlineText"]');
+        item.deadlineText = deadlineInput?.value.trim() || null;
+        const deadlineDate = row.querySelector('[data-field="deadlineDate"]')?.value || "";
+        item.deadlineDate = /^\d{4}-\d{2}-\d{2}$/.test(deadlineDate) ? deadlineDate : null;
+        item.status = original.status === "completed" ? "completed" : "pending";
+      }
+      structured[key].push(item);
+    });
+  });
+  return structured;
+}
+
+function scheduleMeetingDraftSave() {
+  state.meetingDraftDirty = true;
+  meetingReviewDraftState.textContent = "";
+}
+
+async function settleMeetingDraftAutosave() {
+  if (meetingDraftSaveTimer) {
+    window.clearTimeout(meetingDraftSaveTimer);
+    meetingDraftSaveTimer = null;
+  }
+  if (meetingDraftSavePromise) await meetingDraftSavePromise;
+}
+
+async function runMeetingGeneration({ resume = false } = {}) {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
+}
+
+async function recoverMeetingDraft() {
+  return null;
+}
+
+async function discardMeetingReview() {
+  if (state.pendingMeetingSourceNoteId) {
+    const source = await window.desktopSTT.updateNote(state.pendingMeetingSourceNoteId, {
+      status: "transcribed",
+      statusMessage: "",
+    });
+    upsertLibraryNote(source);
+  }
+  state.currentMeetingDraft = null;
+  state.meetingDraftDirty = false;
+  state.meetingStartedAt = null;
+  state.pendingMeetingSourceNoteId = null;
+  state.currentProcessingNoteId = null;
+  state.processingKind = null;
+  switchView("assistant");
+}
+
+async function leaveProcessingOrMeeting() {
+  if (state.processingKind === "transcription") {
+    const noteId = state.currentProcessingNoteId;
+    if (noteId && state.activeTranscriptionNoteIds.has(noteId)) {
+      try {
+        const cancelled = await window.desktopSTT.cancelTranscription(noteId);
+        if (cancelled) upsertLibraryNote(cancelled);
+        state.activeTranscriptionNoteIds.delete(noteId);
+        setTemporaryJobStatus(t("transcriptionCancelled"), false, 2000);
+      } catch (error) {
+        setJobStatus(t("failed", { message: error.message }), true);
+        return;
+      }
+    }
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    stopMeetingElapsedTimer();
+    switchView("assistant");
+    return;
+  }
+  if (state.processingKind && state.processingKind !== "meeting") {
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    stopMeetingElapsedTimer();
+    switchView("assistant");
+    return;
+  }
+  await discardMeetingReview();
+}
+
+async function deleteCurrentTranscriptionNote() {
+  if (state.processingKind !== "transcription" || !state.currentProcessingNoteId) return;
+  const noteId = state.currentProcessingNoteId;
+  try {
+    await window.desktopSTT.moveNoteToTrash(noteId);
+    state.activeTranscriptionNoteIds.delete(noteId);
+    state.currentProcessingNoteId = null;
+    state.processingKind = null;
+    state.meetingStartedAt = null;
+    stopMeetingElapsedTimer();
+    await loadNotesList(noteSearchInput.value.trim());
+    switchView("assistant");
+    setTemporaryJobStatus(t("transcriptionNoteDeleted"), false, 2000);
+  } catch (error) {
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+async function retryCurrentTranscriptionNote() {
+  if (state.processingKind !== "transcription" || !state.currentProcessingNoteId) return;
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("sttNotReady"), true);
+    return;
+  }
+  try {
+    const pending = await window.desktopSTT.retryTranscription(state.currentProcessingNoteId);
+    const visibleNote = upsertLibraryNote(pending);
+    state.activeTranscriptionNoteIds.add(visibleNote.id);
+    showTranscriptionProgress(visibleNote);
+    updateButtons();
+  } catch (error) {
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+async function commitMeetingReview() {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
+}
+
+function getAgentSaveSource() {
+  const agentState = state.agentConversation || { turns: [], noteText: "" };
+  if (!window.agentConversationState.hasSaveableAgentConversation(agentState)) {
+    return null;
+  }
+  const text =
+    agentState.noteText ||
+    window.agentConversationState.formatAgentConversationForNote(agentState.turns);
+  if (!text.trim()) return null;
+  return {
+    text,
+    title: text.slice(0, 80) || "Agent Mode Conversation",
+    audioPath: null,
+    draftTranscript: text,
+    finalTranscript: text,
+    transcriptSegments: [],
+    performance: state.agentLastPerformance || {},
+    updateExistingNoteId: null,
+  };
+}
+
+function getSaveableNoteSource() {
+  if (state.agentMode) {
+    return getAgentSaveSource();
+  }
+
+  const text = state.lastTranscript || state.lastAssistantText;
+  if (!text) return null;
+  return {
+    text,
+    title: state.lastAudioPath
+      ? state.lastAudioPath.replaceAll("\\", "/").split("/").pop()
+      : text.slice(0, 80) || "Untitled Note",
+    audioPath: state.lastAudioPath || null,
+    draftTranscript: state.lastTranscript || text,
+    finalTranscript: state.lastTranscript || "",
+    transcriptSegments: state.lastTranscriptSegments,
+    performance: state.lastPerformance || {},
+    updateExistingNoteId: state.pendingMeetingSourceNoteId,
+  };
+}
+
+function hasSaveableNoteContent() {
+  return Boolean(getSaveableNoteSource());
+}
+
 async function handleSaveAsNote() {
-  if (!state.lastTranscript && !state.lastAssistantText) {
+  const saveSource = getSaveableNoteSource();
+  if (!saveSource) {
     return;
   }
 
   state.isWorking = true;
   updateButtons();
-  setJobStatus(t("generatingNote"));
+  let processingNote = null;
 
   try {
-    const textToProcess = state.lastTranscript || state.lastAssistantText;
+    const textToProcess = saveSource.text;
+    const draftData = {
+      title: saveSource.title,
+      audioPath: saveSource.audioPath,
+      transcript: saveSource.draftTranscript,
+      transcriptSegments: saveSource.transcriptSegments,
+      structured: {},
+      tags: [],
+      folder: "default",
+      templateId: "general",
+      status: "structuring",
+      statusMessage: t("generatingNote"),
+      conversations: [],
+    };
+    processingNote = saveSource.updateExistingNoteId
+      ? await window.desktopSTT.updateNote(saveSource.updateExistingNoteId, draftData)
+      : await window.desktopSTT.createNote(draftData);
+    upsertLibraryNote(processingNote);
+    showGeneralProgress(processingNote);
+
     const result = await window.desktopSTT.processStructured(textToProcess);
 
     const noteData = {
       title: result.structured.title,
-      audioPath: state.lastAudioPath || null,
-      transcript: state.lastTranscript || "",
+      audioPath: saveSource.audioPath,
+      transcript: saveSource.finalTranscript,
+      transcriptSegments: saveSource.transcriptSegments,
       structured: result.structured,
       tags: result.structured.tags || [],
       folder: "default",
+      templateId: "general",
+      status: "ready",
+      statusMessage: "",
       performance: {
-        ...state.lastPerformance,
+        ...saveSource.performance,
         structuringDurationMs: result.llmDurationMs,
         structuringModel: result.modelName,
       },
       conversations: [],
     };
 
-    const savedNote = await window.desktopSTT.createNote(noteData);
-    setJobStatus(t("saved", { title: savedNote.title }));
-    setTimeout(() => setJobStatus(""), 3000);
+    const savedNote = await window.desktopSTT.updateNote(processingNote.id, noteData);
+    if (saveSource.updateExistingNoteId) {
+      state.pendingMeetingSourceNoteId = null;
+    }
     await loadNotesList(noteSearchInput.value.trim());
+    if (state.currentProcessingNoteId === savedNote.id) {
+      switchView("assistant");
+      state.currentProcessingNoteId = null;
+      state.processingKind = null;
+      state.meetingStartedAt = null;
+      stopMeetingElapsedTimer();
+      await openNoteDetail(savedNote.id);
+    }
   } catch (error) {
-    setJobStatus(t("saveFailed", { message: error.message }), true);
+    if (processingNote?.id) {
+      const failedNote = await window.desktopSTT.updateNote(processingNote.id, {
+        status: "error",
+        statusMessage: error.message,
+      });
+      upsertLibraryNote(failedNote);
+      if (state.currentProcessingNoteId === failedNote.id) showGeneralProgress(failedNote);
+    } else {
+      setJobStatus(t("saveFailed", { message: error.message }), true);
+    }
   } finally {
     state.isWorking = false;
     updateButtons();
@@ -4315,6 +5774,7 @@ async function handleStopRecording() {
     return;
   }
 
+  const recordedDurationMs = state.recordingSeconds * 1000;
   state.isRecording = false;
   updateRecordingMeta();
   setJobStatus(t("processingRecording"));
@@ -4332,6 +5792,7 @@ async function handleStopRecording() {
     await cleanupRecording();
 
     const savedRecording = await window.desktopSTT.saveRecording(wavBuffer);
+    state.lastSourceDurationMs = recordedDurationMs;
     if (state.currentView === "detail") {
       await transcribeAndAskAboutNote(savedRecording.filePath, t("microphoneRecording"));
     } else {
@@ -4559,28 +6020,28 @@ function renderTrashPreview() {
     ${note.structured?.summary ? `
       <div class="note-section">
         <h4>${t("summary")}</h4>
-        <p>${escapeHtml(note.structured.summary)}</p>
+        <div class="note-summary">${renderStructuredSummaryHtml(note.structured.summary)}</div>
       </div>
     ` : ""}
 
     ${note.structured?.keyPoints?.length > 0 ? `
       <div class="note-section">
         <h4>${t("keyPoints")}</h4>
-        <ul>${note.structured.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ul>
+        <ul>${note.structured.keyPoints.map((point) => `<li>${escapeHtml(noteItemText(point))}</li>`).join("")}</ul>
       </div>
     ` : ""}
 
     ${note.structured?.actionItems?.length > 0 ? `
       <div class="note-section">
         <h4>${t("actionItems")}</h4>
-        <ul class="action-items">${note.structured.actionItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        <ul class="action-items">${note.structured.actionItems.map((item) => `<li>${escapeHtml(noteItemText(item))}</li>`).join("")}</ul>
       </div>
     ` : ""}
 
     ${note.transcript ? `
       <div class="note-section transcript-section">
         <h4>${t("originalTranscript")}</h4>
-        <p class="transcript-text">${escapeHtml(note.transcript)}</p>
+        <div class="transcript-text">${renderTimestampedTranscriptHtml(note.transcript, note.transcriptSegments)}</div>
       </div>
     ` : ""}
   `;
@@ -4610,11 +6071,32 @@ async function handlePermanentDeleteTrashNote() {
   if (!window.confirm(t("deleteForeverConfirm"))) return;
 
   try {
-    await window.desktopSTT.permanentlyDeleteNote(state.currentTrashNoteId);
+    const note = state.deletedNotes.find((item) => item.id === state.currentTrashNoteId);
+    const normalizedAudioPath = String(note?.audioPath || "").replaceAll("\\", "/");
+    const normalizedManagedRoot = String(state.runtime.managedDataRoot || "").replaceAll("\\", "/");
+    const isManagedRecording = Boolean(
+      normalizedAudioPath &&
+      normalizedManagedRoot &&
+      normalizedAudioPath.startsWith(`${normalizedManagedRoot}/stt/output/recordings/`)
+    );
+    const deleteManagedAudio = isManagedRecording
+      ? window.confirm(t("deleteManagedRecordingConfirm"))
+      : false;
+    const result = await window.desktopSTT.permanentlyDeleteNote(state.currentTrashNoteId, {
+      deleteManagedAudio,
+    });
     state.currentTrashNoteId = "";
     await loadTrashNotes();
     await loadNotesList(noteSearchInput.value.trim());
-    setTrashStatus(t("noteDeletedForever"), false, 2000);
+    setTrashStatus(
+      result.audio?.deleteError
+        ? t("managedRecordingDeleteFailed", { message: result.audio.deleteError })
+        : result.audio?.shared && deleteManagedAudio
+          ? t("managedRecordingShared")
+          : t("noteDeletedForever"),
+      false,
+      3000
+    );
   } catch (error) {
     setTrashStatus(t("operationFailed", { message: error.message }), true);
   }
@@ -4648,13 +6130,29 @@ function renderNotesList() {
     }
     card.dataset.noteId = note.id;
 
+    const head = document.createElement("div");
+    head.className = "note-card-head";
+
     const title = document.createElement("h3");
     title.className = "note-card-title";
     title.textContent = note.title || "Untitled";
+    head.append(title);
+
+    if (note.status === "transcribing" || note.status === "structuring") {
+      const spinner = document.createElement("span");
+      spinner.className = "note-card-status-spinner";
+      spinner.setAttribute("role", "status");
+      spinner.setAttribute("aria-label", note.statusMessage || t("transcribing"));
+      head.append(spinner);
+    }
 
     const summary = document.createElement("p");
     summary.className = "note-card-summary";
-    summary.textContent = note.structured?.summary || note.transcript?.slice(0, 100) || "";
+    summary.textContent = note.status === "transcribing" || note.status === "structuring"
+      ? note.statusMessage || t("transcribing")
+      : note.status === "error"
+        ? note.statusMessage || t("transcriptionEmpty")
+        : note.structured?.summary || note.transcript?.slice(0, 100) || "";
 
     const footer = document.createElement("div");
     footer.className = "note-card-footer";
@@ -4673,7 +6171,7 @@ function renderNotesList() {
     tags.textContent = (note.tags || []).slice(0, 3).map((t) => `#${t}`).join(" ");
 
     footer.append(date, tags);
-    card.append(title, summary, footer);
+    card.append(head, summary, footer);
     notesListEl.append(card);
 
     card.addEventListener("click", () => openNoteDetail(note.id));
@@ -4681,19 +6179,88 @@ function renderNotesList() {
 }
 
 async function openNoteDetail(noteId) {
+  if (!(await confirmAndLeaveCurrentWork())) return;
   try {
     const note = await window.desktopSTT.getNote(noteId);
+    if (note.status === "transcribing") {
+      showTranscriptionProgress(note);
+      return;
+    }
+    if (note.status === "structuring" || note.status === "reviewing") {
+      showGeneralProgress(note);
+      return;
+    }
+    if (note.status === "error") {
+      if (note.transcript) showGeneralProgress(note);
+      else showTranscriptionProgress(note);
+      return;
+    }
+    if (note.status === "transcribed") {
+      openTranscribedDraft(note);
+      return;
+    }
     state.currentNoteId = noteId;
+    state.currentNote = note;
+    state.meetingEditMode = false;
+    state.meetingEditDirty = false;
     state.noteQaMessages = note.conversations || [];
     renderNoteDetail(note);
     switchView("detail");
     highlightActiveNote();
+    setJobStatus("");
   } catch (error) {
     setJobStatus(t("openNoteFailed", { message: error.message }), true);
   }
 }
 
+function noteItemText(item) {
+  return typeof item === "string" ? item : item?.text || "";
+}
+
+function escapeAttribute(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function renderNoteEvidence(item) {
+  const evidence = Array.isArray(item?.evidence) ? item.evidence : [];
+  if (evidence.length === 0) return "";
+  return `<div class="note-evidence">${evidence.map((entry) =>
+    escapeHtml(`${formatEvidenceTime(entry)}${t("sourceEvidence", { quote: entry.quote })}`)
+  ).join(" · ")}</div>`;
+}
+
+function renderSourceItems(items) {
+  return (items || []).map((item) => `
+    <li>
+      <span>${escapeHtml(noteItemText(item))}</span>
+      ${renderNoteEvidence(item)}
+      ${item?.possibleDuplicateGroupId ? `<span class="meeting-duplicate-badge">${t("possibleDuplicate")}</span>` : ""}
+    </li>
+  `).join("");
+}
+
+function renderMeetingActionItems(items) {
+  return (items || []).map((item, index) => {
+    const completed = item?.status === "completed";
+    const meta = [item?.assignee, item?.deadlineText || item?.deadlineDate].filter(Boolean).join(" · ");
+    return `<li class="note-action-row${completed ? " completed" : ""}">
+      <input class="note-action-checkbox" data-action-index="${index}" type="checkbox" ${completed ? "checked" : ""} />
+      <div>
+        <div class="note-action-text">${escapeHtml(noteItemText(item))}</div>
+        ${meta ? `<div class="note-action-meta">${escapeHtml(meta)}</div>` : ""}
+        ${renderNoteEvidence(item)}
+        ${item?.possibleDuplicateGroupId ? `<span class="meeting-duplicate-badge">${t("possibleDuplicate")}</span>` : ""}
+      </div>
+    </li>`;
+  }).join("");
+}
+
 function renderNoteDetail(note) {
+  state.currentNote = note;
   const perf = note.performance || {};
   const perfItems = [];
   if (perf.sttDurationMs) perfItems.push(`STT: ${formatMs(perf.sttDurationMs)}`);
@@ -4713,34 +6280,213 @@ function renderNoteDetail(note) {
 
     ${note.structured ? `
       <div class="note-section">
-        <h4>${t("summary")}</h4>
-        <p>${escapeHtml(note.structured.summary)}</p>
+        <div class="note-sub-section">
+          <h4 style="display:flex; justify-content:space-between; align-items:center;">
+            Structured Output
+            <button class="note-copy-btn" data-action="copy" data-copy-text="${escapeHtml([
+              note.structured.summary ? 'Summary:\n' + note.structured.summary : '',
+              note.structured.keyPoints?.length ? 'Key Points:\n' + note.structured.keyPoints.join('\n') : '',
+              note.structured.decisions?.length ? 'Decisions:\n' + note.structured.decisions.join('\n') : '',
+              note.structured.actionItems?.length ? 'Action Items:\n' + note.structured.actionItems.map(a => typeof a === 'string' ? a : a.text).join('\n') : '',
+              note.structured.openQuestions?.length ? 'Open Questions:\n' + note.structured.openQuestions.join('\n') : ''
+            ].filter(Boolean).join('\n\n'))}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy All
+            </button>
+          </h4>
+          
+          <h4 style="margin-top: 12px;">${t("summary")}</h4>
+          <div class="note-summary">${renderStructuredSummaryHtml(note.structured.summary)}</div>
+        </div>
+
+        ${note.structured.keyPoints?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("keyPoints")}</h4>
+            <ul>${renderSourceItems(note.structured.keyPoints)}</ul>
+          </div>
+        ` : ""}
+
+        ${note.templateId === "meeting" && note.structured.decisions?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("decisions")}</h4>
+            <ul>${renderSourceItems(note.structured.decisions)}</ul>
+          </div>
+        ` : ""}
+
+        ${note.structured.actionItems?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("actionItems")}</h4>
+            <ul class="action-items">${note.templateId === "meeting"
+              ? renderMeetingActionItems(note.structured.actionItems)
+              : note.structured.actionItems.map((a) => `<li>${escapeHtml(noteItemText(a))}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+
+        ${note.templateId === "meeting" && note.structured.openQuestions?.length > 0 ? `
+          <div class="note-sub-section" style="margin-top: 24px;">
+            <h4>${t("openQuestions")}</h4>
+            <ul>${renderSourceItems(note.structured.openQuestions)}</ul>
+          </div>
+        ` : ""}
       </div>
-
-      ${note.structured.keyPoints?.length > 0 ? `
-        <div class="note-section">
-          <h4>${t("keyPoints")}</h4>
-          <ul>${note.structured.keyPoints.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
-        </div>
-      ` : ""}
-
-      ${note.structured.actionItems?.length > 0 ? `
-        <div class="note-section">
-          <h4>${t("actionItems")}</h4>
-          <ul class="action-items">${note.structured.actionItems.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
-        </div>
-      ` : ""}
     ` : ""}
+
+
 
     ${note.transcript ? `
       <div class="note-section transcript-section">
         <h4>${t("originalTranscript")}</h4>
-        <p class="transcript-text">${escapeHtml(note.transcript)}</p>
+        <div class="transcript-text">${renderTimestampedTranscriptHtml(note.transcript, note.transcriptSegments)}</div>
       </div>
     ` : ""}
   `;
 
+  
+  if (subnotesTimeline) {
+    if (note.subnotes && note.subnotes.length > 0) {
+      subnotesTimeline.innerHTML = note.subnotes.map(sn => `
+        <div class="subnote-item">
+          <div class="subnote-meta">
+            <span>${sn.type === 'audio' ? '🎤 Audio' : '📝 Text'}</span>
+            <span>${new Date(sn.createdAt).toLocaleString(state.uiLanguage === "zh-CN" ? "zh-CN" : "en-US")}</span>
+          </div>
+          <div class="subnote-content">${escapeHtml(sn.content || '')}</div>
+        </div>
+      `).join("");
+    } else {
+      subnotesTimeline.innerHTML = "";
+    }
+  }
+
+  noteDetailContent.querySelectorAll(".note-action-checkbox").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => handleActionCompletionToggle(note, checkbox));
+  });
+
   renderNoteQaMessages();
+}
+
+function renderSavedMeetingEdit(note) {
+  const structured = note.structured || {};
+  const sectionConfig = [
+    ["keyPoints", t("keyPoints")],
+    ["decisions", t("decisions")],
+    ["actionItems", t("actionItems")],
+    ["openQuestions", t("openQuestions")],
+  ];
+  noteDetailContent.innerHTML = `
+    <div class="note-meeting-actions">
+      <button id="savedMeetingCancelBtn" class="ghost-btn" type="button">${t("cancel")}</button>
+      <button id="savedMeetingSaveBtn" class="ghost-btn accent-btn" type="button">${t("save")}</button>
+    </div>
+    <form id="savedMeetingEditForm" class="meeting-editor-pane">
+      <label>${t("title")}<input id="savedMeetingTitle" type="text" maxlength="300" value="${escapeAttribute(note.title)}" /></label>
+      <label>${t("summary")}<textarea id="savedMeetingSummary" rows="5">${escapeHtml(structured.summary || "")}</textarea></label>
+      ${sectionConfig.map(([key, label]) => `
+        <section class="meeting-section-editor" data-saved-section="${key}">
+          <div class="meeting-section-head"><h3>${label}</h3></div>
+          ${(structured[key] || []).map((item, index) => `
+            <div class="meeting-list-row${key === "actionItems" ? " action-row" : ""}" data-saved-index="${index}">
+              <input data-saved-field="text" type="text" value="${escapeAttribute(noteItemText(item))}" />
+              ${key === "actionItems" ? `
+                <input data-saved-field="assignee" type="text" placeholder="${t("assignee")}" value="${escapeAttribute(item.assignee || "")}" />
+                <input data-saved-field="deadlineText" type="text" placeholder="${t("deadline")}" value="${escapeAttribute(item.deadlineText || "")}" />
+                <input data-saved-field="deadlineDate" type="date" title="${t("normalizedDate")}" value="${escapeAttribute(item.deadlineDate || "")}" />
+              ` : ""}
+              ${renderNoteEvidence(item)}
+            </div>
+          `).join("")}
+        </section>
+      `).join("")}
+      <label>${t("tags")}<input id="savedMeetingTags" type="text" value="${escapeAttribute((note.tags || []).join(", "))}" /></label>
+      <div class="note-section transcript-section">
+        <h4>${t("originalTranscript")}</h4>
+        <div class="transcript-text">${renderTimestampedTranscriptHtml(note.transcript, note.transcriptSegments)}</div>
+      </div>
+    </form>
+  `;
+  const form = document.querySelector("#savedMeetingEditForm");
+  form.querySelectorAll('[data-saved-field="deadlineText"]').forEach((input) => {
+    input.addEventListener("input", () => {
+      const dateInput = input.closest(".meeting-list-row")?.querySelector('[data-saved-field="deadlineDate"]');
+      if (dateInput) dateInput.value = "";
+    });
+  });
+  form.addEventListener("input", () => { state.meetingEditDirty = true; });
+  document.querySelector("#savedMeetingCancelBtn").addEventListener("click", () => {
+    if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) return;
+    state.meetingEditMode = false;
+    state.meetingEditDirty = false;
+    renderNoteDetail(note);
+    updateButtons();
+  });
+  document.querySelector("#savedMeetingSaveBtn").addEventListener("click", saveMeetingNoteEdits);
+}
+
+function collectSavedMeetingEdit(note) {
+  const structured = {
+    ...note.structured,
+    title: document.querySelector("#savedMeetingTitle").value.trim(),
+    summary: document.querySelector("#savedMeetingSummary").value.trim(),
+    tags: document.querySelector("#savedMeetingTags").value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean),
+  };
+  document.querySelectorAll("[data-saved-section]").forEach((section) => {
+    const key = section.dataset.savedSection;
+    structured[key] = [];
+    section.querySelectorAll("[data-saved-index]").forEach((row) => {
+      const index = Number(row.dataset.savedIndex);
+      const rawOriginal = note.structured[key][index];
+      const original = typeof rawOriginal === "string"
+        ? { text: rawOriginal, evidence: [], status: "pending" }
+        : rawOriginal;
+      const text = row.querySelector('[data-saved-field="text"]').value.trim();
+      if (!text) return;
+      const next = { ...original, text };
+      if (key === "actionItems") {
+        next.assignee = row.querySelector('[data-saved-field="assignee"]').value.trim() || null;
+        const deadlineText = row.querySelector('[data-saved-field="deadlineText"]').value.trim() || null;
+        next.deadlineText = deadlineText;
+        const deadlineDate = row.querySelector('[data-saved-field="deadlineDate"]').value;
+        next.deadlineDate = /^\d{4}-\d{2}-\d{2}$/.test(deadlineDate) ? deadlineDate : null;
+      }
+      structured[key].push(next);
+    });
+  });
+  return structured;
+}
+
+async function saveMeetingNoteEdits() {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
+}
+
+async function handleActionCompletionToggle(note, checkbox) {
+  const index = Number(checkbox.dataset.actionIndex);
+  const action = note.structured.actionItems[index];
+  const previous = action.status === "completed";
+  checkbox.disabled = true;
+  try {
+    const updated = await window.desktopSTT.setActionItemCompletion(note.id, action.id, checkbox.checked);
+    state.currentNote = updated;
+    renderNoteDetail(updated);
+    const undo = document.createElement("button");
+    undo.type = "button";
+    undo.className = "ghost-btn";
+    undo.textContent = t("undo");
+    undo.addEventListener("click", async () => {
+      const reverted = await window.desktopSTT.setActionItemCompletion(note.id, action.id, previous);
+      state.currentNote = reverted;
+      noteJobStatusEl.replaceChildren();
+      renderNoteDetail(reverted);
+    });
+    noteJobStatusEl.replaceChildren(undo);
+  } catch (error) {
+    checkbox.checked = previous;
+    checkbox.disabled = false;
+    setJobStatus(t("failed", { message: error.message }), true);
+  }
+}
+
+async function beginLegacyMeetingConversion(note) {
+  setJobStatus(t("saveFailed", { message: "Meeting template has been removed." }), true);
 }
 
 function renderNoteQaMessages() {
@@ -4865,7 +6611,7 @@ async function transcribeAndAskAboutNote(filePath, sourceLabel) {
 
   try {
     const { transcript } = await transcribeAudioInput(filePath, sourceLabel);
-    await sendNoteQaQuestion(transcript);
+    await handleSubnoteSend(transcript, "audio", filePath);
   } catch (error) {
     setJobStatus(t("failed", { message: error.message }), true);
     state.isWorking = false;
@@ -4899,8 +6645,11 @@ async function handleDeleteQaMessage(index) {
 
 async function handleDeleteNote() {
   if (!state.currentNoteId) return;
+  if (state.meetingEditDirty && !window.confirm(t("unsavedMeetingConfirm"))) return;
 
   try {
+    state.meetingEditDirty = false;
+    state.meetingEditMode = false;
     await window.desktopSTT.moveNoteToTrash(state.currentNoteId);
     state.currentNoteId = null;
     state.noteQaMessages = [];
@@ -5044,6 +6793,56 @@ function createRichTextContentElement(className, text) {
 
 /* ========== Event Listeners ========== */
 
+function hasDraggedFiles(event) {
+  return Array.from(event.dataTransfer?.types || []).includes("Files");
+}
+
+window.addEventListener("dragenter", (event) => {
+  if (!hasDraggedFiles(event)) return;
+  event.preventDefault();
+  fileDragDepth += 1;
+  if (
+    state.currentView === "assistant" &&
+    state.activeTranscriptionNoteIds.size === 0 &&
+    state.runtime.sttReady
+  ) {
+    fileDropOverlay.classList.remove("hidden");
+    fileDropOverlay.setAttribute("aria-hidden", "false");
+  }
+});
+
+window.addEventListener("dragover", (event) => {
+  if (!hasDraggedFiles(event)) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+});
+
+window.addEventListener("dragleave", (event) => {
+  event.preventDefault();
+  fileDragDepth = Math.max(0, fileDragDepth - 1);
+  if (fileDragDepth === 0) {
+    fileDropOverlay.classList.add("hidden");
+    fileDropOverlay.setAttribute("aria-hidden", "true");
+  }
+});
+
+window.addEventListener("drop", async (event) => {
+  if (!hasDraggedFiles(event)) return;
+  event.preventDefault();
+  fileDragDepth = 0;
+  fileDropOverlay.classList.add("hidden");
+  fileDropOverlay.setAttribute("aria-hidden", "true");
+  if (state.currentView !== "assistant" || state.activeTranscriptionNoteIds.size > 0) return;
+
+  const result = await window.dropInput.handleDroppedMedia(event.dataTransfer?.files, {
+    getPathForFile: window.desktopSTT.getPathForFile,
+    startTranscription: startLibraryTranscription,
+  });
+  if (!result.ok) {
+    setTemporaryJobStatus(t("unsupportedDrop"), true, 3000);
+  }
+});
+
 promptInputEl.addEventListener("input", () => {
   state.draft = promptInputEl.value;
   autoResizePrompt();
@@ -5068,8 +6867,10 @@ promptInputEl.addEventListener("keydown", async (event) => {
   }
 });
 
-pickFileBtn.addEventListener("click", handlePickFile);
-recordToggleBtn.addEventListener("click", handleRecordToggle);
+pickFileBtn.addEventListener("click", () => (state.agentMode ? agentImportAudio() : handlePickFile()));
+recordToggleBtn.addEventListener("click", () =>
+  state.agentMode ? agentToggleRecording() : handleRecordToggle()
+);
 noteQaPickFileBtn.addEventListener("click", handlePickFile);
 noteQaRecordToggleBtn.addEventListener("click", handleRecordToggle);
 refreshRuntimeBtn.addEventListener("click", () => {
@@ -5082,6 +6883,48 @@ cleanAllAssetsBtn.addEventListener("click", () => {
 copyBtn.addEventListener("click", handleCopy);
 saveAsNoteBtn.addEventListener("click", handleSaveAsNote);
 sendBtn.addEventListener("click", handleSend);
+noteTemplateSelect.addEventListener("change", () => {
+  state.noteTemplateId = "general";
+  noteTemplateSelect.value = "general";
+});
+meetingReviewBackBtn.addEventListener("click", leaveProcessingOrMeeting);
+meetingReviewSaveBtn.addEventListener("click", commitMeetingReview);
+meetingPauseBtn.addEventListener("click", () => {
+  if (state.processingKind === "transcription") {
+    void deleteCurrentTranscriptionNote();
+  }
+});
+meetingRetryBtn.addEventListener("click", () => {
+  if (state.processingKind === "transcription") {
+    void retryCurrentTranscriptionNote();
+    return;
+  }
+  runMeetingGeneration({ resume: true });
+});
+meetingCancelBtn.addEventListener("click", leaveProcessingOrMeeting);
+meetingReviewForm.addEventListener("input", scheduleMeetingDraftSave);
+meetingTranscriptSearch.addEventListener("input", () => renderMeetingTranscript());
+document.querySelectorAll(".meeting-review-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".meeting-review-tab").forEach((item) => {
+      item.classList.toggle("active", item === tab);
+    });
+    document.querySelectorAll("[data-review-panel]").forEach((panel) => {
+      panel.classList.toggle("mobile-hidden", panel.dataset.reviewPanel !== tab.dataset.reviewPane);
+    });
+  });
+});
+window.desktopSTT.onTranscriptionStatus(handleTranscriptionStatus);
+window.addEventListener("DOMContentLoaded", () => {
+  loadNotesList();
+  refreshTrashCount();
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (!state.meetingEditDirty && !state.meetingDraftDirty) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 
 initDropdown(llmModelDropdownEl, "llm", handleLLMModelChange);
 initDropdown(ttsModelDropdownEl, "tts-model", handleTTSModelChange);
@@ -5098,9 +6941,31 @@ noteSearchInput.addEventListener("input", () => {
   loadNotesList(noteSearchInput.value.trim());
 });
 
-backToNotesBtn.addEventListener("click", () => switchView("assistant"));
 deleteNoteBtn.addEventListener("click", handleDeleteNote);
 noteQaSendBtn.addEventListener("click", handleNoteQaSend);
+
+if (subnoteSendBtn) {
+  subnoteSendBtn.addEventListener("click", () => handleSubnoteSend(subnoteInput.value, "text"));
+}
+if (askAiToggleBtn) {
+  askAiToggleBtn.addEventListener("click", () => {
+    askAiSidebar.classList.toggle("hidden");
+  });
+}
+if (askAiCloseBtn) {
+  askAiCloseBtn.addEventListener("click", () => {
+    askAiSidebar.classList.add("hidden");
+  });
+}
+if (subnoteInput) {
+  subnoteInput.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      await handleSubnoteSend(subnoteInput.value, "text");
+    }
+  });
+}
+
 
 noteQaInput.addEventListener("input", () => {
   autoResizeNoteQaInput();
@@ -5130,6 +6995,7 @@ noteQaInput.addEventListener("keydown", async (event) => {
 /* ========== Init ========== */
 
 initSidebarState();
+noteTemplateSelect.value = state.noteTemplateId;
 state.settingsCategory = getStoredSettingsCategory();
 renderSettingsCategory();
 initLanguage();
@@ -5143,3 +7009,682 @@ loadNotesList();
 updateSelectedFileMeta();
 updateRecordingMeta();
 updateButtons();
+initDownloadDock();
+window.desktopSTT.onDownloadProgress(handleDownloadProgress);
+
+/* ========== Local Agent (tool-calling orchestrator UI) ========== */
+
+Object.assign(I18N.en, {
+  agentNavLabel: "Agent",
+  agentKicker: "Local Agent",
+  agentTitle: "Agent",
+  agentSubtitle: "The local model plans and calls local tools to fulfill your request.",
+  agentInputPlaceholder: "Describe a task for the agent…",
+  agentEmptyTitle: "Agent mode",
+  agentEmptyDesc:
+    "Describe a task — the agent plans it and calls local tools to get it done: transcribe audio, structure notes, search and read your saved notes, and read text aloud. Each step appears below.",
+  agentRunning: "Running…",
+  agentThinking: "Thinking…",
+  agentToolCall: "Calling tool",
+  agentToolResult: "Result",
+  agentToolError: "Tool error",
+  agentFinal: "Final answer",
+  agentReplay: "Replay",
+  agentPlay: "Play",
+  agentPause: "Pause",
+  agentResume: "Resume",
+  agentStop: "Stop",
+  agentNewChat: "New chat",
+  agentRecording: "● Recording…",
+  agentTranscribing: "Transcribing…",
+  agentVoiceFailed: "Voice input failed",
+  agentSttNotReady: "Speech-to-Text is not ready (set it up in Settings).",
+  agentRunError: "Agent run failed",
+  agentLlmNotReady: "Local LLM is not ready. Open settings and download/start a model first.",
+  agentMetaDone: "Done · {steps} step(s) · {ms} ms · {model}",
+  agentMetaStopped: "Stopped at step limit · {steps} step(s) · {model}",
+});
+
+Object.assign(I18N["zh-CN"], {
+  agentNavLabel: "智能体",
+  agentKicker: "本地智能体",
+  agentTitle: "智能体",
+  agentSubtitle: "本地模型自己规划并调用本地工具来完成你的请求。",
+  agentInputPlaceholder: "描述一个任务，交给智能体…",
+  agentEmptyTitle: "智能体模式",
+  agentEmptyDesc:
+    "描述一个任务，智能体会自己规划并调用本地工具来完成：转写音频、整理结构化笔记、搜索与阅读你的笔记、朗读文字。每一步都会显示在下面。",
+  agentRunning: "运行中…",
+  agentThinking: "思考中…",
+  agentToolCall: "调用工具",
+  agentToolResult: "结果",
+  agentToolError: "工具出错",
+  agentFinal: "最终答复",
+  agentReplay: "重播",
+  agentPlay: "播放",
+  agentPause: "暂停",
+  agentResume: "继续",
+  agentStop: "停止",
+  agentNewChat: "新对话",
+  agentRecording: "● 录音中…",
+  agentTranscribing: "转写中…",
+  agentVoiceFailed: "语音输入失败",
+  agentSttNotReady: "语音转文字未就绪(请先在设置中配置)。",
+  agentRunError: "智能体运行失败",
+  agentLlmNotReady: "本地大模型未就绪，请先在设置里下载/启动模型。",
+  agentMetaDone: "完成 · {steps} 步 · {ms} ms · {model}",
+  agentMetaStopped: "已达步数上限 · {steps} 步 · {model}",
+});
+
+const agentOverlay = document.querySelector("#agentOverlay");
+const agentCloseBtn = document.querySelector("#agentCloseBtn");
+const agentClearBtn = document.querySelector("#agentClearBtn");
+// Agent renders inline in the main conversation area (#agentTrace), not a modal.
+const agentTraceList = document.querySelector("#agentTrace");
+const composerAgentToggle = document.querySelector("#composerAgentToggle");
+const agentInput = document.querySelector("#agentInput");
+const agentRunBtn = document.querySelector("#agentRunBtn");
+const agentRunStatus = document.querySelector("#agentRunStatus");
+const agentPickFileBtn = document.querySelector("#agentPickFileBtn");
+const agentRecordBtn = document.querySelector("#agentRecordBtn");
+const agentRecordingMeta = document.querySelector("#agentRecordingMeta");
+
+// Mutable agent-run state. Declared with var so it is safely hoisted: applyLanguageUI()
+// can run during init (before this block executes) and call applyAgentLanguageUI().
+var agentRunActive = false;
+var agentPendingToolCard = null;
+var agentThinkingEl = null;
+// Live streaming final-answer card (built from answer_delta steps).
+var agentLiveFinalEl = null;
+var agentLiveFinalText = "";
+// Condensed conversation memory (user + final-answer turns) passed back into the
+// agent so follow-ups like "read the previous answer again" have context.
+var agentHistory = [];
+const AGENT_HISTORY_MAX = 12; // keep the last ~6 turns to stay within the small model's context
+
+function applyAgentLanguageUI() {
+  const setText = (selector, value) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  };
+  setText("#agentKicker", t("agentKicker"));
+  setText("#agentTitle", t("agentTitle"));
+  setText("#agentSubtitle", t("agentSubtitle"));
+  const input = document.querySelector("#agentInput");
+  if (input) input.placeholder = t("agentInputPlaceholder");
+  setText("#agentClearBtn", t("agentNewChat"));
+  const pickBtn = document.querySelector("#agentPickFileBtn");
+  if (pickBtn) {
+    pickBtn.title = t("importAudio");
+    pickBtn.setAttribute("aria-label", t("importAudio"));
+  }
+  const recBtn = document.querySelector("#agentRecordBtn");
+  if (recBtn) {
+    recBtn.title = t("record");
+    recBtn.setAttribute("aria-label", t("record"));
+  }
+  // Look these up locally rather than via the module-scoped consts: applyLanguageUI()
+  // runs during init (line ~6776) BEFORE the agent block's `const composerAgentToggle`
+  // / `const agentTraceList` are initialized, so referencing those consts here would
+  // throw a TDZ ReferenceError and abort the rest of init (particles, runtime, notes…).
+  const composerToggle = document.querySelector("#composerAgentToggle");
+  if (composerToggle) {
+    composerToggle.title = t("agentNavLabel");
+    composerToggle.setAttribute("aria-label", t("agentNavLabel"));
+  }
+  const traceList = document.querySelector("#agentTrace");
+  if (traceList && !agentRunActive && traceList.querySelector(".agent-empty")) {
+    traceList.innerHTML = agentEmptyStateHtml();
+  }
+}
+
+// Hero shown in the agent trace before any task runs: mirrors the chat empty-state
+// styling (orbs + gradient title) and briefly describes what the local agent can do.
+function agentEmptyStateHtml() {
+  return `
+    <div class="agent-empty">
+      <div class="chat-empty-inner">
+        <div class="chat-empty-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+        <h3>${escapeHtml(t("agentEmptyTitle"))}</h3>
+        <p>${escapeHtml(t("agentEmptyDesc"))}</p>
+      </div>
+    </div>`;
+}
+
+function agentShowEmptyState() {
+  if (agentTraceList) {
+    agentTraceList.innerHTML = agentEmptyStateHtml();
+  }
+  agentPendingToolCard = null;
+  agentThinkingEl = null;
+  agentLiveFinalEl = null;
+  agentLiveFinalText = "";
+}
+
+// Remove the empty-state placeholder while keeping any existing conversation cards.
+function agentClearEmptyState() {
+  if (agentTraceList && agentTraceList.querySelector(".agent-empty")) {
+    agentTraceList.innerHTML = "";
+  }
+}
+
+// True once the trace shows real conversation content (not just the hint).
+function agentHasConversation() {
+  return Boolean(agentTraceList && agentTraceList.querySelector(".agent-step-card"));
+}
+
+// Start a fresh conversation: clear memory and the trace.
+function agentResetConversation() {
+  if (agentRunActive) return;
+  agentHistory = [];
+  state.agentConversation = window.agentConversationState.resetAgentConversationState();
+  state.agentLastPerformance = null;
+  agentShowEmptyState();
+  setJobStatus("");
+  updateButtons();
+}
+
+// Switch the main view between chat and agent mode (shared composer, one window).
+function setAgentMode(on) {
+  state.agentMode = Boolean(on);
+  if (chatListEl) chatListEl.classList.toggle("hidden", state.agentMode);
+  if (agentTraceList) agentTraceList.classList.toggle("hidden", !state.agentMode);
+  if (composerAgentToggle) {
+    composerAgentToggle.classList.toggle("active", state.agentMode);
+    composerAgentToggle.setAttribute("aria-pressed", state.agentMode ? "true" : "false");
+  }
+  if (promptInputEl) {
+    promptInputEl.placeholder = state.agentMode ? t("agentInputPlaceholder") : t("promptPlaceholder");
+  }
+  // Preserve an in-progress or prior conversation; only show the hint when empty.
+  if (state.agentMode && !agentRunActive && !agentHasConversation()) agentShowEmptyState();
+  updateButtons();
+  if (promptInputEl) window.requestAnimationFrame(() => promptInputEl.focus());
+}
+
+function toggleAgentMode() {
+  setAgentMode(!state.agentMode);
+}
+
+function agentAppendCard(variant, innerHTML) {
+  const card = document.createElement("div");
+  card.className = `agent-step-card ${variant}`;
+  card.innerHTML = innerHTML;
+  agentTraceList.append(card);
+  agentTraceList.scrollTop = agentTraceList.scrollHeight;
+  return card;
+}
+
+function agentShowThinking() {
+  agentHideThinking();
+  const el = document.createElement("div");
+  el.className = "agent-thinking";
+  el.innerHTML =
+    `<span class="agent-dot"></span><span class="agent-dot"></span><span class="agent-dot"></span>` +
+    `<span class="agent-thinking-text">${escapeHtml(t("agentThinking"))}</span>`;
+  agentTraceList.append(el);
+  agentTraceList.scrollTop = agentTraceList.scrollHeight;
+  agentThinkingEl = el;
+}
+
+function agentHideThinking() {
+  if (agentThinkingEl) {
+    agentThinkingEl.remove();
+    agentThinkingEl = null;
+  }
+}
+
+function agentToolIcon(tool) {
+  if (tool === "transcribe_audio") return "🎙";
+  if (tool === "structure_note") return "🗂";
+  if (tool === "speak") return "🔊";
+  if (tool === "search_notes") return "🔎";
+  if (tool === "read_note") return "📄";
+  return "🛠";
+}
+
+function agentFormatArgs(args) {
+  try {
+    const text = JSON.stringify(args == null ? {} : args, null, 2);
+    return text === "{}" ? "" : text;
+  } catch (_error) {
+    return "";
+  }
+}
+
+function agentFinalCardHTML(finalText) {
+  return (
+    `<div class="agent-step-head">` +
+    `<span class="agent-tool-icon">✦</span>` +
+    `<span class="agent-step-label">${escapeHtml(t("agentFinal"))}</span>` +
+    `</div><div class="agent-final-text rich-text">${renderRichTextToHtml(finalText || "")}</div>`
+  );
+}
+
+// Drop a streamed final card (the streamed text turned out to precede a tool call).
+function agentDiscardLiveFinal() {
+  if (agentLiveFinalEl) {
+    agentLiveFinalEl.remove();
+    agentLiveFinalEl = null;
+    agentLiveFinalText = "";
+  }
+}
+
+// Play / pause / resume / stop controls for a synthesized speech result.
+function agentAttachSpeakControls(card, audio) {
+  const controls = document.createElement("div");
+  controls.className = "agent-audio-controls";
+  const playBtn = document.createElement("button");
+  playBtn.type = "button";
+  playBtn.className = "ghost-btn agent-audio-btn";
+  const stopBtn = document.createElement("button");
+  stopBtn.type = "button";
+  stopBtn.className = "ghost-btn agent-audio-btn";
+
+  let mode = "idle"; // idle | playing | paused
+  const apply = () => {
+    playBtn.textContent =
+      mode === "playing"
+        ? `⏸ ${t("agentPause")}`
+        : mode === "paused"
+        ? `▶ ${t("agentResume")}`
+        : `▶ ${t("agentPlay")}`;
+    stopBtn.textContent = `■ ${t("agentStop")}`;
+    stopBtn.disabled = mode === "idle";
+  };
+  const start = () => {
+    mode = "playing";
+    apply();
+    playLocalTTSAudio(audio.samples, audio.sampleRate)
+      .then(() => {
+        mode = "idle";
+        apply();
+      })
+      .catch(() => {
+        mode = "idle";
+        apply();
+      });
+  };
+
+  playBtn.addEventListener("click", async () => {
+    const ctx = ensurePlaybackAudioContext();
+    if (mode === "idle") {
+      start();
+    } else if (mode === "playing") {
+      try {
+        await ctx.suspend();
+      } catch (_error) {
+        /* ignore */
+      }
+      mode = "paused";
+      apply();
+    } else {
+      try {
+        await ctx.resume();
+      } catch (_error) {
+        /* ignore */
+      }
+      mode = "playing";
+      apply();
+    }
+  });
+
+  stopBtn.addEventListener("click", () => {
+    const ctx = ensurePlaybackAudioContext();
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    stopLocalTTSPlayback();
+    mode = "idle";
+    apply();
+  });
+
+  apply();
+  controls.append(playBtn, stopBtn);
+  card.append(controls);
+  // Autoplay the delivery once it lands.
+  start();
+}
+
+function renderAgentStep(step) {
+  if (!agentRunActive || !step || !agentTraceList) return;
+
+  if (step.type === "answer_delta") {
+    agentHideThinking();
+    if (!agentLiveFinalEl) {
+      agentLiveFinalEl = agentAppendCard("is-final", agentFinalCardHTML(""));
+      agentLiveFinalText = "";
+    }
+    agentLiveFinalText += String(step.text || "");
+    const textEl = agentLiveFinalEl.querySelector(".agent-final-text");
+    if (textEl) textEl.innerHTML = renderRichTextToHtml(agentLiveFinalText);
+    agentTraceList.scrollTop = agentTraceList.scrollHeight;
+    return;
+  }
+
+  if (step.type === "tool_call") {
+    agentHideThinking();
+    // Any streamed text before a tool call was reasoning, not the answer — drop it.
+    agentDiscardLiveFinal();
+    const argsText = agentFormatArgs(step.args);
+    const argsBlock = argsText ? `<pre class="agent-args">${escapeHtml(argsText)}</pre>` : "";
+    agentPendingToolCard = agentAppendCard(
+      "is-tool is-running is-collapsible",
+      `<div class="agent-step-head">` +
+        `<span class="agent-tool-icon">${agentToolIcon(step.tool)}</span>` +
+        `<span class="agent-step-label">${escapeHtml(t("agentToolCall"))}: <b>${escapeHtml(step.tool || "")}</b></span>` +
+        `<span class="agent-spinner"></span>` +
+        `<span class="agent-collapse-chevron" aria-hidden="true">▾</span>` +
+        `</div><div class="agent-collapse-body">${argsBlock}</div>`
+    );
+    return;
+  }
+
+  if (step.type === "tool_result") {
+    const ok = step.ok !== false;
+    const label = ok ? t("agentToolResult") : t("agentToolError");
+    const resultText = ok ? step.result || "" : step.error || step.result || "";
+    const bodyHtml =
+      `<div class="agent-step-head">` +
+      `<span class="agent-tool-icon">${agentToolIcon(step.tool)}</span>` +
+      `<span class="agent-step-label">${escapeHtml(label)}: <b>${escapeHtml(step.tool || "")}</b></span>` +
+      `<span class="agent-collapse-chevron" aria-hidden="true">▾</span>` +
+      `</div><div class="agent-collapse-body"><div class="agent-step-result">${escapeHtml(String(resultText))}</div></div>`;
+
+    let card = agentPendingToolCard;
+    agentPendingToolCard = null;
+    if (card) {
+      card.className = `agent-step-card is-tool is-collapsible ${ok ? "is-ok" : "is-error"}`;
+      card.innerHTML = bodyHtml;
+    } else {
+      card = agentAppendCard(`is-tool is-collapsible ${ok ? "is-ok" : "is-error"}`, bodyHtml);
+    }
+
+    if (ok && step.tool === "speak" && step.data && step.data.audio) {
+      agentAttachSpeakControls(card, step.data.audio);
+    }
+
+    // Verbose results: shown expanded, then auto-collapse after a few seconds.
+    if (step.tool === "search_notes" || step.tool === "read_note") {
+      window.setTimeout(() => card.classList.add("collapsed"), 4000);
+    }
+
+    agentShowThinking();
+  }
+}
+
+function agentRenderFinal(result) {
+  agentHideThinking();
+  agentPendingToolCard = null;
+  const finalText = (result && result.finalText) || "";
+  if (agentLiveFinalEl) {
+    // Finalize the streamed card with the complete, fully-rendered text.
+    const textEl = agentLiveFinalEl.querySelector(".agent-final-text");
+    if (textEl) textEl.innerHTML = renderRichTextToHtml(finalText);
+    agentLiveFinalEl = null;
+    agentLiveFinalText = "";
+    agentTraceList.scrollTop = agentTraceList.scrollHeight;
+    return;
+  }
+  agentAppendCard("is-final", agentFinalCardHTML(finalText));
+}
+
+function setAgentRunningUI(isRunning) {
+  agentRunActive = isRunning;
+  if (promptInputEl) promptInputEl.disabled = isRunning;
+  if (sendBtn) sendBtn.disabled = isRunning;
+}
+
+function rememberAgentConversationForNote(instruction, result) {
+  state.agentConversation = window.agentConversationState.appendAgentConversationTurn(
+    state.agentConversation,
+    { instruction, result }
+  );
+  state.agentLastPerformance = {
+    agentDurationMs: (result && result.agentDurationMs) || null,
+    agentModel: (result && result.modelName) || "",
+    agentStepCount: (result && result.stepCount) || 0,
+  };
+}
+
+// Run one agent turn from the shared main composer, rendering inline into #agentTrace.
+async function runAgentInstruction() {
+  if (agentRunActive || !promptInputEl) return;
+  const instruction = String(promptInputEl.value || "").trim();
+  if (!instruction) return;
+
+  if (!state.runtime.llmReady) {
+    agentClearEmptyState();
+    agentAppendCard("is-error", `<div class="agent-step-result">${escapeHtml(t("agentLlmNotReady"))}</div>`);
+    return;
+  }
+
+  // Keep prior turns on screen; just drop the empty-state hint and append.
+  agentClearEmptyState();
+  agentPendingToolCard = null;
+  agentThinkingEl = null;
+  agentLiveFinalEl = null;
+  agentLiveFinalText = "";
+  state.draft = "";
+  promptInputEl.value = "";
+  autoResizePrompt();
+  agentAppendCard("is-user", `<div class="agent-user-text">${escapeHtml(instruction)}</div>`);
+  setAgentRunningUI(true);
+  setJobStatus(t("agentRunning"));
+  agentShowThinking();
+
+  const startedAt = Date.now();
+  try {
+    const result = await window.desktopSTT.runAgent(instruction, { history: agentHistory });
+    agentRenderFinal(result);
+    rememberAgentConversationForNote(instruction, result);
+    // Remember this turn (condensed) so later questions have context.
+    agentHistory.push({ role: "user", content: instruction });
+    agentHistory.push({ role: "assistant", content: (result && result.finalText) || "" });
+    if (agentHistory.length > AGENT_HISTORY_MAX) {
+      agentHistory = agentHistory.slice(-AGENT_HISTORY_MAX);
+    }
+    const model = (result && result.modelName) || "";
+    const steps = (result && result.stepCount) || 0;
+    const ms = (result && result.agentDurationMs) || Date.now() - startedAt;
+    setJobStatus(
+      result && result.completed === false
+        ? t("agentMetaStopped", { steps, model })
+        : t("agentMetaDone", { steps, ms, model })
+    );
+  } catch (error) {
+    agentHideThinking();
+    agentDiscardLiveFinal();
+    agentAppendCard(
+      "is-error",
+      `<div class="agent-step-head"><span class="agent-step-label">${escapeHtml(t("agentRunError"))}</span></div>` +
+        `<div class="agent-step-result">${escapeHtml((error && error.message) || String(error))}</div>`
+    );
+    setJobStatus("");
+  } finally {
+    setAgentRunningUI(false);
+    updateButtons();
+    if (promptInputEl) promptInputEl.focus();
+  }
+}
+
+// Agent voice input — a self-contained recorder that reuses the existing
+// save/transcribe IPC but its own state, so it never touches the main composer.
+var agentRec = {
+  recording: false,
+  stream: null,
+  ctx: null,
+  source: null,
+  processor: null,
+  buffers: [],
+  sampleRate: 0,
+  timerId: null,
+  seconds: 0,
+};
+
+async function agentCleanupRecording() {
+  if (agentRec.timerId) {
+    window.clearInterval(agentRec.timerId);
+    agentRec.timerId = null;
+  }
+  if (agentRec.processor) {
+    agentRec.processor.disconnect();
+    agentRec.processor.onaudioprocess = null;
+    agentRec.processor = null;
+  }
+  if (agentRec.source) {
+    agentRec.source.disconnect();
+    agentRec.source = null;
+  }
+  if (agentRec.stream) {
+    agentRec.stream.getTracks().forEach((track) => track.stop());
+    agentRec.stream = null;
+  }
+  if (agentRec.ctx) {
+    await agentRec.ctx.close();
+    agentRec.ctx = null;
+  }
+}
+
+function agentSetRecordingUI(on) {
+  if (recordToggleBtn) recordToggleBtn.classList.toggle("recording", on);
+  if (recordingMetaEl) {
+    recordingMetaEl.classList.toggle("hidden", !on);
+    recordingMetaEl.classList.remove("error");
+    if (on) recordingMetaEl.textContent = `${t("agentRecording")} 0:00`;
+  }
+}
+
+function agentFillInputFromTranscript(text) {
+  const clean = String(text || "").trim();
+  if (!clean || !promptInputEl) return;
+  const existing = promptInputEl.value.trim();
+  promptInputEl.value = existing ? `${existing} ${clean}` : clean;
+  state.draft = promptInputEl.value;
+  autoResizePrompt();
+  promptInputEl.focus();
+}
+
+function agentVoiceBusy() {
+  return agentRunActive || agentRec.recording;
+}
+
+async function agentStartRecording() {
+  if (agentVoiceBusy()) return;
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("agentSttNotReady"), true);
+    return;
+  }
+  try {
+    agentRec.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      video: false,
+    });
+    agentRec.ctx = new AudioContext();
+    agentRec.sampleRate = agentRec.ctx.sampleRate;
+    agentRec.buffers = [];
+    agentRec.source = agentRec.ctx.createMediaStreamSource(agentRec.stream);
+    agentRec.processor = agentRec.ctx.createScriptProcessor(4096, 1, 1);
+    agentRec.processor.onaudioprocess = (event) => {
+      if (agentRec.recording) {
+        agentRec.buffers.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+      }
+    };
+    agentRec.source.connect(agentRec.processor);
+    agentRec.processor.connect(agentRec.ctx.destination);
+    agentRec.recording = true;
+    agentRec.seconds = 0;
+    agentSetRecordingUI(true);
+    agentRec.timerId = window.setInterval(() => {
+      agentRec.seconds += 1;
+      const minutes = Math.floor(agentRec.seconds / 60);
+      const seconds = String(agentRec.seconds % 60).padStart(2, "0");
+      if (recordingMetaEl) recordingMetaEl.textContent = `${t("agentRecording")} ${minutes}:${seconds}`;
+    }, 1000);
+  } catch (_error) {
+    await agentCleanupRecording();
+    agentRec.recording = false;
+    agentSetRecordingUI(false);
+    setJobStatus(t("agentVoiceFailed"), true);
+  }
+}
+
+async function agentStopRecording() {
+  if (!agentRec.recording) return;
+  agentRec.recording = false;
+  agentSetRecordingUI(false);
+  const samples = mergeFloat32Arrays(agentRec.buffers);
+  const sampleRate = agentRec.sampleRate;
+  agentRec.buffers = [];
+  await agentCleanupRecording();
+  if (!samples.length) return;
+  setJobStatus(t("agentTranscribing"));
+  try {
+    const wavBuffer = encodeWav(samples, sampleRate);
+    const saved = await window.desktopSTT.saveRecording(wavBuffer);
+    const result = await window.desktopSTT.transcribeAudio(saved.filePath);
+    agentFillInputFromTranscript(result && result.text);
+    setJobStatus("");
+  } catch (_error) {
+    setJobStatus(t("agentVoiceFailed"), true);
+  }
+}
+
+async function agentToggleRecording() {
+  if (agentRec.recording) {
+    await agentStopRecording();
+  } else {
+    await agentStartRecording();
+  }
+}
+
+async function agentImportAudio() {
+  if (agentVoiceBusy()) return;
+  if (!state.runtime.sttReady) {
+    setJobStatus(t("agentSttNotReady"), true);
+    return;
+  }
+  let filePath = null;
+  try {
+    filePath = await window.desktopSTT.pickAudioFile();
+  } catch (_error) {
+    filePath = null;
+  }
+  if (!filePath) return;
+  setJobStatus(t("agentTranscribing"));
+  try {
+    const result = await window.desktopSTT.transcribeAudio(filePath);
+    agentFillInputFromTranscript(result && result.text);
+    setJobStatus("");
+  } catch (_error) {
+    setJobStatus(t("agentVoiceFailed"), true);
+  }
+}
+
+// Collapse/expand a tool card when its header is clicked (cards start expanded).
+if (agentTraceList) {
+  agentTraceList.addEventListener("click", (event) => {
+    const head =
+      event.target instanceof Element
+        ? event.target.closest(".agent-step-card.is-collapsible .agent-step-head")
+        : null;
+    if (!head) return;
+    const card = head.closest(".agent-step-card");
+    if (card) card.classList.toggle("collapsed");
+  });
+}
+
+// The composer toggle switches the shared main view between chat and agent mode
+// (no separate overlay window).
+if (composerAgentToggle) composerAgentToggle.addEventListener("click", toggleAgentMode);
+if (agentClearBtn) agentClearBtn.addEventListener("click", agentResetConversation);
+if (window.desktopSTT && typeof window.desktopSTT.onAgentStep === "function") {
+  window.desktopSTT.onAgentStep(renderAgentStep);
+}
+applyAgentLanguageUI();
+
+document.addEventListener("click", (e) => {
+  const copyBtn = e.target.closest(".note-copy-btn");
+  if (copyBtn) {
+    const text = copyBtn.getAttribute("data-copy-text");
+    if (text) copyTextToClipboard(decodeURIComponent(text));
+  }
+});

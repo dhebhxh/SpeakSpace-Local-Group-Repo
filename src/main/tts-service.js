@@ -4,7 +4,7 @@ const os = require("os");
 const path = require("path");
 const { spawn } = require("child_process");
 const { pipeline } = require("stream/promises");
-const { Readable } = require("stream");
+const { Readable, Transform } = require("stream");
 const {
   getProjectRoot,
   getTTSCacheRoot,
@@ -137,7 +137,7 @@ async function ensureDir(dirPath) {
   await fs.mkdir(dirPath, { recursive: true });
 }
 
-async function downloadArchive(url, destinationPath) {
+async function downloadArchive(url, destinationPath, onProgress) {
   const response = await fetch(url, {
     headers: {
       "User-Agent": "SpeakSpace-TTS-Setup",
@@ -149,8 +149,20 @@ async function downloadArchive(url, destinationPath) {
     throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
   }
 
+  const totalBytes = Number(response.headers.get("content-length")) || null;
+  let received = 0;
+  const counter = new Transform({
+    transform(chunk, _enc, callback) {
+      received += chunk.length;
+      if (onProgress) {
+        onProgress({ phase: "downloading", receivedBytes: received, totalBytes });
+      }
+      callback(null, chunk);
+    },
+  });
+
   const tempPath = `${destinationPath}.tmp`;
-  await pipeline(Readable.fromWeb(response.body), fsSync.createWriteStream(tempPath));
+  await pipeline(Readable.fromWeb(response.body), counter, fsSync.createWriteStream(tempPath));
   await fs.rename(tempPath, destinationPath);
 }
 
@@ -250,7 +262,7 @@ async function writeRuntimeManifest(extra = {}) {
   await fs.writeFile(getManifestPath(), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 }
 
-async function downloadTTSRuntime() {
+async function downloadTTSRuntime(onProgress) {
   const packageInfos = getPackageInfos();
   const preferredPackage = packageInfos.node.installed ? packageInfos.node : packageInfos.wasm;
 
@@ -272,7 +284,10 @@ async function downloadTTSRuntime() {
     await fs.rm(archivePath, { force: true });
     await fs.rm(`${archivePath}.tmp`, { force: true });
 
-    await downloadArchive(DEFAULT_TTS_ARCHIVE_URL, archivePath);
+    await downloadArchive(DEFAULT_TTS_ARCHIVE_URL, archivePath, onProgress);
+    if (onProgress) {
+      onProgress({ phase: "extracting", indeterminate: true });
+    }
     await runCommand("tar", ["-xf", archivePath, "-C", getTTSModelsRoot()], {
       windowsHide: process.platform === "win32",
     });

@@ -9,6 +9,7 @@ jobs:
   verify:
     name: Verify on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -32,5 +33,11 @@ jobs:
       - name: Run local verification
         run: npm run verify:local
 
-      - name: Run placeholder test script
+      - name: Run tests
         run: npm test
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Prepare Electron native module
+        run: npm run native:electron
